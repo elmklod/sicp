@@ -1,0 +1,38 @@
+(define (parse-word word-list)
+  (define (choose-word words)
+    (require (not (null? words)))
+    (amb (car words)
+         (choose-word (cdr words))))
+  (let ((words (cdr word-list))
+        (word-type (car word-list)))
+    (list word-type (choose-word words)))) ; the resulting word may be parsed or unparsed, it is up to the implementation
+
+pitfalls: depth-first search on the amb expression that is recursive in nature.
+The LAST one of these will always recurse to itself and all of its viable results will be used,
+while the rest(before this last recursive one) amb expressions will not change their result no matter how many times try-again is called.
+
+In my case, the very first one in the procedure parse-sentence
+It is actually evaluated last.
+Therefore, my generator will always recurse into adding up an additional(the same, depth-first, remember) sentence to the original
+
+(parse-sentence)
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(sentence (noun-phrase (article the) (noun student)) (verb studies))
+
+;;; Amb-Eval input:
+try-again
+
+;;; Amb-Eval value:
+(compound-sentence (sentence (noun-phrase (article the) (noun student)) (verb studies)) (conjunction and) (sentence (noun-phrase (article the) (noun student)) (verb studies)))
+
+;;; Amb-Eval input:
+try-again
+
+;;; Amb-Eval value:
+(compound-sentence (sentence (noun-phrase (article the) (noun student)) (verb studies)) (conjunction and) (compound-sentence (sentence (noun-phrase (article the) (noun student)) (verb studies)) (conjunction and) (sentence (noun-phrase (article the) (noun student)) (verb studies))))
+
+Hope he will pass the exams, this hardworker.
+
+ramb will save the day.

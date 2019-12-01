@@ -1,0 +1,19 @@
+(define (averager a b c)
+  (let ((one-half (make-connector))
+        (sum (make-connector)))
+    (constant 1/2 one-half)
+    (adder a b sum)
+    (multiplier one-half sum c))
+  'done)
+
+
+(define averager
+  (let ((one-half (make-connector)))
+    (constant 1/2 one-half)
+    (lambda (a b c)
+      (let ((sum (make-connector)))
+        (adder a b sum)
+        (multiplier one-half sum c))
+      'done)))
+
+; This implementation keeps one connector for a constant constraint 1/2. Thus, it saves some space.

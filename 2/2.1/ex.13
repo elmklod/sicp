@@ -1,0 +1,35 @@
+Work with positive numbers only:
+
+uz = ux * uy
+
+lz = lx * ly
+
+
+rj = width(interval of j)/j
+
+ux = x(1 + rx)
+
+uy = y(1 + ry)
+
+lx = x(1 - rx)
+
+ly = y(1 - ry)
+
+
+ux * uy = xy(1 + rx + ry + rx*ry)
+
+lx * ly = xy(1 - rx - ry + rx*ry)
+
+center(z) = (uz + lz)/2 = (ux * uy + lx * ly)/2 =
+
+xy(2 + 2rx*ry)/2 = xy(1 + rx*ry)
+
+width(z) = (uz - lz)/2 = xy(2rx + 2ry)/2 = xy(rx + ry)
+
+percent(z) = 100 * (width/center) = (uz - lz)/(uz + lz) =
+
+100 * (rx + ry)/(1 + rx*ry)
+
+When rx and ry -> 0
+
+percent(z) = approx. 100 * (rx + ry)

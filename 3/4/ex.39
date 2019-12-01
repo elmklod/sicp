@@ -1,0 +1,31 @@
+(define x 10)
+(define s (make-serializer))
+(parallel-execute
+  (lambda ()  ; P1
+    (set! x ((s (lambda () (* x x))))))
+  (s (lambda () (set! x (+ x 1))))) ; P2
+
+P1: sets x to 100, P2: sets x to 101
+
+P2: sets x to 11, P1: sets x to 121
+
+P1: starts setting(starts the assignment statement evaluation) x, P2: sets x to 11, P1: computes  (* 11 11), sets x to 121
+
+P1: starts setting x, P1: evaluates (* 10 10), P2: evaluates (+ 10 1), P1: sets x to 100,
+P2: sets x to 11
+
+P1: starts setting x, P1: evaluates (* 10 10), P2: evaluates (+ 10 1), P2: sets x to 11,
+P1: sets x to 100.
+
+
+P2: starts setting x, P1: starts setting x, P2: sets x to 11, P1: sets x to 121
+
+Overall, out of five possible values: 11, 100, 110, 101, 121
+this parallel execution allows for 4:
+11, 100, 101, 121.
+ This is a consequence of letting the assignment be interleaved with another one.
+
+The value 110 does not appear because the computations (* x x) and (+ x 1) are serialized.
+110 can occur only when they are interleaved in the order (* 10 | (+ 10 1) (set! x 11) | 11)
+
+Also garbage is possible since the assignments can happen at the same time

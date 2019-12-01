@@ -1,0 +1,25 @@
+(define (deep-reverse l)
+ (define (iter l rev-l)
+  (if (null? l)
+      rev-l
+      (iter (cdr l) (cons (deep-reverse (car l)) rev-l))))
+ (if (pair? l)
+     (iter l '())
+     l))
+
+(define (deep-reverse l)
+ (if (pair? l)
+     (reverse (map deep-reverse l))
+     l))
+
+(define (reverse-map proc items)
+ (define (iter items result)
+  (if (null? items)
+      result
+      (iter (cdr items) (cons (proc (car items)) result))))
+ (iter items '()))
+
+(define (deep-reverse l)
+ (if (pair? l)
+     (reverse-map deep-reverse l)
+     l))

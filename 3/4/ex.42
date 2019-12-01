@@ -1,0 +1,47 @@
+Yes, it is safe.
+No, there will be no difference.
+Observe that even though procedures deposit and withdraw use assignment,
+they are in fact timeless, i.e they have no local state and there is nothing that changes with time
+Things that change are outside the procedures(objects).
+Therefore, if there is a procedure with a different name that has the same code as either
+deposit or withdraw,
+
+as long as they are used at the same moment in time
+(it does not matter which was defined first or second or even if they were defined in parallel,
+which distinguishes it from the objects for which referential transparency is lost -
+these preserve it as long as they are run at the same moments in time, independently and not concurrently)
+the result will be indistinguishable as if the original procedures were executed.
+
+That property is preserved when the procedures are serialized:
+It does not matter that the resulting procedures are different objects (checked using eq?),
+what matters is that they share the same code and their results after the execution are always the same for
+some particular moment in time regardless which new serialized procedure
+was executed(concerning one type of serialized procedures, of course. Either that withdrawal process or
+deposition process).
+
+Therefore, it is unnecessary to create new serialized procedures of the same kind.
+In fact, it wastes a lot of space. Serializer set grows with each deposit and withdraw
+procedure call. But the newly created procedures are used only during the parallel-execute process.
+They are never called again.
+
+It is possible to make serializer set of a fixed number of elements(in this case 2)
+with each kind of procedure serialized only once during the creation of the account.
+
+Ben's idea is beneficial to the performance of the overall program/process.
+(Constant space, no extra procedure creation)
+
+
+(It depends on the decision if the same procedure is allowed to be interleaved with itself.
+Here it is assumed that it is not, which is reasonable.
+Even more, original make-serializer may utilize the fact that all procedures are unique
+and use pointers to them to order them, which would fail with the new way procedures
+withdraw and deposit are defined. This can and should be avoided when dealing with these definitions.
+But it is not necessary to change it in the original system, the need never arises, but it makes
+the serializer less general.
+Therefore, it is better to disregard pointers to the procedures as a way to order the execution of serialized
+procedures in some way.)
+
+The solution: State is not allowed to change as long as there are processes running that use this state
+in computation. There are exceptions.
+In addition no two processes may change the same state concurrently/based on the value of the current state,
+i.e. shadow.

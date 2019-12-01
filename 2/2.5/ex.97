@@ -1,0 +1,82 @@
+ (define (reduce-terms L1 L2)
+   (if (empty-termlist? L1)
+       (list L1 L2)
+       (let ((g (gcd-terms L1 L2))
+             (o1 (max (order (first-term L1))
+                      (order (first-term L1)))))
+         (let ((o2 (order (first-term g))))
+            (let ((factor
+                   (make-term 0
+                              (expt (first-term g)
+                              (+ 1 (- o1 o2))))))
+              (let ((reduced-n
+                      (car (div-terms
+                                  (mul-term-by-all-terms
+                                    factor
+                                    L1)
+                                  g)))
+                    (reduced-d
+                            (car (div-terms
+                                        (mul-term-by-all-terms
+                                          factor
+                                          L2)
+                                        g))))
+                   (let ((g (gcd (common-factor reduced-n)
+                                 (common-factor reduced-d))))))
+                      (list (fold-right adjoin-term the-empty-termlist
+                                        (map (lambda (term) (make-term (order term)
+                                                                       (div (coeff term)
+                                                                            g)))
+                                             (rec reduced-n)))
+                            (fold-right adjoin-term the-empty-termlist
+                                              (map (lambda (term) (make-term (order term)
+                                                                             (div (coeff term)
+                                                                                  g)))
+                                                   (rec reduced-d)))))))))
+
+(define (reduce-poly p1 p2)
+  (if (same-variable? (variable p1)
+                      (variable p2))
+      (map (lambda (L) (make-poly
+                          (preserve-variable
+                            (variable p1)
+                            (variable p2))))
+           (reduce-terms (term-list p1)
+                         (term-list p2)))
+      (error "Polys not in same var:
+              REDUCE-POLY"
+             (list p1 p2))))
+
+
+(define (reduce-integers n d)
+  (let ((g (gcd n d)))
+    (list (/ n g) (/ d g))))
+
+
+
+(put 'reduce '(polynomial polynomial)
+  (lambda (p1 p2) (map tag (reduce-poly p1 p2))))
+
+(put 'reduce '(scheme-number scheme-number)
+  (lambda (i1 i2) (map tag (reduce-integers i1 i2))))
+
+(define (reduce x y)
+  (apply-generic 'reduce x y))
+
+(define (make-rat n d)
+  (let ((reduced (reduce n d)))
+    (cons (car reduced) (cadr reduced))))
+
+
+
+(define p1
+  (make-polynomial 'x '(sparse (1 1) (0 1))))
+(define p2
+  (make-polynomial 'x '(sparse (3 1) (0 -1))))
+(define p3
+  (make-polynomial 'x '(sparse (1 1))))
+(define p4
+  (make-polynomial 'x '(sparse (2 1) (0 -1))))
+(define rf1 (make-rational p1 p2))
+(define rf2 (make-rational p3 p4))
+(add rf1 rf2)

@@ -1,0 +1,6 @@
+(rule (big-shot ?person)
+  (and (job ?person (?pers-dep . ?pers-title))
+       (not (and (supervisor ?person ?boss)
+                 (job ?boss (?pers-dep . ?boss-title))))
+
+; perfectly valid, to be tested

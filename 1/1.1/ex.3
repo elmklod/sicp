@@ -1,0 +1,54 @@
+(define (max-sum-of-squares a b c)
+  (sum-of-squares (if (and (< a c) (< a b))
+                      (if (< c b)
+                          c
+                          b)
+                      a)
+                  (if (< c b)
+                      b
+                      c)))
+
+This procedure, when viewed using a substitution model,
+works as follows:
+All operands are evaluated, the evaluated procedure max-sum-of-squares is applied to them
+resulting in a body of its definition now being evaluated with all formal parameters substituted for
+the arguments of max-sum-of-squares.
+The evaluation of the body proceeds as follows:
+operator is evaluated, then for the first operand either the first original argument is is its value if its value is not the least among the three arguments,
+otherwise the least of two other arguments is the value.
+For the second operand, the greatest among the two last arguments is its value.
+
+This works because choosing first argument if it not the least value means that the next value to be chosen is the maximum one among other arguments.
+But if the first is the least, then other 2 arguments are the required values.
+Choosing the least among them in the first operand and the greatest in the second
+allows the second operand of expression body to always be the combination of choosing the greatest value procedure
+with 2 last arguments as its operands, and later arguments.
+
+If can be substituted for cond, with some adjustments, the alternative clauses must be rewritten as clauses with else at their predicates.
+
+The first variant works at least for every possible combination of positive numbers
+and for some subset of combinations of all real numbers(negative + 0 + positive.
+Too many combinations to check manually).
+
+Another variant: less clear and concise, but still working
+(define (max-sum-of-squares-v1 a b c)
+  (cond ((and (>= a b) (>= c b)) (sum-of-squares a c))
+        ((and (>= a c) (> b c)) (sum-of-squares a b))
+        ((and (> b a) (> c a)) (sum-of-squares b c))))
+
+The first cond clause corresponds to the b being not greater than other two.
+The second cond clause corresponds to the c now being either the least value or not greater than a. the equality in the second operand of predicate is not needed.
+Consider that b = c, then (>= a c) = (>= a b) and (>= c b) = #t = (= c b) is the predicate, therefore it is a first clause predicate.
+since b = c, (sum-of-squares a c)= (sum-of-squares a b)
+Therefore, >= is redundant.
+The last cond clause corresponds to the a now being the least value. Being not greater is redundant.
+Consider a = b, then (> c a) = (> c b) and (= a b) = #t = (>= a b). It is a PART of the first clause (or (= c b) (> c b)).
+ Ther. a first clause includes this clause for a case of a = b. It will be true in more cases than the last clause.
+ Since a = b, (sum-of-squares a c) = (sum-of-squares b c).
+ Ther, (>= a b) is redundant.
+
+Consider c = a, (> b a) = (> b c) and (= c a) = (>= a c) = true, which is the second clause with (>= a c) being true.
+since c = a, (sum-of-squares b c) = (sum-of-squares a b) (this procedure is commutative)
+Ther. (>= c a) is redundant.
+
+a = c = b is a part of the first clause. (sum-of-squares a c)= (sum-of-squares b c) = (sum-of-squares a b)= (sum-of-squares a a) =(sum-of-squares b b)= (sum-of-squares c c)

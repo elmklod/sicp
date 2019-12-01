@@ -1,0 +1,117 @@
+Suppose there are n resources with unique numbers assigned to them
+order procedures that deal with each one(only one) in some way based on their numbers:
+p0, p1, p2, p3, ..., p(n-1).
+
+Suppose that several such procedures are called by different procedures;
+For clarity only two procedures operating on 2 shared resources are inspected:
+
+proc0 uses processes pk, p(k+1) in this order.
+
+proc1 uses processes p(k+1), pk in this order.
+
+When executed concurrently, both proc0 and proc1 first try to lock resources that pk
+ operates on irrelevant of the order procedures pk and p(k+1) execute in.
+
+Therefore, whichever lock access to resource k-1 proceeds, while the other will not,
+and therefore, will not trigger a deadlock situation by locking the second shared resource before
+the first one locks it.
+
+It prevents deadlock by making every procedure that may force deadlock to be serialized
+in the same order all other such procedures are serialized: they all lock access in the same order.
+(same order here means here the shared resources
+ locking resources 1, 65, 565, 1000 for one
+         and       50, 56, 65, 100, 565, 1000 is considered "same order")
+
+
+Deadlock arises when procedures recursively wait for each other to complete.
+With the ordering, procedures wait only for one procedure and that procedure
+needs not wait for any of them to proceed.
+
+(define (make-account-and-serializer balance)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin
+          (set! balance (- balance amount))
+          balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((balance-serializer
+         (make-serializer))
+        (resource-number (generate-resource-number)))
+    (define (dispatch m)
+      (cond ((eq? m 'withdraw) withdraw)
+            ((eq? m 'deposit) deposit)
+            ((eq? m 'balance) balance)
+            ((eq? m 'serializer)
+             balance-serializer)
+            ((eq? m 'number)
+             resource-number)
+            (else (error "Unknown request:
+                          MAKE-ACCOUNT"
+                         m))))
+    dispatch))
+
+(define generate-resource-number
+  (let ((next-free 0))
+    ((make-serializer)
+     (lambda ()
+       (let ((assigned next-free))
+          (set! next-free (+ 1 next-free))
+          assigned)))))
+
+; or keeping track of the last assigned
+
+(define generate-resource-number
+  (let ((last-assigned -1))
+    ((make-serializer)
+     (lambda ()
+          (set! last-assigned
+                (+ 1 last-assigned))
+          last-assigned))))
+
+(define (serialized-exchange account1 account2)
+  ((serialize exchange
+              account1
+              account2)
+   account1
+   account2)
+
+(define (serialize f . resources)
+  (define (order-serializers)
+    (if (null? resources)
+        (error "ORDER-SERIALIZERS was given no resources")
+        (fold-right (lambda (res L)
+                      (add-to-ordered-list
+                       res
+                       (lambda (x) (x 'serializer))
+                       (lambda (x) (x 'number))
+                       L))
+                    '()
+                    resources)))
+  (fold-right (lambda (ordered-serializer g)
+                ((car ordered-serializer) g))
+              f
+              (order-serializers)))
+
+(define (add-to-ordered-list struct elem-selector num-selector L)
+  (define (iter L-before L-after)
+    (let ((num (num-selector struct))
+          (elem (elem-selector struct)))
+      (let ((numbered-elem (cons elem num)))
+        (cond ((null? L-after)
+               (reverse
+                (cons numbered-elem
+                      L-before)))
+              ((> num
+                  (cdar L-after))
+               (iter (cons (car L-after)
+                           L-before)
+                     (cdr L-after)))
+              ((< num
+                  (cdar L-after))
+               (append (reverse L-before)
+                       (cons numbered-elem
+                             L-after)))))))
+  (iter '() L))

@@ -1,0 +1,40 @@
+(define (flip-horiz painter)
+ (transform-painter
+  painter
+  (make-vect 1. 0.)
+  (make-vect 0. 0.)
+  (make-vect 1. 1.)))
+
+rotate90 could be used for this task
+
+(define (rotate90 painter)
+  (transform-painter painter
+                     (make-vect 1.0 0.0)
+                     (make-vect 1.0 1.0)
+                     (make-vect 0.0 0.0)))
+
+(define (rotate180 painter)
+ (transform-painter
+  painter
+  (make-vect 1. 1.)
+  (make-vect 0. 1.)
+  (make-vect 1. 0.)))
+
+(define (rotate270 painter)
+ (transform-painter
+  painter
+  (make-vect 0. 1.)
+  (make-vect 0. 0.)
+  (make-vect 1. 1.)))
+
+(define (rotate180 painter)
+ (rotate90 (rotate90 painter)))
+
+(define (rotate270 painter)
+ (rotate180 (rotate90 painter)))
+
+or 3 consequent rotate90
+
+Order does no matters
+
+in case of 180 and its multiples the direction of rotation is not important.

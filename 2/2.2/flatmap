@@ -1,0 +1,7 @@
+(define (flatmap op seqs)
+ (accumulate (lambda (x y) (append (op x) y)) '() seqs))
+
+Spread-out mapping before appending vs. appending mapped
+ works because accumulate is actually a generalized map procedure.
+It is slightly faster as the it does not have to go over the elements of the sequence
+twice.

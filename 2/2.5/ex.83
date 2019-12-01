@@ -1,0 +1,51 @@
+Since the tower of number types is unlike the hierarchy established in the book,
+
+it is assumed here that there are 4 different types :
+'integer 'rational 'real 'complex
+
+It is also assumed that every procedure related to the type is installed as
+an entry in the table for dispatching procedures on types and is available
+
+An that generic procedures are also defined.
+
+(define (integer->rational n)
+ (make-rational (contents n) 1))
+
+(define (rational->real n)
+ (make-real (/ (numer n)
+               (denom n))))
+
+It is assumed that make-real, for example, adds 0.0 to the argument or multiplies it by 1.0
+and that numer and denom are generic selectors for the type rational and all its subtypes
+
+(define (real->complex n)
+  (make-complex-from-real-imag
+   (contents n) 0))
+
+(put-coercion 'integer 'rational integer->rational)
+(put-coercion 'rational 'real rational->real)
+(put-coercion 'real 'complex real->complex)
+
+(put 'raise 'integer (get-coercion 'integer 'rational)) integer package
+(put 'raise 'rational (get-coercion 'rational 'real)) rational package
+(put 'raise 'real (get-coercion 'real 'complex)) real package
+
+(define (raise n)
+  (let ((up (get-coercion 'raise (list (type-tag n)))))
+    (if up
+        (up n)
+        (error "Type cannot be raised:"
+               (type-tag n)))))
+
+Apply-generic can be used to avoid redundancy in design. it requires making
+the table column entries lists(listing data type tag)
+and it would require breaking modularity  between packages
+
+(put-coercion 'raise '(integer) (get-coercion 'integer 'rational))
+(put-coercion 'raise '(rational) (get-coercion 'rational 'real))
+(put-coercion 'raise '(real) (get-coercion 'real 'complex))
+
+(define (raise n)
+  (apply-generic 'raise n))
+
+However, it may be slower than the former implementation.

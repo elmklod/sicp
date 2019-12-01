@@ -1,0 +1,39 @@
+(define (an-integer-between bound-1 bound-2)
+  (define (generate-integer low high)
+    (let ((integer low))
+      (if (= 0 (- high low))
+          integer
+          (amb integer
+               (generate-integer (+ integer 1) high)))))
+  (if (> bound-1 bound-2) ; strict or non-strict - no difference
+      (generate-integer bound-2 bound-1)
+      (generate-integer bound-1 bound-2)))
+
+(define (queens size)
+  (define (make-queen column row)
+   (list column row))
+  (define (column-queen qn)
+   (car qn))
+  (define (row-queen qn)
+   (cadr qn))
+  (define (checking? q1 q2)
+   (let ((cq1 (column-queen q1))
+         (cq2 (column-queen q2))
+         (rq1 (row-queen q1))
+         (rq2 (row-queen q2)))
+    (or (= rq1 rq2)
+        (= cq1 cq2)
+        (= (abs (- cq1 cq2))
+           (abs (- rq1 rq2)))))) ; add extra false
+  (define (iter next-column solution)
+    (if (= next-column 0)
+        solution
+        (let ((queen (make-queen next-column ; amb here increases the steps greatly. No need if one systematically goes from one column to another. A vital optimiziation, because otherwise permutations of the same non-viable solutions will increase the computation time.
+                                 (an-integer-between 1 size))))
+          (for-each (lambda (q)
+                      (require (not (checking? queen q)))) ; or (if (checking? queen q) (amb)) - the former is clearer
+                    solution)
+          (iter (- next-column 1)
+                (cons queen
+                      solution)))))
+  (iter size '()))

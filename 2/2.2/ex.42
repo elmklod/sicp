@@ -1,0 +1,236 @@
+(define (queens board-size)
+
+ (define (queen-iter column solutions)
+
+  (define (place-queen)
+
+   (define (add-queen queen)
+     (map (lambda (sol) (cons queen sol))
+          solutions))
+     (let ((queen-on-col (map (lambda (row) (make-queen column row))
+                              (enumerate-interval 1 board-size))))
+      (flatmap add-queen queen-on-col)))
+
+  (if (> column board-size)
+       solutions
+       (queen-iter (+ column 1) (filter no-check?
+                                        (place-queen)))))
+ (queen-iter 1 zero-solutions))
+
+
+(define (queens board-size)
+
+ (define (queen-iter column solutions)
+
+  (define (place-queen)
+
+   (define (add-queen sol)
+    (let ((queen-on-col (map (lambda (row) (make-queen column row))
+                             (enumerate-interval 1 board-size))))
+     (map (lambda (queen) (cons queen sol))
+          queen-on-col)))
+
+   (flatmap add-queen solutions))
+
+  (if (> column board-size)
+       solutions
+       (queen-iter (+ column 1) (filter no-check?
+                                        (place-queen)))))
+ (queen-iter 1 zero-solutions))
+
+
+
+(define (no-check? sol)
+  (define (checking? q1 q2)
+   (let ((cq1 (column-queen q1))
+         (cq2 (column-queen q2))
+         (rq1 (row-queen q1))
+         (rq2 (row-queen q2)))
+    (or (= rq1 rq2)
+        (= (abs (- cq1 cq2))
+           (abs (- rq1 rq2))))))
+
+ (accumulate (lambda (x y)
+               (and x y))
+             true
+             (map (lambda (x) (not (checking? (new-queen-sol sol)
+                                              x)))
+                  (previous-queens-sol sol))))
+
+(define (enumerate-interval low high)
+ (define (iter low result)
+  (if (> low high)
+      result
+      (iter (+ low 1) (cons low result))))
+ (reverse (iter low nil)))
+
+(define (make-queen column row)
+ (list column row))
+
+(define (column-queen qn)
+ (car qn))
+
+(define (row-queen qn)
+ (cadr qn))
+
+(define zero-solutions
+ (list empty-board))
+
+(define (new-queen-sol sol)
+ (car sol))
+
+(define (previous-queens-sol sol)
+ (cdr sol))
+
+(define empty-board nil)
+
+----------------------
+(define (queens board-size)
+ (define (queen-iter column solutions)
+  (if (> column board-size)
+       solutions
+       (queen-iter (+ column 1) (filter no-check?
+                                        (place-queen column
+                                                     solutions
+                                                      board-size)))))
+ (queen-iter 1 zero-solutions))
+
+(define (place-queen col prev k)
+ (define (add-queen queen)
+       (map (lambda (comb) (cons queen comb))
+            prev))
+ (let ((queen-on-col (map (lambda (row) (list col row))
+                          (enumerate-interval 1 k))))
+   (flatmap add-queen queen-on-col)))
+
+(define (queen-col column previous k)
+  (if (> column k)
+      previous
+      (queen-col (+ column 1) (filter no-check?
+                                  (place-queen column
+                                               previous)))))
+-------------------
+(define (no-check? sol)
+ (accumulate (lambda (x y) (and  (not (checking? (car sol)
+                                                 x))
+                                 y))
+             true
+             (cdr sols)))
+----------------------
+
+
+(define (no-check? sol)
+  (define (checking? q1 q2)
+   (let ((cq1 (column-queen q1))
+         (cq2 (column-queen q2))
+         (rq1 (row-queen q1))
+         (rq2 (row-queen q2)))
+    (or (= rq1 rq2)
+        (= (abs (- cq1 cq2))
+           (abs (- rq1 rq2))))))
+
+ (accumulate (lambda (x y)
+               (and x y))
+             true
+             (map (lambda (x) (not (checking? (new-queen-sol sol)
+                                              x)))
+                  (previous-queens-sol sol))))
+
+(define (enumerate-interval low high)
+ (define (iter low result)
+  (if (> low high)
+      result
+      (iter (+ low 1) (cons low result))))
+ (reverse (iter low nil)))
+
+(define (make-queen column row)
+ (list column row))
+
+(define (column-queen qn)
+ (car qn))
+
+(define (row-queen qn)
+ (cadr qn))
+
+(define empty-board nil)
+
+(define (new-queen-sol sol)
+ (car sol))
+
+(define (previous-queens-sol sol)
+ (cdr sol))
+
+(define zero-solutions
+  (list empty-board))
+
++++++++++++++++++++++++++++++++++++
+
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions)
+           (safe? k positions))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position
+                    new-row
+                    k
+                    rest-of-queens))
+                 (enumerate-interval
+                  1
+                  board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size))
+
+(define empty-board nil)
+
+(define (adjoin-position row column rest-of-queens)
+  (cons (make-queen column row)
+        rest-of-queens))
+
+(define (safe? column positions)
+ (define queen-at-col?
+   (lambda (queen) (= (column-queen queen)
+                      column)))
+ (define (find-queen positions)
+  (first-queen-positions (filter queen-at-col?
+                                 positions)))
+
+ (define (remove-queen positions)
+  (filter (lambda (queen) (not (queen-at-col? queen)))
+          positions))
+
+ (accumulate (lambda (x y) (and x y))
+             true
+             (map (lambda (x) (not (checking? (find-queen positions)
+                                              x)))
+                  (remove-queen positions))))
+
+(define (first-queen-positions positions)
+ (car positions))
+
+(define (rest-positions positions)
+ (cdr positions))
+
+(define (make-queen column row)
+ (list column row))
+
+(define (column-queen qn)
+ (car qn))
+
+(define (row-queen qn)
+ (cadr qn))
+
+(define empty-board nil)
+
+(define (new-queen-sol sol)
+ (car sol))
+
+(define (previous-queens-sol sol)
+ (cdr sol))
+
+(define zero-solutions
+  (list empty-board))

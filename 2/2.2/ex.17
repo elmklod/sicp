@@ -1,0 +1,9 @@
+(define (last-pair l)
+ (if (null? (cdr l))
+     l
+     (last-pair (cdr l))))
+
+(define (last-pair l)
+ (cond ((null? l) (error "empty list given as argument"))
+       ((null? (cdr l)) l)
+       (else (last-pair (cdr l)))))

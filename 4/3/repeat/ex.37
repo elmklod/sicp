@@ -1,0 +1,31 @@
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-between low high))
+        (hsq (* high high)))
+    (let ((j (an-integer-between i high)))
+      (let ((ksq (+ (* i i) (* j j))))
+        (require (>= hsq ksq))
+        (let ((k (sqrt ksq)))
+          (require (integer? k))
+          (list i j k))))))
+
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-between low high)))
+    (let ((j (an-integer-between i high)))
+      (let ((k (an-integer-between j high)))
+        (require (= (+ (* i i) (* j j))
+                    (* k k)))
+        (list i j k)))))
+
+at least numbers, whose squares are greater than hsq/2
+are not explored. Also there are edge cases where big number + small number are not explored as well
+therefore, it forces i and j not be both > high/sqrt(2)
+which is the same as i <= high/sqrt(2) \/ j <= high/sqrt(2),
+which decreases in general the amount of possibilities explored.
+(when high is a big number, high/(sqrt 2) border is quite a good perfomamce improvement, approx 0.3*high variants are ommited)
+
+However, k is computed via sqrt procedure, which can lead to some answers being lost due to rounding errors.
+But if it didn't have those rounding errors, it would be a perfectly legitimate way to comptute k
+Still, it is possible to change the way k is computed
+(let ((k (an-integer-between j high)))
+  (require (= (square k) ksq))
+like this.

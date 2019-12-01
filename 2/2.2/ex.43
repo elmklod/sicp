@@ -1,0 +1,107 @@
+(define (queens board-size)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions)
+           (safe? k positions))
+         (flatmap (lambda (new-row)
+                  (map (lambda (rest-of-queens)
+                         (adjoin-position
+                          new-row k rest-of-queens))
+                       (queen-cols (- k 1))))
+                (enumerate-interval 1 board-size)))))
+  (queen-cols board-size))
+
+
+Louis has transformed a linear recursive process into a recursive process with R(n)[steps/space] = Θ(n^n):
+
+For each number k in the interval [1, board-size] the process starts a process doing the same computation
+
+for k - 1.
+
+Therefore, the end case for R(0) is multiplied by board-size board-size times
+
+for k + 1 it takes the (the amount of steps for k)  * by board-size + some
+ additional steps including adjoining(which is applied board-size times always to each of the solution for k queens)
+
+let sol(n) be a number of solutions for a given  board-size an the queen at column n
+sol(0) = 1
+sol(n) cannot be more than board-size^n as board-size^n is all possible combinations of queens on the first n columns of the board
+
+R(n)[space/steps] approx = (case of queens-cols 0, value of board-size/n is not important) * n^n  +
+                           all adjoinings + all checkings =
+                           n^n + (n^n + sol(1)*n^(n - 1) + sol(2)*n^(n-2) + ... + sol(n - 1)*n) + (n^n + sol(1)*n^(n - 1) + sol(2)*n^(n-2) + ... + sol(n - 1)*n) =
+
+                           n^n + 2(n^n + sol(1)*n^(n - 1) + sol(2)*n^(n-2) + ... + sol(n - 1)*n);
+
+Therefore, R(n)[space/steps] = Θ(n^n) or Θ(e^(n*ln(n)))
+
+for large n  ln(n) approx = const
+
+R(n)[steps/space] = Θ(e^n)
+
+While for the original procedure it will take n*sol(x) for adjoining and checking at each x + 1 step plus the previous step:
+
+1(zero) + 2(n + n*sol(1) + ... + n*sol(n - 1)) = 1 + 2n(1 + sol(1) + ... + sol(n - 1))
+
+While not truly linear, it is exponential as the number of solutions grows fast, but it is sill LESS than
+
+1 + 2n(1 + n + n^2 ... + n^(n-1)), which is 1 + 2n(n^n - 1)/(n - 1) = approx 1 + 2n^n - 2 = 2n^n - 1
+
+And it is always more(for large n) than 1 + 2n*n = 1 + 2*n^2
+
+
+for the sake of simplicity it will be regarded as a linear recursive process.
+
+It can be checked by timing procedure execution:
+
+(define (queens board-size time)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions)
+           (safe? k positions))
+         (flatmap (lambda (new-row)
+                  (map (lambda (rest-of-queens)
+                         (adjoin-position
+                          new-row k rest-of-queens))
+                       (queen-cols (- k 1))))
+                (enumerate-interval 1 board-size)))))
+  (queen-cols board-size)
+  (display (- (runtime) time)))
+
+1 ]=> (queens 5 (runtime))
+.2699999999999818
+
+1 ]=> (queens 6 (runtime))
+5.069999999999936
+
+1 ]=> (queens 7 (runtime))
+100.0500000000000
+
+(define (queens board-size time)
+  (define (queen-cols k)
+    (if (= k 0)
+        (list empty-board)
+        (filter
+         (lambda (positions)
+           (safe? k positions))
+         (flatmap
+          (lambda (rest-of-queens)
+            (map (lambda (new-row)
+                   (adjoin-position
+                    new-row
+                    k
+                    rest-of-queens))
+                 (enumerate-interval
+                  1
+                  board-size)))
+          (queen-cols (- k 1))))))
+  (queen-cols board-size)
+  (- (runtime) time))
+
+for n = 7 the time is
+
+;Value: .4800000000000182

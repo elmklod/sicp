@@ -1,0 +1,10 @@
+one-element sequence will incur overhead for Alyssa's version as it
+evaluates and extra lambda-expression and execute-sequence
+each time the sequence is evaluated.
+
+2+ -element version is not that clear.
+Original evaluates n-1 lambda expressions while Alyssa's loops n times through the
+analyzed elements of the sequence + 1 lambda expression
+
+Overall, Alyssa's seems to be more expensive when the sequence is called more than once
+The more it is evaluated, the more expensive Alyssa's version is

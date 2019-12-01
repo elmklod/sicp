@@ -1,0 +1,61 @@
+(define (encode message tree)
+  (if (null? message)
+      '()
+      (append
+       (encode-symbol (car message)
+                      tree)
+       (encode (cdr message) tree))))
+
+
+(define (encode-symbol sym tree)
+ (cond ((and (leaf? tree)
+             (element-of-set? sym (symbols tree))) '())
+       ((element-of-set? sym (symbols (left-branch tree)))
+         (cons 0
+               (encode-symbol sym (left-branch tree))))
+       ((element-of-set? sym (symbols (right-branch tree)))
+         (cons 1
+               (encode-symbol sym (right-branch tree))))
+       (else (error "symbol not in tree:
+              ENCODE-SYMBOL" sym))))
+
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((equal? x (car set)) true)
+        (else (element-of-set? x (cdr set)))))
+
+Checks for leaves and leaf-branches can be ignored
+
+Therefore, for the most frequent symbol it will take from n - 1 to 1 steps(depending
+ on the tree, as the procedure may check the left and right branches in different orders,
+and the set of symbols may be in different order, as the representation is unordered)
+
+For the least frequent symbol it MAY take approx
+
+n - 1 + n - 2 + n - 3 + n - 4 + ... + 3 + 2 + 1 = n/2 *(n - 1) = (n^2)/2 - n/2, which is approx n^2 for large n
+
+That was for the element-of-set? process.
+
+other procedures have are applied only once for each node.
+
+Therefore, it also takes 1 step more the most frequent symbol (n steps at most)  and n steps more the least frequent symbol
+
+which results in (n^2 + n)/2 = approx n^2 steps.
+
+The orders of growths:
+
+R(n) = Θ(n) for the most frequent
+
+R(n) = Θ(n^2) for the least frequent
+
+(n^2)/2 + n/2 <= k*n^2
+
+1/2 + 1/2n <= k
+
+k2 >= 1
+
+(for large n k approx = 1/2)
+
+(n^2)/2 + n/2 >= k*n^2
+
+k1 <= 1/2

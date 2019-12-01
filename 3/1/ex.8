@@ -1,0 +1,5 @@
+(define f
+  (let ((y 1))
+    (lambda (x)
+      (set! y (* y x))
+      y)))

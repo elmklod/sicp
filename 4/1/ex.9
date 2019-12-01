@@ -1,0 +1,169 @@
+do construct:
+
+(do ((var0 init0 step0)
+     (var1 init1 step1)
+     ...
+     (varn initn stepn))
+ (test
+  result-exp ...)
+ body)
+
+test is a predicate procedure,
+step is a procedure that iterates over its variable, optional, no step means that variable does not change
+body is optional
+result-exps are optional (their absence defaults to the result of do expressions being false)
+
+is a derived expression
+
+(let rec ((var0 init0)
+          (var1 init1)
+          ...
+          (varn initn))
+ (if test
+     (begin result-exp ...)
+     (begin body (rec step0 step1 ... stepn))))
+
+
+(define (do->let exp)
+  (let ((bindings-with-steps (do-bindings-with-steps exp)))
+    (make-named-let 'rec
+                    (do-bindings bindings-with-steps)
+                    (make-body
+                     (make-if
+                      (do-test exp)
+                      (sequence->exp (do-result-sequence exp))
+                      (sequence->exp
+                       (append-sequences
+                        (do-body exp)
+                        (add-to-sequence-first
+                         (make-application
+                          'rec
+                          (do-steps bindings-with-steps))
+                         (the-empty-sequence)))))))))
+
+(define (make-named-let name bindings body)
+  (cons 'let
+        (cons name
+              (cons bindings body))))
+
+(define (do-bindings-with-steps exp)
+  (define (iter exp result)
+    (let ((bindings (car result))
+          (steps (cadr result)))
+      (if (null? exp)
+          (list (reverse bindings)
+                (reverse steps))
+          (iter (cdr exp)
+                (let ((step-position (cddar exp))
+                      (variable (caar exp)))
+                  (list (cons
+                         (list variable
+                               (cadar exp))
+                         bindings)
+                        (cons (if (null? step-position)
+                                  variable
+                                  (car step-position))
+                              steps)))))))
+  (iter (cadr exp) '(() ())))
+(define (do-bindings bindings-with-steps)
+  (car bindings-with-steps))
+(define (do-steps bindings-with-steps)
+  (cadr bindings-with-steps))
+(define (do-body exp)
+  (cdddr exp))
+(define (do-test exp)
+  (caaddr exp))
+(define (do-result-sequence exp)
+  (let ((result (cdaddr exp)))
+    (if (null? result)
+        (list 'false)
+        result)))
+(define (append-sequences seq1 seq2)
+    (append seq1 seq2))
+
+
+until:
+(until test body)
+
+(define (make-do bindings-with-steps test result-exps body)
+  (append
+   (list 'do
+         bindings-with-steps
+         (cons
+          test
+          result-exps))
+   body))
+It is a derived expression
+(do () (test) body)
+
+or
+
+(let rec ()
+ (if test
+     false
+     (begin body (rec))))
+
+
+
+(define (until->do exp)
+  (make-do
+   (the-empty-bindings-with-steps)
+   (until-test exp)
+   (the-empty-sequence)
+   (until-body exp)))
+
+(define (until-test exp) (cadr exp))
+
+(define (until-body exp) (cddr exp))
+
+(define (the-empty-bindings-with-steps)
+  (the-empty-bindings-list))
+
+while:
+(while test body)
+It is a derived expression:
+
+(do () ((not test)) body)
+
+However, not is a primitive, evaluator does not specify primitives
+
+(let rec ()
+ (if test
+     (begin body (rec))
+     false))
+
+(define (while-test exp) (cadr exp))
+
+(define (while-body exp) (cddr exp))
+
+(define (while->let exp)
+  (make-named-let
+   'rec
+   (the-empty-bindings-list)
+   (make-body
+    (make-if
+     (while-test exp)
+     (sequence->exp
+      (append-sequences
+       (while-body exp)
+       (add-to-sequence-first
+        (make-application
+         'rec
+         (the-empty-values))
+        (the-empty-sequence))))
+     'false))))
+
+(define (the-empty-values) '())
+
+(put-evaluation-rule
+    'do
+    (lambda (exp env)
+      (eval (do->let exp) env)))
+(put-evaluation-rule
+    'until
+    (lambda (exp env)
+      (eval (until->do exp) env)))
+(put-evaluation-rule
+    'while
+    (lambda (exp env)
+      (eval (while->let exp) env)))

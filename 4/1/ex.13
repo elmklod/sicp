@@ -1,0 +1,95 @@
+Scheme is lexically scoped.
+A binding shall be removed only once from the environment,
+ in the first frame in which it occurs
+
+(make-unbound! var)
+
+(define (make-unbound-variable exp)
+  (cadr exp))
+
+results in a
+
+ (define (unbind-variable! var env)
+   (traverse-environment
+    (lambda () (error "Unbound variable" var))
+    (lambda () (unbind-variable! var (enclosing-environment env)))
+    (lambda (frame) (set-car! frame (cadr frame))
+                    (set-cdr! frame (cddr frame)))
+    var
+    env))
+
+with traverse-environment modified
+
+(define (traverse-environment empty-evironment-proc
+                              empty-frame-proc
+                              equal-variable-proc
+                              var
+                              env)
+ (define (scan frame-bindings)
+   (cond ((equal? (the-empty-frame) frame-bindings)
+          (empty-frame-proc))
+         (else
+          (let ((binding (frame-first-binding frame-bindings)))
+             (cond ((eq? var (car binding))
+                    (equal-variable-proc frame-bindings)) ;here
+                   (else
+                    (scan (frame-rest-bindings frame-bindings))))))))
+ (if (eq? env the-empty-environment)
+     (empty-evironment-proc)
+     (scan (first-frame env))))
+
+other procedures should be modified accordingly to this change.
+
+(define (lookup-variable-value var env)
+  (traverse-environment
+   (lambda () (error "Unbound variable" var))
+   (lambda () (lookup-variable-value var (enclosing-environment env)))
+   (lambda (frame) (let ((val (cadr (frame-first-binding frame))))
+                        (if (eq? val '*unassigned*)
+                            (error "Unassigned variable" var)
+                            val)))
+   var
+   env))
+
+(define (set-variable-value! var val env)
+  (traverse-environment
+   (lambda () (error "Unbound variable: SET!" var))
+   (lambda () (set-variable-value! var val (enclosing-environment env)))
+   (lambda (frame) (set-car! (cdr (frame-first-binding frame)) val))
+   var
+   env))
+
+(define (define-variable! var val env)
+ (traverse-environment
+  (lambda () (error "Environment has no frames" env))
+  (lambda () (add-binding-to-frame! var val (first-frame env)))
+  (lambda (frame) (set-car! (cdr (frame-first-binding frame)) val))
+  var
+  env))
+
+
+
+or
+
+(define (unbind-variable! var env)
+  (define (env-loop env)
+    (define (scan frame-bindings)
+      (cond ((equal? (the-empty-frame) frame-bindings)
+             (env-loop
+              (enclosing-environment env)))
+            (else
+             (let ((binding (frame-first-binding frame-bindings)))
+                (cond ((eq? var (car binding))
+                       (set-car! frame-bindings (cadr frame-bindings))
+                       (set-cdr! frame-bindings (cddr frame-bindings)))
+                      (else
+                       (scan (frame-rest-bindings frame-bindings))))))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (scan (first-frame env))))
+  (env-loop env))
+----
+(put-evaluation-rule
+      'make-unbound!
+      (lambda (exp env)
+        (unbind-variable! (make-unbound-variable exp) env)))

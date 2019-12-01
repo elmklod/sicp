@@ -1,0 +1,7 @@
+The local state for acc is kept in the enclosing environment, which was  created during the
+the evaluation of the combination of the application of the procedure make-account
+to 50
+It is kept together with the corresponding state-changing procedures.
+
+acc and acc2 share the global frame/environment only.
+Probably they also share the code for state-changing procedures. But this is implementation dependent.

@@ -1,0 +1,15 @@
+(define (solve f y0 dt)
+  (define y (integral (delay (force dy)) y0 dt))
+  (define dy (delay (stream-map f y)))
+  y)
+This version will work with this implementation of simultaneous  definitions.
+
+The version in the book will fail with this new implementation of the simultaneous
+scope. But it will work with the implementation from the exercise 4.16
+The reason for that is the new version does not allow for the value expressions
+to be evaluated with the access to some (internal) variables already possessing a value.
+The initial version allowed for this to happen. But in the unspecified order.
+As it is given in the book, it would evaluate definitions in the order in which they appear in the procedure body.
+As it turns out, my implementation from the ex. 4.16 will fail as well, because it reverses the order of definitions.
+
+It is also possible to implement this version without the additional frame as in the exercise 4.17

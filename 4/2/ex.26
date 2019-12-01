@@ -1,0 +1,35 @@
+(define (unless-condition exp)
+  (cadr exp))
+
+(define (unless-usual-value exp)
+  (caddr exp))
+
+(define (unless-exceptional-value exp)
+  (cadddr exp))
+
+(define (unless->if exp)
+  (make-if (unless-condition exp)
+           (unless-exceptional-value exp)
+           (unless-usual-value exp)))
+
+(put-evaluation-rule
+   'unless
+   (lambda (exp env)
+     (eval (unless->if exp) env)))
+
+were unless a procedure, it would be possible to use it with fold and with apply.
+which would allow for easier solutions for some problems.
+And there would be no drawback when it is a procedure, not a special form.
+
+However, every special form may be encompassed by a lambda expression making it a procedure.
+E.g.
+
+(lambda (condition usual-value exceptional-value)
+  (unless condition
+          usual-value
+          exceptional-value))
+
+is now a procedure and can be used with higher-order-procedures.
+
+However, some benefits are lost, and it does not solve the problem with the delayed evaluation.
+Therefore, this use has limitations, especially in purely applicative-order languages.

@@ -1,0 +1,206 @@
+(define (make-table)
+  (list '*table*))
+
+(define (table-entry-mark table)
+  table)
+
+Warning: causes endless printing of the table
+
+or
+
+(define (make-table)
+  (list (cons '*table*
+              '(end))))
+
+(define (table-entry-mark table)
+  (cdar table))
+
+With end-entries the following procedures will not have problems dealing with the
+entries indexed under the existing keys in cases when the given key-list
+includes as its first part the existing indexes and the new ones.
+It also avoids the problem of storing lists and other list structures as entries
+when the list structure closely resembles the implemented structure of the table.
+(which would introduce very implicit and hard to catch bugs)
+
+(define (lookup keys table) ; or without the dotted tail
+  (define mark (table-entry-mark table))
+  (define (final-entry? rec)
+    (and (pair? (car rec))
+         (eq? (caar rec) mark)))
+  (define (value-entry rec)
+    (cdar rec))
+  (define (iter subtable)
+    (let ((key (car keys)))
+      (set! keys (cdr keys))
+      (let ((record (assoc key (cdr subtable))))
+        (if record
+            ((if (null? keys)
+                 (lambda (x)
+                   (let ((entry (cdr x)))
+                     (if (final-entry? entry)
+                         (value-entry entry)
+                         entry)))
+                 iter)
+             record)
+            false))))
+  (if (null? keys)
+      (error "LOOKUP called with no keys")
+      (iter table)))
+
+(define (assoc key records)
+  (cond ((null? records) false)
+        ((equal? key (caar records))
+         (car records))
+        (else (assoc key (cdr records)))))
+
+(define (insert! keys value table)
+  (let ((mark (table-entry-mark table)))
+    (define (make-final-entry value)
+      (list (cons mark value)))
+    (define (iter subtable)
+      (let ((key (car keys)))
+        (set! keys (cdr keys))
+        (let ((record (assoc key (cdr subtable))))
+          (cond  ((and record (null? keys))
+                  (set-cdr! record (make-final-entry value)))
+                 (record
+                  (iter record))
+                 (else
+                  (let ((intermediate-record
+                         (cons key '())))
+                      (set-cdr! subtable
+                                (cons  intermediate-record
+                                       (cdr subtable)))
+                      (if (null? keys)
+                          (set-cdr! intermediate-record
+                                    (make-final-entry value))
+                          (iter intermediate-record))))))))
+    (iter table)
+    'ok))
+
+Using this implementation is more concise yet it will require twice as much steps for
+insert! to make a new table as if insert! had a local implementation of this procedure
+
+(define (assoc key-list records)
+  (define (assoc-iter records)
+    (let ((key (car key-list)))
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (set! key-list (cdr key-list))
+             (if (null? key-list)
+                 (car records)
+                 (assoc-iter (cdar records))))
+            (else (assoc-iter (cdr records))))))
+  (assoc-iter records))
+
+
+FP-version
+(define (assoc key-list records)
+  (define (assoc-iter key-list records)
+    (let ((key (car key-list)))
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (let ((new-key-list (cdr key-list))) ; this binding can be done along with the key
+                (if (null? new-key-list)          ; whereas with the assignment this structure must be preserved
+                    (car records)
+                    (assoc-iter new-key-list (cdar records)))))
+            (else (assoc-iter key-list (cdr records))))))
+  (assoc-iter key-list records))
+
+(define (assoc key-list records)
+  (define (assoc-iter key-list records)
+    (let ((key (car key-list))
+          (new-key-list (cdr key-list))) ; this binding can be done along with the key
+      (cond ((null? records) false)      ; whereas with the assignment this structure must be preserved
+            ((equal? key (caar records))
+              (if (null? new-key-list)
+                  (car records)
+                  (assoc-iter new-key-list (cdar records))))
+            (else (assoc-iter key-list (cdr records))))))
+  (assoc-iter key-list records))
+
+
+(define (lookup table . keys)
+  (define (iter subtable keys)
+    (let ((key (car keys))
+          (new-keys (cdr keys)))
+      (let ((record (assoc key (cdr subtable))))
+        (if record
+            ((if (null? new-keys)
+                 (lambda (x) (cdr x))
+                 (lambda (x) (iter x new-keys)))
+             record)
+            false))))
+  (if (null? keys)
+      (error "LOOKUP called with no keys")
+      (iter table keys)))
+
+
+(define (make-table)
+  (let ((table
+         (list
+          (cons '*table* '(end)))))
+    (define (lookup keys) ; or without the dotted tail
+      (define mark (table-entry-mark table))
+      (define (final-entry? rec)
+        (and (pair? (car rec))
+             (eq? (caar rec) mark)))
+      (define (value-entry rec)
+        (cdar rec))
+      (define (iter subtable)
+        (let ((key (car keys)))
+          (set! keys (cdr keys))
+          (let ((record (assoc key (cdr subtable))))
+            (if record
+                ((if (null? keys)
+                     (lambda (x)
+                       (let ((entry (cdr x)))
+                         (if (final-entry? entry)
+                             (value-entry entry)
+                             entry)))
+                     iter)
+                 record)
+                false))))
+      (if (null? keys)
+          (error "LOOKUP called with no keys")
+          (iter table)))
+
+    (define (assoc key records) ; provided to ensure that it behaves as expected
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (car records))
+            (else (assoc key (cdr records)))))
+
+    (define (insert! keys value)
+      (let ((mark (table-entry-mark table)))
+        (define (make-final-entry value)
+          (list (cons mark value)))
+        (define (iter subtable)
+          (let ((key (car keys)))
+            (set! keys (cdr keys))
+            (let ((record (assoc key (cdr subtable))))
+              (cond  ((and record (null? keys))
+                      (set-cdr! record (make-final-entry value)))
+                     (record
+                      (iter record))
+                     (else
+                      (let ((intermediate-record
+                             (cons key '())))
+                          (set-cdr! subtable
+                                    (cons  intermediate-record
+                                           (cdr subtable)))
+                          (if (null? keys)
+                              (set-cdr! intermediate-record
+                                        (make-final-entry value))
+                              (iter intermediate-record))))))))
+        (iter table)
+        'ok))
+        (define (dispatch m)
+          (cond ((eq? m 'lookup)
+                 lookup)
+                ((eq? m 'insert!)
+                 insert!)
+                ((eq? m 'assoc)
+                 assoc)
+                (else (error "Unknown table operation" m))))
+        dispatch))

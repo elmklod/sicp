@@ -1,0 +1,59 @@
+(define (body-first-exp body)
+  (car body))
+(define (body-rest-exps body)
+  (cdr body))
+(define (body-no-exps? body)
+  (null? body))
+(define (definition->assignment definition)
+  (make-assignment (definition-variable definition)
+                   (definition-value definition)))
+  (define (scan-out-defines body-original)
+    (define (make-unassigned-bindings reversed-vars)
+      (define (iter vars result)
+        (if (null? vars)
+            result
+            (iter (cdr vars)
+                  (cons (make-binding (car vars)
+                              '(quote *unassigned*))
+                        result))))
+      (iter reversed-vars '()))
+    (define (iter body reversed-vars reversed-new-body reversed-assignments)
+     (if (body-no-exps? body)
+         (if (null? reversed-vars)
+             body-original
+             (make-body
+              (make-let (make-unassigned-bindings
+                         reversed-vars)
+                        (append-sequences reversed-assignments ; reverse is not necessary here
+                                          (reverse-sequence reversed-new-body)))))
+         (let ((first-exp
+                (body-first-exp body)))
+           (if (tagged-list? first-exp 'define)
+               (iter (body-rest-exps body)
+                     (cons (definition-variable first-exp)
+                           reversed-vars)
+                     reversed-new-body
+                     (add-to-sequence-first
+                      (definition->assignment first-exp)
+                      reversed-assignments))
+               (iter (body-rest-exps body)
+                     reversed-vars
+                     (add-to-sequence-first
+                      first-exp
+                      reversed-new-body)
+                     reversed-assignments)))))
+    (iter body-original
+          '()
+          (the-empty-sequence)
+          (the-empty-sequence)))
+
+
+it is better to install it into make-procedure, because procedure-body
+is used twice as much often.
+unless it uses an assignment-utilizing version of scan-out-defines,
+it will do the testing twice as many times compared to when it is used inside make-procedure
+(while the transformation will only happen once just as with make-procedure approach)
+
+Notice that this version is inefficient compared to the version from the ex.17
+as it goes over the same body twice because let-expression is transformed into the application of the
+lambda expression. And in the second traversal it does nothing but wastes resources.

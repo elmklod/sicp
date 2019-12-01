@@ -1,0 +1,17 @@
+(define (make-center-percent center percent)
+  (let ((width (abs (* center percent 0.01))))
+(make-interval (- center width)
+               (+ center width))))
+
+(define (percent-interval z)
+ (/ (* (width z) 100.) (center z)))
+
+
+(define (width x)
+ (/ (- (upper-bound x)
+       (lower-bound x))
+    2))
+
+
+(define (percent-interval z)
+ (abs (/ (* (width z) 100.) (center z))))

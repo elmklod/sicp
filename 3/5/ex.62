@@ -1,0 +1,37 @@
+(define (div-series num den)
+  (let ((den-constant (stream-car den)))
+    (if (zero? den-constant)
+        (error "DIV-SERIES denominator has a constant term equal 0"
+               den)
+        (let ((inverted-den-constant (/ 1 den-constant)))
+          (mul-series num (scale-stream inverted-den-constant
+                                        (invert-series
+                                         (scale-stream inverted-den-constant
+                                                       den))))))))
+
+(define (div-series num den)
+  (mul-series
+   num
+   (let ((den-constant (stream-car den)))
+     (if (zero? den-constant)
+         (error "DIV-SERIES denominator has a constant term equal 0"
+                den)
+         (let ((inverted-den-constant (/ 1 den-constant)))
+           (scale-stream inverted-den-constant
+                         (invert-series
+                          (scale-stream inverted-den-constant
+                                        den))))))))
+
+(define (invert s)
+  (let ((s-constant (stream-car s)))
+    (if (zero? s-constant)
+        (error "Series has a constant term equal 0"
+               s)
+        (let ((inverted-s-constant (/ 1 s-constant)))
+          (scale-stream inverted-s-constant
+                        (invert-series
+                         (scale-stream inverted-s-constant
+                                       s)))))))
+
+(define (div-series num den)
+  (mul-series num (invert den)))

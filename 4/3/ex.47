@@ -1,0 +1,25 @@
+(define (parse-verb-phrase)
+  (amb (parse-word verbs)
+       (list
+        'verb-phrase
+        (parse-verb-phrase)
+        (parse-prepositional-phrase))))
+
+It works only if verb-phrase-parsing succeeds in the first place.
+
+If it does not, the procedure will get struck after 1 failed attempt to parse a verb.
+This may occur if the verb is unknown or the sentence has bad grammar and is malformed or when
+try-again is evaluated and the sentence structure cannot be parsed in any other way
+with additional prepositional phrases.
+
+If the order is interchanged, the procedure will never terminate in the first place even if the grammar is correct.
+Infinite recursive call inside procedure parse-verb-phrase to itself.
+
+(define (parse-verb-phrase)
+  (amb (list
+        'verb-phrase
+        (parse-verb-phrase)
+        (parse-prepositional-phrase))
+       (parse-word verbs)))
+
+You did it again, Louis.

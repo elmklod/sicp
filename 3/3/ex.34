@@ -1,0 +1,25 @@
+(define (squarer a b) (multiplier a a b))
+
+Suppose that the constraint is placed on some connector radicand and squared
+
+(squarer radicand squared)
+
+Suppose that for both connectors selector  has-value? evaluates to false.
+
+Suppose that radicand gets a value n.
+
+because 2 out of the three connectors now have value,
+the constraint propagation indeed squares n and sets the value of squared to n^2
+
+Suppose that both connectors have again no values.
+
+Suppose that now squared gets a value k.
+However only 1 connector out of 3 now has a value.
+The constraint propagation won't work because all the cond clauses predicates
+internal to the multiplier constraint evaluate to false and the radicand will not get a value.
+It just can't:
+multiplier constaraint has no knowledge of how to compute square roots from the squared number.
+The computation involves more than just multiplication/division.
+Even more, for one product there are infinite ways to split it into
+the multiplicand and  the multiplier. This is why the multiplier constraint is not suitable
+for this task.

@@ -1,0 +1,71 @@
+; Ben's query will work:
+(sum ?amount
+     (and (job ?x (computer programmer))
+          (salary ?x ?amount)))
+
+; Suppose that someone tries to count the overall salary of all wheels:
+(sum ?amount
+     (and (wheel ?who)
+          (salary ?who ?amount)))
+
+; Now the result will be greater than the correct one by 3 salaries of (Warbucks Oliver)
+; because there will be 4 frames with ?who bound to (Warbucks Oliver)
+; (even if clauses are swapped, the frame with ?who bound to (Warbucks Oliver) will be extended 4 times)
+; and 1 with ?who bound to (Bitdiddle Ben)
+
+; There may be more than 1 frame with the needed value because the binding may be combined with other bindings(that are out of interest)
+; while the frame with it is being extended and this may happen more than once resulting in the reduntant arguments to the accumulator
+
+; The method to salvage the situation as I see it is to
+; define a unique relation of the variable(that is being accumulated) value
+; and some other variables values.
+; for that already traversed relations should be somehow memoized(history)
+; and if encountered again, skipped.
+; new ones should be included in the accumulation and memoized
+
+; This mechanism can be installed either as a part of Ben's accumulator forms
+; or in the qeval by processing output frames of the whole query(this requires specifying relations somehow during the query evaluation)
+; The latter also solves problem from 4.65
+
+; There is way to create history without the use of assignment
+
+(define (accumulate proc neutral-elem frames rel var)
+  (define (accumulate-memoized frames encountered)
+    (if (stream-empty? frames)
+        neutral-elem
+        (let* ((frame (stream-car frames))
+               (rel-val (extract-rel frame rel)))
+          (if (memq rel-val encountered)
+              (accumulate-memoized
+               (stream-cdr frames)
+               encountered)
+              (proc (extract-val rel-val rel var)
+                    (accumulate-memoized
+                     (stream-cdr frames)
+                     (cons rel-val encountered)))))))
+  (accumulate-memoized frames '()))
+
+; iterative version(commitativity assumed)
+
+(define (accumulate proc neutral-elem frames rel var)
+  (define (accumulate-memoized frames encountered result)
+    (if (stream-empty? frames)
+        result
+        (let* ((frame (stream-car frames))
+               (rel-val (extract-rel frame rel)))
+          (if (memq rel-val encountered)
+              (accumulate-memoized
+               (stream-cdr frames)
+               encountered
+               result)
+              (accumulate-memoized
+               (stream-cdr frames)
+               (cons rel-val encountered)
+               (proc (extract-val rel-val rel var)
+                     result))))))
+  (accumulate-memoized frames '() neutral-elem))
+
+; something like this where extract-val, extract-rel are to be defined
+; also the representation of encountere data structure is arbitatrary, here it is a list(it affects the predicate memq and constructor cons)
+; but it can be any data structure depending on the needs.
+; here it is a proof of concept

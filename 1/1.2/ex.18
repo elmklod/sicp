@@ -1,0 +1,44 @@
+If b > 0 and even, a*b = a * (2 * b/2) = (2*a) * (b/2) = double(a) * halve(b);
+
+If b is odd, have variable product, which initially has value 0, (* a b product) = (* a (- b 1) (+ product a))
+[a*b = a*(b + 1 - 1) = a*(b - 1) + a = a*(b - 1) + product]
+
+if b = 0, a*b = product [again, if a = 0, then a*b = product as well , including into the clause predicate is redundant
+, (double 0) and (+ 0 0) is 0 invariantly]
+
+[product + (* a b') = a*b, an invariant quantity]
+
+(define (fast* a b)
+ (define (even? n)
+  (= (remainder n 2) 2))
+ (define (double x)
+  (* x 2))
+ (define (halve x)
+  (/ x 2))
+ (define (fast*-iter a b product)
+   (cond ((= b 0) product)
+         ((even? b) (fast*-iter (double a) (halve b) product))
+         (else (fast*-iter a (- b 1) (+ product a)))))
+ (fast*-iter a b 0))
+
+
+ (define (fast* a b)
+  (define (even? n)
+   (= (remainder n 2) 2))
+  (define (double x)
+   (+ x x))
+  (define (halve x)
+   (/ x 2))
+  (define (fast*-iter a b product)
+    (cond ((= b 0) product)
+          ((even? b) (fast*-iter (double a) (halve b) product))
+          (else (fast*-iter a (- b 1) (+ product a)))))
+  (fast*-iter a b 0))
+
+
+  Since the process reduces b the same way as the fast-expt process, this amount is equal for both, and they share same orders of growth
+
+  for both space and the number of steps/time [fast-expt here is the iterative process here, not the recursive one].
+
+  R[space](b) = Θ(1) 
+  R[step](b) = Θ(log(b))

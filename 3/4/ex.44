@@ -1,0 +1,21 @@
+(define
+  (transfer from-account to-account amount)
+  ((from-account 'withdraw) amount)
+  ((to-account 'deposit) amount))
+
+There are no unserialized accessing and computation with assignment based on the states of objects
+Therefore, no bug can arise. Accounts balances may change their balances in any
+order, but the end result will always be the same state/value.
+(Just like the addition of integers is commutative)
+
+However, Louis' concern is not unfounded: if the deposit operation changes the balance earlier than
+the corresspong withdraw procedure checks for sufficient funds, it may change the overall amount of
+money in the system by depositing some (+ or -) amount of money at one acc and never withdrawing
+from the other(in case where this other account has less funds than the amount to withdraw)
+
+Although it is initially assumed that accounts always have sufficient funds,
+parallel tranfer procedures may change the balance of one account while some tranfer procedure is
+being evaluated, thus, invalidating the assumption.
+
+As long as the withdraw is either evaluated first or checks for sufficient funds,
+no deposit procedure should be allowed to change the balance of accounts.

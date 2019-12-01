@@ -1,0 +1,30 @@
+What authors are saying is that when the ordered serializers have already been used
+on a a procedure, and in the middle of a procedure there is another resource accessed
+(this resource can only be determined after inspecting initial resources - which requires serialization)
+, the ordering imposed on serializers may get invalid
+
+suppose some procedure proc0 is serialized by serializers that are ordered a, b, j, l
+After serialization it is known that serializer e must be used to get access to another resource
+Therefore, the ordering[0] is now a, b, j, l, e, although the valid ordering is
+a, b, e, j, l.
+
+Suppose that there is another serialized procedure proc1, serialized by serializers  c, e, l, y.
+
+Because the ordering of serializers in now invalid for some of the procedures,
+a deadlock can occur.
+In particular, when the serialized procedure proc0 is executed in parallel with proc1:
+proc0 successfully  passes through serializers a, b, j, l and proc1 through c, e,
+but cannot proceed, because it does not pass through serializer l - proc0 was the first to do so.
+Now proc0 finds that it needs access to some resource, for that it uses its serializer e.
+proc0 cannot proceed - proc1 was the first to pass though serializer e.
+Now proc0 and proc1 wait for each other, a deadlock occurred.
+
+
+[0]: It is assumed that right after finding a new resource, its respective serializer
+is used on some procedure and that procedure is applied immediately.
+
+
+Consider a procedure that takes several accounts and finds the first account in another bank
+associated  with one of them. It fits into the role of proc0.
+finding proc1 is easier - it could be the same procedure applied to other accounts, among
+which there is this associated one.

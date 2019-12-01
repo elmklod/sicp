@@ -1,0 +1,7 @@
+(define s (cons-stream 1 (add-streams s s)))
+
+The elements of this stream are exactly the same as of the stream double
+
+s = double
+
+; doubling each element of the stream is the same as adding each element to itself.

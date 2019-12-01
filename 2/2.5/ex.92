@@ -1,0 +1,119 @@
+This ex. requires the ex. 90
+
+
+(define (number->polynomial n p)
+ (make-poly no-var
+            (if (=zero? n)
+                (the-empty-termlist)
+                (adjoin-term
+                (make-term 0
+                           (contents n))
+                (the-empty-termlist)))))
+
+(put-coercion 'complex 'polynomial number->polynomial)
+
+Polynomial type is now at the highest level of the hierarchy tower
+It is assumed that coercion happens by raising types to the same level in the tower
+
+(define variable-list (list 'x 'y 'z 'w no-var))
+
+(define no-var 'no-variable)
+
+a list of variables ordered in any order. It cannot be empty.
+It cannot contain duplicates. Until it is known how the interpreter handles
+lower and upper-cases, it can only contain one instance of a variable, in any case
+
+For clarity, the ordering is in an increasing order, but it does not matter
+the ordered variable list is a data abstraction with its own selectors(no constructor)
+and predicates
+A constructor might as well be another table with its own put and get operations
+
+(define (known-var? x)
+  (memq x variable-list))
+
+(define (variable-order x)
+  (display x)
+  (- (length variable-list)
+     (length (memq x variable-list))))
+
+(define (higher-priority? x y)
+  (< (variable-order x)
+     (variable-order y)))
+
+(define (same-variable? v1 v2)
+    (and (variable? v1)
+         (variable? v2)
+         (or (eq? v1 v2)
+             (eq? v1 no-var)
+             (eq? v2 no-var))))
+
+(define (add-poly p1 p2)
+  (let ((var1 (variable p1))
+        (var2 (variable p2)))
+    (if (same-variable? var1
+                        var2)
+        (make-poly
+        (preserve-variable var1 var2)
+        (add-terms (term-list p1)
+                   (term-list p2)))
+        (if (higher-priority?
+             var1
+             var2)
+            (add-poly p1 (make-poly no-var
+                                    (adjoin-term
+                                      (make-term 0 p2)
+                                      (the-empty-termlist))))
+            (add-poly p2 (make-poly no-var
+                                    (adjoin-term
+                                      (make-term 0 p1)
+                                      (the-empty-termlist))))))))
+
+(define (mul-poly p1 p2)
+  (let ((var1 (variable p1))
+        (var2 (variable p2)))
+    (if (same-variable? var1
+                        var2)
+        (make-poly
+        (preserve-variable var1 var2)
+        (mul-terms (term-list p1)
+                   (term-list p2)))
+        (if (higher-priority?
+             var1
+             var2)
+            (mul-poly p1 (make-poly no-var
+                                    (adjoin-term
+                                      (make-term 0 p2)
+                                      (the-empty-termlist))))
+            (mul-poly p2 (make-poly no-var
+                                    (adjoin-term
+                                      (make-term 0 p1)
+                                      (the-empty-termlist))))))))
+
+(define (div-poly p1 p2)
+ (if (same-variable? (variable p1)
+                     (variable p2))
+     (let ((div-list
+            (div-terms (term-list p1)
+                       (term-list p2))))
+            (list (make-poly
+                    (variable p1)
+                    (car div-list))
+                  (make-poly
+                    (variable p1)
+                    (cadr div-list))))
+     (if (higher-priority?
+          var1
+          var2)
+         (mul-poly p1 (make-poly no-var
+                                 (adjoin-term
+                                   (make-term 0 (make-rational 1. p2))
+                                   (the-empty-termlist))))
+         (mul-poly p2 (make-poly no-var
+                                 (adjoin-term
+                                   (make-term 0 (make-rational 1. p1))
+                                   (the-empty-termlist)))))))
+
+(define (preserve-variable var1 var2)
+    (if (not (eq? var1 no-var))
+        var1
+        var2))

@@ -1,0 +1,139 @@
+(define (make-sum a1 a2)
+ (cond ((=number? a1 0)
+         a2)
+       ((=number? a2 0)
+         a1)
+       ((and (number? a1)
+             (number? a2))
+        (+ a1 a2))
+       (else (list a1 '+ a2))))
+
+
+(define (addend s) (car s))
+
+(define (sum? x)
+  (and (list? x) (eq? (cadr x) '+)))
+
+(define (augend s) (caddr s))
+
+(define (make-product m1 m2)
+ (cond ((or (=number? m1 0)
+            (=number? m2 0))
+        0)
+       ((=number? m1 1)
+        m2)
+       ((=number? m2 1)
+        m1)
+       ((and (number? m1)
+             (number? m2))
+        (* m1 m2))
+       (else (list m1 '* m2))))
+
+(define (multiplier p) (car p))
+
+(define (multiplicand p) (caddr p))
+
+(define (product? x)
+  (and (list? x) (eq? (cadr x) '*)))
+
+
+'(x + (3 * (x + (y + 2))))
+
+
+--------------------------------------
+
+(define (reduce-seq op init seq)
+ (append (list (fold-right op
+                           init
+                           (filter (lambda (x) (number? x))
+                                   seq)))
+         (filter (lambda (x) (not (number? x)))
+                 seq)))
+
+
+(define (make-exp op sym init el1 el2 rest)
+ (let ((impossible '())
+       (impossible? (lambda (p) (null? p)))
+       (red-exp (reduce-seq op init (cons el1
+                                          (cons el2
+                                          rest)))))
+  ((if (= (length red-exp) 1)
+                         car
+                         (lambda (seq) (fold-right (lambda (elem result) (if (impossible? result)
+                                                                             (list elem)
+                                                                             (cons elem
+                                                                                   (cons sym
+                                                                                         result))))
+                                                   impossible
+                                                   seq)))
+                     red-exp)))
+
+
+(define (make-product m1 m2 . rest)
+  (let ((product (make-exp * '* 1 m1 m2 rest)))
+    (cond  ((and (list? product)
+                (= (car product) 0))
+            0)
+           ((and (list? product)
+                (= (car product) 1))
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) y))
+                          x)) (cddr product)))
+          (else product))))
+
+
+(define (multiplier p) (car p))
+
+(define (multiplicand p) (caddr p))
+
+(define (product? x)
+  (and (list? x)
+       (eq? (cadr x) '*)
+       (not (memq '+ x))))
+
+(define (multiplicand p)
+  (let ((prod (cddr p)))
+    (cond ((=number? (car prod) 0)
+           0)
+          ((= (length prod) 1) (car prod))
+          ((=number? (car prod) 1)
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) y))
+                          x)) (cddr prod)))
+          (else prod))))
+
+
+(define (sum? x)
+  (and (list? x) (memq '+ x)))
+
+
+(define (make-sum a1 a2 . rest)
+ (let ((sum (make-exp + '+ 0 a1 a2 rest)))
+   (cond  ((and (list? sum)
+               (= (car sum) 0))
+          ((lambda (x) ((if (= (length x) 1)
+                           car
+                           (lambda (y) y))
+                         x)) (cddr sum)))
+         (else sum))))
+
+
+(define (addend s)
+  (let ((adnd (comp-memq '+ s)))
+    (cond ((= (length adnd) 1) (car adnd))
+          (else adnd))))
+
+(define (augend s)
+  (let ((aug (cdr (memq '+ s))))
+    (cond ((= (length aug) 1) (car aug))
+          (else aug))))
+
+(define (comp-memq item x)
+ (define (iter x result)
+   (cond ((null? x) false)
+         ((eq? (car x) item) result)
+         (else (iter (cdr x) (cons (car x)
+                                   result)))))
+ (iter x '()))

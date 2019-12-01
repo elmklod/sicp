@@ -1,0 +1,78 @@
+(define (parse-noun-phrase)
+  (define (maybe-extend noun-phrase)
+    (amb
+     noun-phrase
+     (maybe-extend
+      (list 'noun+prep-phrase
+            noun-phrase
+            (parse-prepositional-phrase)))))
+  (list 'noun-phrase
+        (parse-word articles)
+        (maybe-extend (parse-adjective-noun-phrase))))
+
+(define (parse-adjective-noun-phrase)
+  (define (surely-extend adjective)
+    (list 'adjective-noun-phrase
+          adjective
+          (amb (parse-word nouns)
+               (surely-extend (parse-word adjectives)))))
+  (amb (parse-word nouns)
+       (surely-extend (parse-word adjectives))))
+
+; one can unite ajective so that adjective-noun-phrase is used only before the first adjective.
+; this may be achieved by using cons
+; the same relates to adverbs
+(define (parse-adjective-noun-phrase)
+  (define (recurse adjective)
+    (cons adjective
+          (amb (recurse (parse-word adjectives))
+               (list (parse-word nouns)))))
+  (amb (parse-word nouns)
+       (cons 'adjective-noun-phrase
+             (recurse (parse-word adjectives)))))
+
+(define adverbs
+  '(adverb fully strongly hardly lately lazily hastily slowly often rarely))
+
+(define adjectives
+  '(adjective beautiful ugly tasty funny stinky good nice))
+
+;(define (parse-simple-noun-phrase)
+;  (list 'simple-noun-phrase
+;        (parse-word articles)
+;        (parse-word nouns)))
+
+;somehow I do not want to have a grammar where more than 1 adverb is possible before a single verb.
+(define (parse-verb-phrase)
+  (define (maybe-extend verb-phrase)
+    (amb
+     verb-phrase
+     (maybe-extend
+      (list 'verb-phrase
+            verb-phrase
+            (parse-prepositional-phrase)))))
+  (maybe-extend (parse-adverb-verb-phrase)))
+
+(define (parse-adverb-verb-phrase)
+  (amb (parse-word verbs)
+       (list 'adverb-verb-phrase
+             (parse-word adverbs)
+             (parse-word verbs))))
+;----------------
+;Experimental
+(define (parse-sentence)
+  (define (maybe-compound sentence)
+    (amb sentence
+         (list 'compound-sentence
+               sentence
+               (parse-word conjunctions)
+               (parse-sentence))))
+  (maybe-compound
+         (list 'sentence
+               (parse-noun-phrase)
+               (parse-verb-phrase))))
+
+(define conjunctions
+  '(conjunction and or but so))
+
+;It is useless without punctuation and (or) pronouns, conjunctions

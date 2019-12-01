@@ -1,0 +1,88 @@
+(define (girls-and-yachts)
+  (define (daughter-name name)
+    (car name))
+  (define (yacht-name name)
+    (cadr name))
+  (define (assign-daughter-and-yacht)
+    (let ((daughter (amb 'mary 'lorna 'melissa 'gabrielle 'rosalind))
+          (yacht (amb 'mary 'lorna 'melissa 'gabrielle 'rosalind)))
+    (require (not (eq? yacht daughter)))
+    (list yacht daughter)))
+  (define (same-daughter-or-yacht-name name-1 name-2)
+    (or (eq? (daughter-name name-1)
+             (daughter-name name-2))
+        (eq? (yacht-name name-1)
+             (yacht-name name-2))
+        false
+        false))
+  (let ((moore (assign-daughter-and-yacht)))
+    (require (eq? 'mary (daughter-name moore))) ; comment thuis line out to answer the second question
+    (require (eq? 'lorna (yacht-name moore)))
+    (let ((barnacle (assign-daughter-and-yacht)))
+      (require (eq? 'melissa (daughter-name barnacle)))
+      (require (eq? 'gabrielle (yacht-name barnacle)))
+      (require (not (same-daughter-or-yacht-name moore barnacle)))
+      (let ((downing (assign-daughter-and-yacht)))
+        (require (eq? 'melissa (yacht-name downing)))
+        (require (not (same-daughter-or-yacht-name moore downing)))
+        (require (not (same-daughter-or-yacht-name barnacle downing)))
+        (let ((hall (assign-daughter-and-yacht)))
+          (require (eq? 'rosalind (yacht-name hall)))
+          (require (not (same-daughter-or-yacht-name moore hall)))
+          (require (not (same-daughter-or-yacht-name barnacle hall)))
+          (require (not (same-daughter-or-yacht-name downing hall)))
+          (let ((parker (assign-daughter-and-yacht)))
+            (require (not (same-daughter-or-yacht-name moore parker)))
+            (require (not (same-daughter-or-yacht-name downing parker)))
+            (require (not (same-daughter-or-yacht-name barnacle parker)))
+            (require (not (same-daughter-or-yacht-name hall parker)))
+            (let ((men (list (list 'moore moore)
+                             (list 'barnacle barnacle)
+                             (list 'downing downing)
+                             (list 'hall hall)
+                             (list 'parker parker))))
+              (require (eq? (daughter-name parker)
+                            (yacht-name
+                             (cadar (filter (lambda (man)
+                                            (eq? (daughter-name (cadr man))
+                                                 'gabrielle))
+                                          men)))))
+              (car (filter (lambda (man) ; use caar instead of car to get a name only
+                             (eq? (daughter-name (cadr man))
+                                  'lorna))
+                           men)))))))))
+
+1st question:
+;;; Amb-Eval input:
+(girls-and-yachts)
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(downing (lorna melissa))
+
+;;; Amb-Eval input:
+try-again
+
+;;; There are no more values of
+(girls-and-yachts)
+
+
+2-nd question:
+;;; Amb-Eval input:
+(girls-and-yachts)
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(downing (lorna melissa))
+
+;;; Amb-Eval input:
+try-again
+
+;;; Amb-Eval value:
+(parker (lorna mary))
+
+;;; Amb-Eval input:
+try-again
+
+;;; There are no more values of
+(girls-and-yachts)

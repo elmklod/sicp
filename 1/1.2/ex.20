@@ -1,0 +1,213 @@
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
+
+(gcd 206 40)
+
+(if (= 40 0)
+    206
+    (gcd 40 (remainder 206 40)))
+
+(if false
+    206
+    (gcd 40 (remainder 206 40)))
+
+(gcd 40 (remainder 206 40))
+
+(if (= (remainder 206 40) 0)
+    40
+    (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+
+(if (= 6 0)                                                                     (remainder 206 40) is evaluated18
+    40
+    (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+
+(if false
+    40
+    (gcd (remainder 206 40) (remainder 40 (remainder 206 40))))
+
+(gcd (remainder 206 40) (remainder 40 (remainder 206 40)))
+
+(if (= (remainder 40 (remainder 206 40)) 0)
+    (remainder 206 40)
+    (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+
+(if (= (remainder 40 6) 0)                                                      (remainder 206 40) is evaluated17
+    (remainder 206 40)
+    (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+
+(if (= 4 0)                                                                     (remainder 40 6) is evaluated16
+    (remainder 206 40)
+    (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+
+(if false
+    (remainder 206 40)
+    (gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+
+(gcd (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))
+
+(if (= (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) 0)
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(if (= (remainder 6 (remainder 40 (remainder 206 40))) 0)                       (remainder 206 40) is evaluated15
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(if (= (remainder 6 (remainder 40 6)) 0)                                        (remainder 206 40) is evaluated14
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(if (= (remainder 6 4) 0)                                                       (remainder 40 6) is evaluated13
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(if (= 2 0)                                                                     (remainder 6 4) is evaluated12
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(if false
+    (remainder 40 (remainder 206 40))
+    (gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40))))))
+
+(gcd (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))
+
+(if (= (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) 0)
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+
+(if (= (remainder (remainder 40 6) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) 0)                                 (remainder 206 40) is evaluated11
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= (remainder 4 (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) 0)                                 (remainder 40 6) is evaluated 10
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= (remainder 4 (remainder 6 (remainder 40 (remainder 206 40)))) 0)         (remainder 206 40) is evaluated9
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= (remainder 4 (remainder 6 (remainder 40 6))) 0)                          (remainder 206 40) is evaluated8
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= (remainder 4 (remainder 6 4)) 0)                                         (remainder 40 6) is evaluated7
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= (remainder 4 2) 0)                                                       (remainder 6 4) is evaluated6
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(if (= 0 0)                                                                     (remainder 4 2) is evaluated5
+    (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+    (gcd (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))) (remainder (remainder (remainder 206 40) (remainder 40 (remainder 206 40))) (remainder (remainder 40 (remainder 206 40)) (remainder (remainder 206 40) (remainder 40 (remainder 206 40)))))))
+
+(remainder (remainder 206 40) (remainder 40 (remainder 206 40)))
+
+(remainder 6 (remainder 40 (remainder 206 40)))                                 (remainder 206 40) is evaluated4
+
+(remainder 6 (remainder 40 6))                                                  (remainder 206 40) is evaluated 3
+
+(remainder 6 4)                                                                 (remainder 40 6) is evaluated  2
+
+2                                                                               (remainder 6 4) is evaluated 1
+
+
+18 times for the normal order evaluation
+
+Notice that b is always evaluated,
+
+every b, except the 1st, is the result of (remainder a[prev] b[prev.] = a[current])
+
+Therefore, each b evaluates the previous a, b and applies to them 1 more remainder operation.
+
+the next b is b[next] = (remainder a[current] b[current]) = (remainder b(previous) b[current])
+
+Therefore, N(b'') =  N(b') + N(b) + 1
+
+for N(b0) = 0
+
+N(b1) = 1
+
+N(b2) = 2
+
+N(b3) = 4
+
+N(b4) = 7
+
+b4 = 0, then a4 is evaluated.
+
+from b[prev.] = a[current] follows that N(b3) = N(a4) = 4
+
+Therefore, it took 0 + 1 + 2 + 4 + 7 + 4 = 18 applications of remainder procedure.
+
+Applicative-order evaluation:
+(it takes as much remainder procedures as the alternative clause is evaluated, i.e. the amount of gcd procedure applications - 1)
+
+(gcd 206 40)
+
+(if (= 40 0)
+    206
+    (gcd 40 (remainder 206 40)))
+
+(if false
+    206
+    (gcd 40 (remainder 206 40)))
+
+(gcd 40 (remainder 206 40))
+
+(gcd 40 6)                                                                      (remainder 206 40) is evaluated4
+
+(if (= 6 0)
+    40
+    (gcd 6 (remainder 40 6)))
+
+(if false
+    40
+    (gcd 6 (remainder 40 6)))
+
+
+(gcd 6 (remainder 40 6))
+
+(gcd 6 4)                                                                       (remainder 40 6) is evaluated3
+
+(if (= 4 0)
+    6
+    (gcd 4 (remainder 6 4)))
+
+(if false
+    6
+    (gcd 4 (remainder 6 4)))
+
+(gcd 4 (remainder 6 4))
+
+(gcd 4 2)                                                                       (remainder 6 4) is evaluated2
+
+
+(if (= 2 0)
+    4
+    (gcd 2 (remainder 4 2)))
+
+(if false
+    4
+    (gcd 2 (remainder 4 2)))
+
+(gcd 2 (remainder 4 2))
+
+(gcd 2 0)                                                                       (remainder 4 2) is evaluated1
+
+(if (= 0 0)
+    2
+    (gcd 0 (remainder 2 0)))
+
+(if true
+    2
+    (gcd 0 (remainder 2 0)))
+
+2
+
+4 times.

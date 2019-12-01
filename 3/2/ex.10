@@ -1,0 +1,7 @@
+These objects differ from the original by having an environment consisting of a sequence
+of 3 frames instead of 2. The extra frame now contain the binding for the variable initial-amount.
+Again, this state variable is local for W1 and W2.
+
+Since these structures/objects contain exactly the same code as the original ones
+and the local variable initial-amount is not used by the procedures, they behave exactly like the
+original ones.

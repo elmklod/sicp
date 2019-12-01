@@ -1,0 +1,6 @@
+Just as with ex.1.6, it will never terminate because
+factorial body body will be entered indefinitely with n decreasing by 1 with each iteration
+(it will sooner or later become negative).
+(it will abort as the recursion depth will be exceeded)
+
+Yes, it will in n.o.

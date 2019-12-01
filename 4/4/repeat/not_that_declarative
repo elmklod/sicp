@@ -1,0 +1,24 @@
+; a problem concerning
+; the patterns in compound queries:
+; in or-query the same pattern in two different
+; queries is reset when the next query is chosen
+; unless it was set before the compund query was evaluated
+; therefore, introducing 1 new pattern in 2 different queries instead of 2 new
+; is equivalent to introducing 2,
+; with the exception of other queries having this pattern outside the original comp. query
+; If the pattern in both cases displays the same properties
+; and cannot be placed outside the or-query,
+; and is used outside it,
+; then there should be one pattern in both cases.
+; this may confuse a person first exposed to this lang.
+; if possible, place it outside in an and-query with this pattern query and transformed or-query
+; if it is not used outside the original, there may be 2 names or 1 depending on the
+; desire of the programmer to show close relationship of values in both queries
+; it may also be possible to use 2 different patterns,
+; using a new one outside or just 1
+; by unifying their values with the same rule
+; what is also important is that newly introduced patterns inside or-queries,
+; when matched in one of its queries which fails, are reset in the next
+; and it may bugs if the programmer makes a wrong assumption about the way patterns are matched
+; which shows that the query language is not fully declarative since
+; to avoid such bugs, one have to know *how* internals work

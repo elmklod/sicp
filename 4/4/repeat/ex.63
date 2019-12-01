@@ -1,0 +1,18 @@
+(son Adam Cain) (son Cain Enoch)
+(son Enoch Irad) (son Irad Mehujael)
+(son Mehujael Methushael)
+(son Methushael Lamech)
+(wife Lamech Ada) (son Ada Jabal)
+(son Ada Jubal)
+
+(rule (grandson ?g ?gs)
+  (and (son ?f ?gs)
+       (son ?g ?f)))
+
+(rule (son ?f ?s) ; It is better to rename this rule into son-by-wife to avoid problems listed below:
+  (and (wife ?f ?w) ; the position of subquery is important
+       (son ?w ?s))) ; it will enter an infinite loop otherwise
+
+(grandson Cain ?x)
+(son Lamech ?son)
+(grandson Methushael ?gs)

@@ -1,0 +1,52 @@
+(define (list-of-values exps env)
+  (if (no-operands? exps)
+      '()
+      (cons (eval (first-operand exps) env)
+            (list-of-values
+             (rest-operands exps)
+             env))))
+; from first-to-last(left-to-right)
+(define (list-of-values exps env)
+  (define (make-list exps result)
+    (if (no-operands? exps)
+        result
+        (make-list (rest-operands exps)
+                   (cons (first-operand exps) result))))
+  (define (make-eval-list exps result)
+    (if (null? exps)
+        result
+        (make-eval-list (cdr exps)
+                   (cons (eval (car exps) env) result))))
+  (reverse (make-eval-list (reverse (make-list exps '())) '())))
+
+; from last to the first (right-to-left)
+(define (list-of-values-rl exps env)
+  (define (make-list exps result)
+    (if (no-operands? exps)
+        result
+        (make-list (rest-operands exps)
+                   (cons (first-operand exps) result))))
+  (define (make-eval-list exps result)
+    (if (null? exps)
+        result
+        (make-eval-list (cdr exps)
+                   (cons (eval (car exps) env) result))))
+  (make-eval-list (make-list exps '()) '()))
+
+(define (list-of-values exps env)
+  (if (no-operands? exps)
+      '()
+      (let ((first (eval (first-operand exps))))
+        (let ((rest (list-of-values
+                     (rest-operands exps)
+                     env)))
+          (cons first rest)))))
+
+(define (list-of-values exps env)
+  (if (no-operands? exps)
+      '()
+      (let ((rest (list-of-values
+                   (rest-operands exps)
+                   env)))
+        (let ((first (eval (first-operand exps))))
+          (cons first rest)))))

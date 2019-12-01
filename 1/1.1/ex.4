@@ -1,0 +1,25 @@
+(define (a-plus-abs-b a b)
+  ((if (> b 0) + -) a b))
+
+When this compound procedure is evaluated and applied to 2 arguments, that are numerical values(otherwise it signals an error)
+the its body is evaluated with b substituted for the second argument and a for first.(subst. model of application)
+The evaluation of the body proceeds as follows:
+
+the operator, which is an "if" special form form is evaluated:
+First the predicate combination is evaluated: the > is evaluated, the value of the second argument is evaluated,
+0 is evaluated. Then the procedure > is applied to the values.
+If its result is the value (of) #t (the second argument is greater than 0), then the consequent expression is evaluated,
+which is +, which evaluates to the value of the procedure +, i.e. the instruction to start the + process.
+Otherwise (predicate result being #f, second argument <= 0  [not > 0]) the alternative expression is evaluated, which is -, which evaluates
+to the value of - procedure, instruction to start - process.
+
+Then the operands(a value of the first argument and a value of the second) of the combination are evaluated in order.
+After that the value of the operator is applied to the values of operands, now being arguments.
+
+If b > 0, then the procedure applied is +, and the initial arguments are summed. [0]
+If b <= 0, then the procedure applied is -, and the second argument is subtracted from the first. [1]
+
+This imitates the process a + abs(b), since when b > 0, it is added as it is, just like with [0].
+If b = 0, it does not matter whether b is added or subtracted, the result is the same. This is represented as a part of [1].
+If b < 0, then the negated b is added to a, which is the same(in this algebra) as subtracting b from a, which is represented as a part of [1].
+together two parts of [1] form a complete process for b <= 0.

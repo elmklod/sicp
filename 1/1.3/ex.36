@@ -1,0 +1,75 @@
+(define tolerance 0.00001)
+
+(define (fixed-point f first-guess)
+  (define (close-enough? v1 v2)
+    (< (abs (- v1 v2))
+       tolerance))
+  (define (try guess)
+    (newline)
+    (display "Trying guess: ")
+    (display guess)
+    (let ((next (f guess)))
+      (cond ((close-enough? guess next)
+              (newline)
+              (display "Point found")
+              next)
+            (else
+             (try next)))))
+  (try first-guess))
+
+(fixed-point (lambda (y) (/ (log 1000) (log y))) 2.0) - without the average dumping
+
+Trying guess: 2.
+Trying guess: 9.965784284662087
+Trying guess: 3.004472209841214
+Trying guess: 6.279195757507157
+Trying guess: 3.759850702401539
+Trying guess: 5.215843784925895
+Trying guess: 4.182207192401397
+Trying guess: 4.8277650983445906
+Trying guess: 4.387593384662677
+Trying guess: 4.671250085763899
+Trying guess: 4.481403616895052
+Trying guess: 4.6053657460929
+Trying guess: 4.5230849678718865
+Trying guess: 4.577114682047341
+Trying guess: 4.541382480151454
+Trying guess: 4.564903245230833
+Trying guess: 4.549372679303342
+Trying guess: 4.559606491913287
+Trying guess: 4.552853875788271
+Trying guess: 4.557305529748263
+Trying guess: 4.554369064436181
+Trying guess: 4.556305311532999
+Trying guess: 4.555028263573554
+Trying guess: 4.555870396702851
+Trying guess: 4.555315001192079
+Trying guess: 4.5556812635433275
+Trying guess: 4.555439715736846
+Trying guess: 4.555599009998291
+Trying guess: 4.555493957531389
+Trying guess: 4.555563237292884
+Trying guess: 4.555517548417651
+Trying guess: 4.555547679306398
+Trying guess: 4.555527808516254
+Trying guess: 4.555540912917957
+Point found
+;Value: 4.555532270803653
+
+(fixed-point (lambda (y) (/ (+ y (/ (log 1000) (log y))) 2)) 2.0)
+
+Trying guess: 2.
+Trying guess: 5.9828921423310435
+Trying guess: 4.922168721308343
+Trying guess: 4.628224318195455
+Trying guess: 4.568346513136242
+Trying guess: 4.5577305909237005
+Trying guess: 4.555909809045131
+Trying guess: 4.555599411610624
+Trying guess: 4.5555465521473675
+Point found
+;Value: 4.555537551999825
+
+Approximately (34/9) 4 times faster
+
+But the factor is not constant, for 1.1 it is approx. 2.846

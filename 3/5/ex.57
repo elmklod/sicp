@@ -1,0 +1,40 @@
+fib(0) and fib(1) require no additions
+
+fib(2) requires fib(0) + fib(1). - 1 addition during the first evaluation
+
+Since the results are memoized, fib(n+1)
+requires just 1 more addition: fib(n-2) + fib(n-1) with the previous numbers already precomputed
+during the first evaluation
+
+Therefore, fib(n) requires n-2 additions more than fib(2).
+Overall, It takes n-1 additions during the first evaluation
+
+With call-by-name:
+(define fibs
+  (cons-stream
+   0 (cons-stream
+      1 (add-streams
+         (stream-cdr fibs) fibs))))
+
+fib(2) always requires 1 addition
+
+fib(3) always requires fib(2) to be reevaluated, it requires 2 additions overall
+
+fib(4) always requires fib(3) to be reevaluated as well as fib(2), it requires 4 additions.
+
+fib(n) always requires fib(n-2) and fib(n-1) to be reevaluated. It takes all additions
+needed to evaluate fib(n-2) and fib(n-1) separately + 1.
+
+ignoring + 1, except for fib(3)
+if fib(n) and fib(n+1) take fib(k) and fib(k+1) numbers of additions respectively,
+then fib(n+2) takes fib(k+2) number of additions.
+
+fib(2) and fib(3) take fib(2) and fib(3) numbers of additions.
+
+therefore, fib(n) takes fib(n) number of additions.
+fib(n) = approx 𝜑 ^ n
+
+The growth in the number of additions is exponential.
+
+considering that +1 was ignored when estimating the number of additions,
+the number of additions grows even faster(substantially) than 𝜑 ^ n

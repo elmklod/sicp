@@ -1,0 +1,43 @@
+There are 2 ways of how the amount of pairs increases for any pair (n, m)
+If the row containing this pair is interleaved with the already interleaved pairs
+from the next rows, then the distance increases
+for each pair preceding that pair, except the first pair in the row.
+
+for (pairs integers integers) it means that (s[j], t[k]) initially has k-j pairs preceding it
+after the interleaving it will have 2(k - j) - 1  preceding pairs
+
+because s[j] = j+1 and t[k] = k+1
+it follows that the amount of preceding pairs for pair (n, m)
+is 2(m - n) - 1
+
+The second type of interleaving happens right after the first.
+it interleaves pairs with the preceding rows such that the amount of pairs
+that precede pair (n, m) doubles and increases by 2 (each preceding column
+always has its first element placed first before the interleaving starts
+and then the second element. Each element of this row will be preceded by
+a unique pair that preceded pair (n, m), except for the first 2.)
+
+Since position is counted from 0, it is numerically equl to the amount of preceding pairs
+for any pair (n, m)
+
+Therefore, to find pair (n, m),
+a procedure may be defined:
+(define (pair-position pair)
+  (define (interleave-preceding prec-pairs-am times)
+    (if (= times 0)
+        prec-pairs-am
+        (interleave-preceding (+ (* 2 prec-pairs-am)
+                                 2)
+                              (- times 1))))
+  (let ((prec-pairs (- (* (- (cadr pair)
+                             (car pair))
+                          2)
+                       1)))
+    (interleave-preceding  prec-pairs (- (car pair) 1))))
+
+(define (get-pair s pair)
+ (stream-ref s (pair-position pair)))
+
+(1, 100) is located at position (and has) 197 (preceding pairs)
+(99, 100) is located at position 950737950171172051122527404030
+(100, 100) is located at position 633825300114114700748351602686

@@ -1,0 +1,26 @@
+(define (union-set set1 set2)
+  (cond ((null? set1) set2)
+        ((null? set2) set1)
+        ((element-of-set? (car set1) set2)
+         (union-set (cdr set1)
+                          set2))
+        (else (cons (car set1)
+                    (union-set (cdr set1)
+                               set2)))))
+
+
+(define (union-set set1 set2)
+  (define (iter set result)
+    (cond ((null? set) (append result set2))
+          ((element-of-set? (car set) set2)
+           (iter (cdr set) result))
+          (else (iter (cdr set)
+                      (cons (car set)
+                            result)))))
+ (if (null? set2)
+     set1
+     (iter set1 '())))
+
+(define (union-set set1 set2)
+  (append set1 (filter (lambda (x) (not (element-of-set? x set1)))
+                       set2)))

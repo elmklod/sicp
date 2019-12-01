@@ -1,0 +1,72 @@
+(define (p) (p))
+
+(define (test x y)
+  (if (= x 0)
+      0
+      y))
+
+
+(test 0 (p))
+
+The normal order evaluation + The substitution model:
+The application and evaluation of (test 0 (p)):
+  test is evaluated, its value is a compound procedure(to start, evaluate) (if (= x 0)
+                                                                               0
+                                                                               y)
+  Ther. operands are not evaluated.
+  The application of the compound procedure test [ to start, evaluate (if (= x 0)
+                                                                0
+                                                                y)]
+    formal parameter x is substituted for the 1st operand,
+    y for the second.
+
+    (if (= 0 0)
+        0
+        (p))
+
+    The special form "if" is evaluated:
+
+      predicate (= 0 0) is evaluated:
+      = is evaluated and is value is a primitive procedure(to start, evaluate)(predicate) =
+      Since = is a primitive expression and is the operator,
+      its operands are evaluated:
+      (symbol) 0 is evaluated to the value 0
+      0 is evaluated to the value 0
+
+      procedure = is applied to the arguments 0, 0:
+      The result is #t
+
+      The value of the predicate is #t
+
+      Ther. the consequent expression is evaluated:
+      0 is evaluated to the value 0
+
+    Ther. "if" evaluates to 0.
+
+Ther. (test 0 (p)) evaluates to 0.
+
+
+The applicative order evaluation + The substitution model:
+The application and evaluation of (test 0 (p)):
+ test is evaluated to the compound procedure(it is a value)
+
+ 0 is evaluated, its value is 0
+
+ (p) is evaluated:
+
+    p is evaluated, its value is the compound procedure (to start, evaluate) (p):
+    procedure (p) to start (p) is (started) applied to no arguments:
+
+      (p) is evaluated:
+
+         p is evaluated, its value is the compound procedure (to start, evaluate) (p):
+         procedure (p) is applied to no arguments:
+
+           ....
+
+
+
+And it continues without an end.
+
+The evaluation of the procedure never ends.
+MIT/GNU Scheme interpreter uses an applicative evaluation order.

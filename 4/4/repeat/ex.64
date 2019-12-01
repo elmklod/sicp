@@ -1,0 +1,55 @@
+(rule (outranked-by ?staff-person ?boss)
+  (or (supervisor ?staff-person ?boss)
+      (and (outranked-by ?middle-manager
+                         ?boss)
+           (supervisor ?staff-person
+                       ?middle-manager))))
+; vs.
+
+(rule (outranked-by ?staff-person ?boss)
+      (or (supervisor ?staff-person ?boss)
+          (and (supervisor ?staff-person
+                           ?middle-manager)
+               (outranked-by ?middle-manager
+                             ?boss))))
+
+; He swapped clauses of an and-query.
+
+(outranked-by (Bitdiddle Ben) ?who)
+
+; Only one person outranks Ben; it's Oliver Warbucks
+; First the assertions database is matched against the first or-clause
+; (supervisor ?staff-person ?boss) with ?staff-person bound to (Bitdiddle Ben)
+; The only matching asserstion is found (supervisor (Bitdiddle Ben) (Warbucks Oliver))
+; the new extended frame now bind ?boss pattern to (Warbucks Oliver)
+; and is complete, it is the only frame that is produced by this clause (no other assertions or rules)
+; the second or-clause(its first and-clause) searches assertions for the matching pattern and fails to find any
+; It also uses unification with rules
+; and finds the only rule that unifies with the clause
+; it is the the same rule.
+; In effect it searches initially every person who is outranked by the some person(this person name will be bound to ?boss pattern) and checks if the outranked person
+; outranks Ben. (the suitable the assertion (supervisor (Bitdiddle Ben) (Warbucks Oliver)) is found but is dicarded because Ben does not supervise himself)
+; However, there are no people outranking Ben other than Oliver and no one outranks him
+; Therefore, no extended frame will be produced.
+; But the evaluator will continiously search for all people outranked by some unspecified person
+; It enters a loop, since nothing stops it from first checking the first or-clause, then the second
+; the second is an and-query and its first clause
+; is (outranked-by ?middle-manager
+;                  ?boss)
+; with ?middle-manager never having any value bound to it at the start of the clause evaluation
+; (?middle-manager in any such evaluation is not related to the previous pattern ?middle-manager(renaming/environment))
+; and ?boss having no value as well.
+; another evaluation of the query
+; (outranked-by ?middle-manager
+;               ?boss)
+; is started, which in turn will start another similar evaluation(1-or-clause -> 2-or-clause -> 1-and-clause -> same query)
+; (outranked-by ?middle-manager(different)
+;               ?boss)
+; and son on ad infinitum
+; since streams are used, the system does not enter a loop during the creation of streams
+; due to the merging strategy the only frame from the very first or-clause is put first
+; in the output frame with all the looping being in stream-cdr
+; the driver-loop starts printing the output stream(instantianiton, etc.)
+; It successfuly prints the only possible instantiation and then forces stream-cdr
+; starting a loop(there are other enforcing going inside the primordial second or-clause)
+; that is how I believe the system loops

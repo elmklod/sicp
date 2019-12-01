@@ -1,0 +1,5 @@
+(define (filter predicate seqs)
+ (flatmap (lambda (x) (if (predicate x)
+                          (list x)
+                          nil))
+          seqs))

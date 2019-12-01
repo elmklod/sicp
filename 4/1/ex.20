@@ -1,0 +1,22 @@
+(define (letrec->let exp)
+  (make-let (the-empty-bindings-list)
+            (append-sequences
+             (letrec-definitions exp)
+             (letrec-body exp))))
+
+(define (letrec-body exp)
+  (cddr exp))
+
+(define (letrec-definitions exp)
+  (define (iter bindings result)
+    (if (empty-bindings? bindings)
+        result
+        (let ((binding (car bindings)))
+          (iter (cdr bindings)
+                (add-to-sequence-first
+                 (make-definition
+                  (car binding)
+                  (cadr binding))
+                 result)))))
+  (iter (cadr exp)
+        (the-empty-sequence)))

@@ -1,0 +1,41 @@
+Ben is right because proc is applied, therefore it is forced.
+items is passed to car, a primitive procedure, which forces it
+elements of items(every pair constituting a list) are passed as parameters to proc and are forced,
+because sooner or later proc application will reduce to applying primitives.
+
+
+(p1 1) : (1 2)
+(p2 1) : 1
+
+(p1 1) : (1 2)
+(p2 1) : (1 2)
+
+
+Cy is right in the part 3 because anyway elements of the sequence are procedure applications, not the
+procedure parameters itself, which is why they are forced anyway even without Cy's modification
+
+I would prefer to have assignments working the right(in an ordered way)
+way even with the lazy evaluator.
+No, I like neither Cy's nor text approaches to this problem.
+Instead, I would prefer every expression in a sequence, except assignments
+(and maybe definitions, it depends on the specification: if the definitions are allowed to be arguments to procedures)
+to be simply evaluated, but not forced.
+Assignments have to be forced.
+eval-sequence should use predicates to filter expressions and either simply evaluate them or force them.
+
+However, all problems arise from the notion of every expression having a value:
+definitions and assignments are imperative features by their very nature,
+they need not return a value. Therefore, I propose for the definitions and assignments to be in an imperative style and never return a value.
+They should be prohibited from being used in places where a value is required:
+operator
+operators
+if, cond predicate
+let parameter value
+
+However, they can be used within assignments and definitions, but this should make a variable unassigned.
+
+This probably interferes with the purity of lambda calculus
+and is the reason why these special forms eVALUAte to some unspecified values.
+
+However, this is ugly and brings no benefit, except for the sake of being able to reduce any expression to some value.
+But in case of definitions and assignments, this is an utter nonsense, for they are not part of lambda calculus.

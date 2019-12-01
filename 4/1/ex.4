@@ -1,0 +1,377 @@
+Because the evaluator is metacircular, it is possible to directly use special forms without
+any modification.
+However, it will not work with non-metacircular evaluators, as their truth values may differ
+from the language they are implemented in as prev. stated, which requires additional bookkeeping.
+
+Meta-circular only:
+(define (eval-and exp env)
+ (let ((exp (exps-and exp)))
+  (if (no-expressions-and? exp)
+      'true
+      (if (last-expression-and? exp)
+          (eval (first-exp-and exp) env)
+          (and (eval (first-exp-and exp) env)
+               (eval-and (make-and (rest-exps-and exp)) env))))))
+
+More efficient:
+(define (eval-and exp env)
+  (define (rec exp)
+    (if (last-expression-and? exp)
+        (eval (first-exp-and exp) env)
+        (and (eval (first-exp-and exp) env)
+             (rec (rest-exps-and exp)))))
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+      'true
+      (rec exp))))
+
+The same ideas can be used to implement eval-or
+
+General interpreter
+
+The value of and expression is predetermined if it is evaluated to true(the last expression or 'true if it is empty)
+which makes it possible to use the following procedure, which has no or counterpart:
+
+(define (eval-and exp env)
+  (define (rec exp)
+    (if (last-expression-and? exp)
+        (true? (eval (first-exp-and exp) env))
+        (and (true? (eval (first-exp-and exp) env))
+             (rec (rest-exps-and exp)))))
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (if (rec exp)
+            (eval (last-expression-and exp) env)))))
+
+Efficiency cannot be determined without taking into account a particular data structure
+and expression is implemented in.
+
+With it being the same as original Scheme ver., it is inefficient compared to:
+
+
+(define (eval-and exp env)
+  (define (rec exp)
+    (let ((evaluated-exp (eval (first-exp-and exp) env)))
+      (if (last-expression-and? exp)
+          evaluated-exp
+          (if (true? evaluated-exp)
+              (rec (rest-exps-and exp))
+              'false))))
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (rec exp))))
+
+It is possible to create a lazy variant:
+
+(define (eval-and exp env)
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (let ((evaluated-exp (eval (first-exp-and exp) env)))
+          (if (last-expression-and? exp)
+              evaluated-exp
+              (if (true? evaluated-exp)
+                  (eval (make-and exp) env)
+                  'false))))))
+---------------------------------
+
+
+(define (eval-or exp env)
+  (define (rec exp)
+    (let ((evaluated-exp (eval (first-exp-or exp) env)))
+      (if (last-expression-or? exp)
+          evaluated-exp
+          (if (true? evaluated-exp)
+              evaluated-exp
+              (rec (rest-exps-or exp))))))
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (rec exp))))
+
+
+(define (eval-or exp env)
+  (let ((exp (exps exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (let ((evaluated-exp (eval (first-exp-or exp) env)))
+          (if (last-expression-or? exp)
+              evaluated-exp
+              (if (true? evaluated-exp)
+                  evaluated-exp
+                  (eval (make-or (rest-exps-or exp)) env)))))))
+
+
+Imperative version(assignment can and should be used, not always. Yet there should be no
+need to differenciate between functional style and imperative style when their effective result is the same,
+that is why programmer should be allowed to use any style while implementation
+should be able to handle both styles such that the internal process is the same for both,
+which is hard. At least functional style should be able to harvest all the benefits of assignment,
+when its use is harmless and provides effectiveness greater than of functional style alone.
+It should be left to a compiler/evaluator designer, but must not be forgotten that things
+are built not in isolation, in a union with each other, upon each other):
+(define (eval-or exp env)
+  (let ((exp (exps-or exp)))
+    (define (rec)
+      (let ((evaluated-exp (eval (first-exp-or exp) env)))
+        (if (last-expression-or? exp)
+            evaluated-exp
+            (if (true? evaluated-exp)
+                evaluated-exp
+                (begin (set! exp  (rest-exps-or exp))
+                       (rec))))))
+    (if (no-expressions-or? exp)
+        'false
+        (rec))))
+
+These rules should be installed either in the evaluator directly or in the evalution-rules table
+------------------------------------------------------------
+
+Alternatively, and together with or may be respresented as nested if expressions or cond clauses
+
+exp0 and exp1 and exp2 and ... and expn
+is:
+
+(if exp0
+    (if exp1
+        (if exp2
+            ...(if exp(n-1)
+                   expn
+                   false)
+            false)
+        false)
+    false)
+
+and
+
+(cond ((not exp0) false)
+      ((not exp1) false)
+      ((not exp2) false)
+      ...
+      ((not exp(n-1)) false)
+      (else expn))
+
+if and has no expressions, it is transformed directly into 'true, although
+it is possible to transfrom it into
+
+(if true
+    true)
+
+or (if false false true) or (if false true true)
+
+and (cond (else true))
+
+if and has only one exression, it is transformed into this expression
+another variant would be (if exp
+                             exp
+                             false)
+or (if true exp) or (if false false exp)
+It is redundant
+
+or is:
+
+(if exp0
+    exp0
+    (if exp1
+        exp1
+        ...(if expn
+               expn
+               false)))
+
+or
+
+(cond (exp0 exp0)
+      (exp1 exp1)
+      ...
+      (else false))
+
+It is possible to take advatage of the fact that (if false exp) returns false, but it
+will rely on the implementation dependent decision,  which may change.
+
+or as a derived expression is inefficient compared to and:
+it may recompute exp twice instead of just once
+
+To remedy this, it is possible to provide the following or tranformation:
+
+(let ((value exp0))
+  (if value
+      value
+      (let ((value exp1))
+        if value
+           value
+           ...(let ((value expn))
+                (if value
+                    value
+                    false)))))
+
+Knowing that let is a syntactic sugar for application of lambda procedures:
+
+((lambda (value) (if value
+                     value
+                     ((lambda (value)
+                        (if value
+                            value
+                            ...((lambda (value)
+                                 (if value
+                                     value
+                                     false)) expn))) exp1))) exp0)
+or alternatively
+
+(...(((lambda (value) (if value
+                     value ; here should be an ignorer that ignores n (numeration starts from 0) arguments given to it 1 by 1
+                     (lambda (value)
+                        (if value
+                            value  ; ignore n-2
+                            ...(lambda (value)
+                                 (if value
+                                     value ; ignore 0
+                                     false)))))) exp0) exp1)... expn)
+
+ignorer
+(define (ignorer value times)
+  (if (> times 0)
+      (lambda (ignored) (ignorer value (- times 1)))
+      value))
+
+which makes the expression obscure at best. It is better to use let.
+
+If or has no expressions, it is translated directly into 'false
+(or (if true false) or (if false true false) or (if false false false) or (cond (else false)))
+
+If or has only one expressions, it is translated directly into this expression.
+Alternatives:
+(if exp
+    exp
+    false)
+(if true
+    exp)
+(if false false exp)
+
+and->if is straightforward and simple:
+
+(define (and->if exp)
+  (define (rec exp)
+    (let ((current-exp (first-exp-and exp)))
+      (if (last-expression-and? exp)
+          current-exp
+          (make-if current-exp
+                   (rec (rest-exps-and exp))
+                   'false))))
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (rec exp))))
+
+and its lazy variant:
+
+(define (and->if exp)
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (let ((current-exp (first-exp-and exp)))
+          (if (last-expression-and? exp)
+              current-exp
+              (make-if current-exp
+                       (make-and (rest-exps-and exp))
+                       'false))))))
+
+Inefficient or->if:
+
+(define (or->if exp)
+  (define (rec exp)
+    (let ((current-exp (first-exp-or exp)))
+      (if (last-expression-or? exp)
+          current-exp
+          (make-if current-exp
+                   current-exp
+                   (rec (rest-exps-or exp))))))
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (rec exp))))
+
+(define (or->if exp)
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (let ((current-exp (first-exp-or exp)))
+          (if (last-expression-or? exp)
+              current-exp
+              (make-if current-exp
+                       current-exp
+                       (make-or (rest-exps-or exp))))))))
+
+
+--------
+;optimized variant.
+(define (or->if exp)
+  (define (rec exp)
+   (let ((current-exp (first-exp-or exp)))
+     (if (last-expression-or? exp)
+         current-exp
+         (make-let
+          (make-bindings-list
+           (make-binding 'variable current-exp))
+          (make-body
+            (make-if 'variable
+                     'variable
+                     (rec (rest-exps-or exp))))))))
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (rec exp))))
+
+; optimized lazy variant
+(define (or->if exp)
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (let ((current-exp (first-exp-or exp)))
+          (if (last-expression-or? exp)
+              current-exp
+              (make-let
+               (make-bindings-list
+                (make-binding 'variable current-exp))
+               (make-body
+                (make-if 'variable
+                         'variable
+                         (make-or (rest-exps-or exp))))))))))
+
+
+(define (make-and exps)
+  (cons 'and exps))
+(define (exps-and and-exp)
+  (cdr and-exp))
+(define (first-exp-and exps) (car exps))
+(define (rest-exps-and exps) (cdr exps))
+(define (no-expressions-and? exps) (null? exps))
+(define (last-expression-and? exps)
+  (no-expressions-and? (rest-exps-and exps)))
+
+(define (make-or exps)
+  (cons 'or exps))
+(define (exps-or or-exp)
+  (cdr or-exp))
+(define (first-exp-or exps) (car exps))
+(define (rest-exps-or exps) (cdr exps))
+(define (no-expressions-or? exps) (null? exps))
+(define (last-expression-or? exps)
+  (no-expressions-or? (rest-exps-or exps)))
+
+
+for a data-directed style:
+
+(put-evaluation-rule 'and eval-and)
+(put-evaluation-rule 'or eval-or)
+
+or
+
+(put-evaluation-rule 'and
+  (lambda (exp env)
+    (eval (and->if exp) env)))
+
+(put-evaluation-rule 'or
+  (lambda (exp env)
+    (eval (or->if exp) env)))

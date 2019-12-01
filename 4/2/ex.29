@@ -1,0 +1,13 @@
+(define (square x) (* x x))
+
+(define count 0)
+(define (id x) (set! count (+ count 1)) x)
+
+(square (id 10))
+
+memo and mo-memo: 100
+
+count
+
+memo : 1
+no-memo: 2

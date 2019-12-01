@@ -1,0 +1,176 @@
+(define (double f)
+  (lambda (x) (f (f x))))
+
+(define (inc number) (+ 1 number))
+
+Notice that double procedure(when applied to procedure f) creates a procedure that applies f twice.
+Therefore, the number of terms in procedure f is doubled.
+
+(double (double (double (... f)))
+Since the outer double double the application of the result of the inner double,
+it doubles the application of f terms as well
+
+double[n] - amount of term f
+
+double[k-1] = 2*double[k]
+
+double[1] = 2^k terms of f
+
+(((double (double double)) inc) 5)
+
+The double will be be applied 4 times to inc procedure
+Therefore, inc procedure will be applied 16 times to 5, the whole expression evaluates to 21
+
+(((double (lambda (x) (double (double x)))) inc)
+ 5)
+
+(((lambda (y) ((lambda (x) (double (double x))) ((lambda (x) (double (double x))) y))) inc)
+ 5)
+
+(((lambda (y) ((lambda (x) (double (double x))) ((lambda (x) (double (double x))) y))) inc)
+ 5)
+
+
+(((lambda (x) (double (double x))) ((lambda (x) (double (double x))) inc))
+ 5)
+
+(((lambda (x) (double (double x))) (double (double inc)))
+ 5)
+
+ (((lambda (x) (double (double x))) (double (lambda (y) (inc (inc y)))))
+  5)
+
+(((lambda (x) (double (double x))) (lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))))
+ 5)
+
+((double (double (lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))))
+ 5)
+
+((double (lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                      ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w))))
+ 5)
+
+((lambda (j) ((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w))) j)))
+ 5)
+
+
+ ((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                      ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+               ((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w))) 5))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) 5)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) 5))))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (y) (inc (inc y))) (inc (inc 5)))))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (y) (inc (inc y))) (inc 6))))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    ((lambda (y) (inc (inc y))) 7)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    (inc (inc 7))))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    (inc 8)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                                    9))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) 9)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (y) (inc (inc y))) (inc (inc 9))))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (y) (inc (inc y))) (inc 10)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              ((lambda (y) (inc (inc y))) 11))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              (inc (inc 11)))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              (inc 12))
+
+((lambda (w) ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) w)))
+              13)
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z))) 13))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) 13)))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (y) (inc (inc y))) (inc (inc 13))))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (y) (inc (inc y))) (inc 14)))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     ((lambda (y) (inc (inc y))) 15))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     (inc (inc 15)))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     (inc 16))
+
+((lambda (z) ((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) z)))
+                     17)
+
+((lambda (y) (inc (inc y))) ((lambda (y) (inc (inc y))) 17))
+
+((lambda (y) (inc (inc y))) (inc (inc 17)))
+
+((lambda (y) (inc (inc y))) (inc 18))
+
+((lambda (y) (inc (inc y))) 19)
+
+(inc (inc 19))
+
+(inc 20)
+
+ 21
+
+Indee, it is so
+
+1 ]=> (((double (lambda (x) (double (double x)))) inc)
+ 5)
+
+;Value: 21

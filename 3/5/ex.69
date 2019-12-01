@@ -1,0 +1,21 @@
+(define (triples s t u)
+  (let ((t-and-u-paired (pairs t u))
+        (s-elem (stream-car s)))
+    (cons-stream
+     (cons s-elem
+           (stream-car t-and-u-paired))
+     (interleave
+      (stream-map (lambda (pair)
+                    (cons s-elem
+                          pair))
+                  (stream-cdr t-and-u-paired))
+      (triples (stream-cdr s)
+               (stream-cdr t)
+               (stream-cdr u))))))
+
+(define pythagorean-triples
+  (stream-filter (lambda (triple)
+                   (= (+ (square (car triple))
+                         (square (cadr triple)))
+                      (square (caddr triple))))
+                  (triples integers integers integers)))

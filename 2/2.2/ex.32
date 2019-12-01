@@ -1,0 +1,31 @@
+(define (subsets s)
+  (if (null? s)
+      (list nil)
+      (let ((rest (subsets (cdr s))))
+        (append rest (map (lambda (x)
+                            (cons (car s) x)) rest)))))
+
+
+Suppose there is a set K that contains all subsets of set S and set Q, which contains all subsets of S without some 1 element j
+
+All possible combinations(sets) of other elements (either in a set or not)
+
+are contained within set Q.
+
+Since those combinations are without j, Q contains all possible combinations(sets) which do not contain j.
+
+There is exactly the same amount of combinations that contain j.(proof, there can't be less, add j to each, a new unique one will be created.
+There can't be more - remove from all of them j, there must be exactly the same amount of combinations in Q as adding or removing j changes nothing -
+the Q constains all possible combinations of elements, not including j,
+otherwise there is a contradiction and Q does not contain all of them)
+
+by adding to each combination in Q j the combinations above are created.
+
+By appending Q and the collection/set M of these newly made combinations, all combinations of S elements
+are now contained in a set A, but K is the set that has all the subsets(combinations of elements) of S
+Then A = K
+
+The base case for the empty set is the empty set itself.
+
+Therefore, by removing 1 element the set and creating a set of the subsets M of this new set
+ and appending M and (M with the deleted element) all the subsets of the initial set are now in the resulting set.

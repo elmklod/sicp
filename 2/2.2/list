@@ -1,0 +1,24 @@
+(define list
+ (lambda items
+  (define rec
+   (lambda (items)
+    (if (null? items)
+        '()
+        (cons (car items) (rec (cdr items))))))
+  (rec items)))
+
+
+(define (list . items)
+ (define (iter items)
+  (lambda (x) (if (null? items)
+                  x
+                  ((iter (cdr items)) (cons (car items) x)))))
+ ((iter (reverse items)) '()))
+
+
+(define (list . items)
+ (define (iter items result)
+  (if (null? items)
+      result
+      (iter (cdr items) (cons (car items) result))))
+ (iter (reverse items) '()))

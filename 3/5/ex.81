@@ -1,0 +1,40 @@
+It is assumed that a request to reset random-number generator is a pair
+whose car is 'reset and cdr the number to reset to
+
+(define (rand message-stream)
+  (define (random-stream previous-number message-stream)
+    (if (empty-stream? message-stream)
+        the-empty-stream
+        (let ((current-number
+               (let ((message (stream-car message-stream)))
+                 (cond ((eq? message 'generate)
+                        (rand-update previous-number))
+                       ((eq? (car message) 'reset)
+                        (cdr message))))))
+          (cons-stream current-number
+                       (random-stream current-number
+                                      (stream-cdr message-stream))))))
+  (cons-stream 1
+               (random-stream 1 message-stream)))
+
+
+(define (rand message-stream)
+  (define random-stream
+    (cons-stream 1 (stream-map
+                     (lambda (previous-number message)
+                       (cond ((eq? message 'generate)
+                              (rand-update previous-number))
+                             ((and (pair? message)
+                                   (eq? (car message) 'reset))
+                              (cdr message))
+                             (else (error
+                                    "RAND unknown type of request"
+                                    message))))
+                     random-stream
+                     message-stream)))
+  random-stream)
+
+(define example-requests
+   (list->stream
+     '(generate generate (reset . 5) generate
+       generate generate (reset . 6) generate)))

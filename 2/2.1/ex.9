@@ -1,0 +1,197 @@
+(define (sub-interval x y)
+ (make-interval (- (lower-bound x)
+                   (upper-bound y))
+                (- (upper-bound x)
+                   (lower-bound y))))
+
+
+(define (add-interval x y)
+  (make-interval (+ (lower-bound x)
+                    (lower-bound y))
+                 (+ (upper-bound x)
+                    (upper-bound y))))
+
+Compute the width of some interval z that is the result of adding two intervals:
+
+(/ (- (upper-bound z) (lower-bound z)) 2)
+
+(/ (- (+ (upper-bound x)
+         (upper-bound y))
+      (+ (lower-bound x)
+         (lower-bound y)))
+   2)
+
+this is equal to:
+
+(/ (+ (- (upper-bound x)
+         (lower-bound x))
+      (- (upper-bound y)
+         (lower-bound y)))
+   2)
+
+(+ (/ (- (upper-bound x)
+         (lower-bound x))
+      2)
+   (/ (- (upper-bound y)
+         (lower-bound y))
+      2))
+
+Which is
+
+(+ (width x)
+   (width y))
+
+Therefore, the width of the sum is a function (width (add-interval x y)) = (+ (width x) (width y))
+width(x + y) = width(x) + width(y)
+
+Compute the width of some interval z that is the result of subtracting some interval form the other:
+
+(/ (- (upper-bound z) (lower-bound z)) 2)
+
+(/ (- (- (upper-bound x)
+         (lower-bound y))
+      (- (lower-bound x)
+         (upper-bound y)))
+   2)
+
+(/ (- (- (upper-bound x)
+         (lower-bound y))
+      (- (lower-bound x)
+         (upper-bound y)))
+   2)
+
+[(upx - ly) - (lx - upy)]/2
+
+[(upx - lx) + (upy -  ly)]/2
+
+width(x) + width(y) = width(x - y)
+
+
+
+
+
+
+
+
+
+
+
+
+
+(define (mul-interval x y)
+  (let ((p1 (* (lower-bound x)
+               (lower-bound y)))
+        (p2 (* (lower-bound x)
+               (upper-bound y)))
+        (p3 (* (upper-bound x)
+               (lower-bound y)))
+        (p4 (* (upper-bound x)
+               (upper-bound y))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+
+
+(define (div-interval x y)
+  (mul-interval x
+                (make-interval
+                 (/ 1.0 (upper-bound y))
+                 (/ 1.0 (lower-bound y)))))
+
+It is sufficient just to show that the width of mul/div for intervals with nonnegative bounds is th enot the function of widths of intervals being mul/div
+
+If x and y are intervals with properties that
+0 < (lower-bound x) < (upper-bound x)
+
+0 < (lower-bound y) < (upper-bound y)
+
+then (lower-bound y) * (lower-bound x) < (upper-bound y) * (lower-bound x)
+     (lower-bound y) * (lower-bound x) < (upper-bound x) * (lower-bound y)
+
+     (upper-bound y) * (lower-bound x) < (upper-bound y) * (upper-bound x)
+     (upper-bound x) * (lower-bound y) < (upper-bound y) * (upper-bound x)
+
+     from which follows that (lower-bound y) * (lower-bound x) < (upper-bound y) * (upper-bound x)
+
+     Which makes value (lower-bound y) * (lower-bound x) the lower-bound as the min value
+             and value (upper-bound y) * (upper-bound x) the upper-bound as the max value
+
+Compute the width:
+
+(ux * uy - lx * ly)/2
+
+try to tranform it so that the widths would be the only expressions containing variables.
+
+(ux - lx)(uy - ly) = ux*uy - ux*ly - lx*uy +  lx*ly
+
+[(ux - lx)(uy - ly) + ux*ly + lx*uy - 2lx*ly]/2 = (ux * uy - lx * ly)/2
+
+It is not possible as the multiplication of widths and the consequent tranformations using any other kind of primitive operations.
+
+Look at the reciprocal of the interval y that divides x:
+
+0 < ly < uy
+
+0 < 1/uy < 1/ly
+
+As with the multiplication(because later this reciprocated interval will actually be multiplied by x)
+
+the lower bound is lx/uy and the upper bound is ux/ly
+
+Compute the widths
+
+(ux/ly - lx/uy)/2
+
+(ux*uy - lx*ly)/(uy*ly*2)
+
+(ux - lx)(uy - ly) + ux*ly + lx*uy - 2lx*ly = (ux*uy - lx*ly)
+
+(ux - lx)(uy - ly) - ux*uy  + ux*ly - lx*ly + 2uy*ly = uy*ly
+
+It is not possible.
+
+
+A more convincing example would be
+
+(define i0 (make-interval 1 3))
+
+(define i1 (make-interval 4 6))
+
+have the same width = 1
+
+Now multiply them both by interval i2
+
+(define i2 (make-interval 1 2))
+
+Its width is 0.5
+
+(define i3 (mul-interval i0 i2))
+
+Its width is (3*2 - 1*1)/2  = 5/2 = 2.5
+
+(define i4 (mul-interval i1 i2))
+
+Its width is (6*2 - 4)/2 = 8/2 = 4
+
+Therefore, the width of the multiplication of the intervals is not a function only of the widths of the argument intervals
+
+Now divide these interval both by i2 just for convenience:
+
+The reciprocal of i2 is:
+
+(define i2-recip (make-interval 1/2 1))
+
+(define i5 (div-interval i0 i2))
+
+Its width is (3*1 - 1/2)/2 = 5/4 = 1.25
+
+(define i6 (div-interval i1 i2))
+
+Its width is (6*1 - 4/2)/2 = (6 - 2)/2 = 4/2 = 2
+
+Therefore, the width of the division of the intervals is not a function only of the widths of the argument intervals
+
+(define (width-interval x)
+ (/ (- (upper-bound x)
+       (lower-bound x))
+    2))

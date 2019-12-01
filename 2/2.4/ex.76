@@ -1,0 +1,94 @@
+data type = data abstraction
+operation = procedure
+
+Generic operations with explicit dispatch:
+ Adding new operations is straightforward: Ensure there is no name conflict with operations naming
+ Start designing each operation separately.
+Just create a new generic operation
+that dispatches(type-specific operations) on all the types operates upon
+Make sure that names of these specific operations do not conflict.
+Other than this centralized change, no other change is required
+
+ Adding a new (data) type is cumbersome: Ensure there is no name conflict with data types naming
+EVERY operation/procedure that will operate upon this new type now has to be modified
+to dispatch a proper type-specific procedure on that new type.
+And these new type-specific procedures must be designed. They also must be named with care to avoid name conflicts with other procedures
+that program uses. That means keeping track of all procedure names.
+
+Notice, however, that it is not necessary to have names for procedures.
+lambda special form may be used to circumvent the name conflict problem,
+this will make the program slightly more verbose.
+
+
+Data-directed programming:
+ Adding new operations is straightforward: Start by designing each operation separately. Ensure that generic operations have no name conflict
+design the required procedure for each of the data type(s) to be operated upon separately.
+Then add these procedures as entries to the table of procedures under the indexes:
+Name of the generic operation/procedure, (list of names) name of the data type(s) this specific procedure is dispatched on
+Create a generic operation of that name that will look up the appropriate operation a specific data type in a table
+(or use message-passing style lookup for that.)
+
+ Adding new data types is straightforward: design each each data type separately. Ensure that data types have no name conflict
+design the required operations/procedures so that the required generic procedures could dispatch on it the appropriate procedure
+(usually procedures for the same data have different names, but this is no guarantee, although
+it would make defining such procedures in one environment problematic)
+Each procedure should be designed according to the principles of data abstraction and stratified design.
+Then add these procedures as entries to the table of procedures under the indexes:
+Name of the generic operation/procedure, (list of names, it is still possible) name of
+ the (new) data type(s) this specific procedure is dispatched on.(if needed, implement a table lookup for this type)
+
+Message-passing:
+ Adding new operations is cumbersome: Ensure that operations have no name conflict
+Every data type that this operation applies to now has to be modified to include an explicit dispatch on
+the new operation type(message)
+Even if the names for procedures need not be (at all, sometimes) unique, they still have
+to be designed for each data type. Usually separately.
+
+
+ Adding new data types is straightforward: Ensure that data types have no name conflict.
+Design each data type separately.
+Implement appropriate dispatches on the (required) operation type(message). Avoid name conflicts during implementation.
+Other than this centralized change, no other change is required.
+
+=================
+
+As can be seen, approaches scale differently when system evolves in different directions:
+
+With the system that has new types often added(but not operations), two approaches are suitable:
+
+Message-passing.
+Data-directed programming.
+
+Message-passing, however, will escalate quickly so that if there is initially a
+ large amount of operations that operate on the new data type,
+The implementation of the data abstraction will be hard to comprehend and the size of it will increase.
+And passing a larger argument from one procedure to another may be suboptimal
+Logic will slow down the overall performance, since the cond clause predicates are evaluated in a sequential order,
+while the table in data-directed programming may have some search optimization
+
+With the system that has new operation often added(but not types), two approaches are suitable:
+
+Generic operations with explicit dispatch
+Data-directed programming
+
+Generic operations with explicit dispatch, however will escalate quickly so that if there is initially a
+ large amount of data types that the procedures operate upon,
+The implementation of procedure abstraction will be hard to comprehend and the size of it will increase.
+And since the procedures are first-class elements, passing a larger argument(procedure in this case) from one procedure to another may be suboptimal
+Logic will slow down the overall performance, since the cond clause predicates are evaluated in a sequential order,
+while the table in data-directed programming may have some search optimization
+
+
+For the system that has new operations AND new types often added, only one approach scales appropriately:
+
+Data-directed programming
+
+
+
+Here the limitation of message passing of inability to deal with operations with more than 1 argument is not considered, as it is implementation dependent
+and may be solved in the future.
+
+
+Notice, however, that message passing can be used in combination with the data-directed programming
+as well as with the generic operations with explicit dispatch.
+Indeed, it does not matter where a lookup happens. It is a matter of convenience.

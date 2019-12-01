@@ -1,0 +1,406 @@
+(define (search-for-primes start end)
+  (define (next n)
+    (if (= n 2)
+        3
+        (+ n 2)))
+
+  (define (even? n)
+   (= (remainder n 2) 0))
+
+  (define (timed-prime-test n)
+     (define (start-prime-test n start-time)
+       (if (prime? n)
+           (report-prime (- (runtime)
+                            start-time))))
+
+     (define (report-prime elapsed-time)
+       (display " *** ")
+       (display elapsed-time))
+
+     (newline)
+     (display n)
+     (start-prime-test n (runtime)))
+
+  (define (prime? n)
+     (define (smallest-divisor n)
+      (test-divisor n 2))
+
+     (define (test-divisor n divisor)
+      (cond ((> (square divisor) n) n)
+            ((divides? divisor n) divisor)
+            (else (test-divisor n (next divisor)))))
+
+     (define (divides? divisor n)
+       (= (remainder n divisor) 0))
+
+     (and (> n 1) (= (smallest-divisor n) n)))
+
+
+  (cond ((or (and (even? start) (not (= start 2))) (= start 1)) (search-for-primes (+ start 1) end))
+        ((> start end) (newline) (display " End of the interval "))
+        (else (timed-prime-test start) (search-for-primes (next start) end))))
+
+!!!!!!!!!!!!!!!!!!
+Warning: timings are for this version :
+(!!!!!!!!!!!!!!!!!!
+
+
+define (search-for-primes start end)
+  (define (next n)
+    (if (= n 2)
+        3
+        (+ n 2)))
+
+  (define (even? n)
+   (= (remainder n 2) 0))
+
+  (define (timed-prime-test n)
+     (define (start-prime-test n start-time)
+       (if (prime? n)
+           (report-prime (- (runtime)
+                            start-time))))
+
+     (define (report-prime elapsed-time)
+       (display " *** ")
+       (display elapsed-time))
+
+     (newline)
+     (display n)
+     (start-prime-test n (runtime)))
+
+  (define (prime? n)
+     (define (smallest-divisor n)
+      (test-divisor n 2))
+
+     (define (test-divisor n divisor)
+      (cond ((> (square divisor) n) n)
+            ((divides? divisor n) divisor)
+            (else (test-divisor n (next divisor)))))
+
+     (define (divides? divisor n)
+       (= (remainder n divisor) 0))
+
+     (= (smallest-divisor n) n))
+
+
+  (cond ((even? start) (search-for-primes (+ start 1) end))
+        ((> start end) (newline) (display " End of the interval "))
+        (else (timed-prime-test start) (search-for-primes (+ start 2) end))))
+
+
+for 100000000:
+
+1-st:
+
+
+100000001
+100000003
+100000005
+100000007 *** 0.
+100000009
+100000011
+100000013
+100000015
+100000017
+100000019
+100000021
+100000023
+100000025
+100000027
+100000029
+100000031
+100000033
+100000035
+100000037 *** 1.0000000000000009e-2
+100000039 *** 1.0000000000000009e-2
+
+2-nd:
+
+100000001
+100000003
+100000005
+100000007 *** 9.999999999999953e-3
+100000009
+100000011
+100000013
+100000015
+100000017
+100000019
+100000021
+100000023
+100000025
+100000027
+100000029
+100000031
+100000033
+100000035
+100000037 *** 2.0000000000000018e-2
+100000039 *** 1.0000000000000009e-2
+
+3-d:
+
+100000001
+100000003
+100000005
+100000007 *** 0.
+100000009
+100000011
+100000013
+100000015
+100000017
+100000019
+100000021
+100000023
+100000025
+100000027
+100000029
+100000031
+100000033
+100000035
+100000037 *** 0.
+100000039 *** 9.999999999999953e-3
+
+
+for 1000000000:
+
+1-st
+
+1000000001
+1000000003
+1000000005
+1000000007 *** .01999999999999999
+1000000009 *** 2.0000000000000004e-2
+1000000011
+1000000013
+1000000015
+1000000017
+1000000019
+1000000021 *** 2.0000000000000004e-2
+1000000023
+1000000025
+1000000027
+1000000029
+1000000031
+1000000033 *** .01999999999999999
+1000000035
+1000000037
+1000000039
+
+2-nd;
+1000000001
+1000000003
+1000000005
+1000000007 *** 1.0000000000000009e-2
+1000000009 *** 1.0000000000000009e-2
+1000000011
+1000000013
+1000000015
+1000000017
+1000000019
+1000000021 *** .01999999999999999
+1000000023
+1000000025
+1000000027
+1000000029
+1000000031
+1000000033 *** .01999999999999999
+1000000035
+1000000037
+1000000039
+
+3-d:
+
+1000000001
+1000000003
+1000000005
+1000000007 *** 2.0000000000000018e-2
+1000000009 *** 1.0000000000000009e-2
+1000000011
+1000000013
+1000000015
+1000000017
+1000000019
+1000000021 *** 2.0000000000000018e-2
+1000000023
+1000000025
+1000000027
+1000000029
+1000000031
+1000000033 *** 2.0000000000000018e-2
+1000000035
+1000000037
+1000000039
+
+
+for 10000000000:
+
+1-st:
+10000000001
+10000000003
+10000000005
+10000000007
+10000000009
+10000000011
+10000000013
+10000000015
+10000000017
+10000000019 *** 5.0000000000000044e-2
+10000000021
+10000000023
+10000000025
+10000000027
+10000000029
+10000000031
+10000000033 *** .05999999999999994
+10000000035
+10000000037
+10000000039
+10000000041
+10000000043
+10000000045
+10000000047
+10000000049
+10000000051
+10000000053
+10000000055
+10000000057
+10000000059
+10000000061 *** .07000000000000006
+10000000063
+10000000065
+10000000067
+10000000069 *** .06999999999999995
+10000000071
+10000000073
+10000000075
+10000000077
+10000000079
+
+2-nd:10000000001
+
+10000000003
+10000000005
+10000000007
+10000000009
+10000000011
+10000000013
+10000000015
+10000000017
+10000000019 *** 5.0000000000000044e-2
+10000000021
+10000000023
+10000000025
+10000000027
+10000000029
+10000000031
+10000000033 *** .06999999999999984
+10000000035
+10000000037
+10000000039
+10000000041
+10000000043
+10000000045
+10000000047
+10000000049
+10000000051
+10000000053
+10000000055
+10000000057
+10000000059
+10000000061 *** .07000000000000006
+10000000063
+10000000065
+10000000067
+10000000069 *** .08000000000000007
+10000000071
+10000000073
+10000000075
+10000000077
+10000000079
+
+3-d:
+
+10000000001
+10000000003
+10000000005
+10000000007
+10000000009
+10000000011
+10000000013
+10000000015
+10000000017
+10000000019 *** .06000000000000005
+10000000021
+10000000023
+10000000025
+10000000027
+10000000029
+10000000031
+10000000033 *** .06000000000000005
+10000000035
+10000000037
+10000000039
+10000000041
+10000000043
+10000000045
+10000000047
+10000000049
+10000000051
+10000000053
+10000000055
+10000000057
+10000000059
+10000000061 *** .08999999999999986
+10000000063
+10000000065
+10000000067
+10000000069 *** .06000000000000005
+10000000071
+10000000073
+10000000075
+10000000077
+10000000079
+
+
+
+As can be seen, results vary considerably.
+
+As the theory suggests, the time for testing each prime should be halved.
+
+Indeed, in some(most) cases, the data supports this idea.
+
+Other cases, however, show, that it may take even more time than for the more redundant test,
+or that it take sometimes less time, but the factor is only very approximately 2(sometimes more, sometimes less, even 1).
+
+There is no problem with the theory.
+
+There may be several sources of the problem:
+
+0) rounding errors: As can be seen, some primes are tested extremely fast so the
+calculated time is less than the precision at which the interpreter does the subtraction.
+
+1) Clock ticks slower than the timed-prime-test process terminates, which results in a time perceived as less than 1/2 of the original.
+
+2) Delay during the evaluation of the consequent clause(especially the operand) for timed-prime-test procedure stays the same.
+
+x/2 + d != x/2 + d/2
+
+3) CPU is loaded with some other tasks.
+
+4) CPU is able to only do a fixed number of operations per a cycle.
+   Those operations can only be done  in a cycle-time * (some integer >= 1):
+   Even if the operations are halved, they may require additional time for the CPU cycle to complete.
+   Sometimes they are halved and still fit in the same cycle as the original test operations.
+
+   This results in the time slightly more than a halved time of the original.
+
+5) CPU intermixes these operations with some other.(as the 3 implies)
+
+   From 3, 4 it follows that it may sometimes require MORE cycles, and, therefore, more time for the procedures to finish.
+
+6) temperature, random circumstances beyond control as of now.
+
+
+The same applies to the original as well.
+
+Therefore, Original and "Halved" time may be less or more than predicted, which explains the discrepancies.

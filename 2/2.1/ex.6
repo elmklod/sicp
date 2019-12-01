@@ -1,0 +1,106 @@
+(define zero (lambda (f) (lambda (x) x)))
+
+(define (add-1 n)
+  (lambda (f) (lambda (x) (f ((n f) x)))))
+
+(add-1 zero)
+
+(add-1 (lambda (f) (lambda (x) x)))
+
+(lambda (f) (lambda (x) (f (((lambda (f) (lambda (x) x)) f) x))))
+
+Notice that ((lambda (f) (lambda (x) x)) f) is just (lambda (x) x) regardless of f
+
+(lambda (f) (lambda (x) (f ((lambda (x) x) x))))
+
+Notice that  ((lambda (x) x) x) is x regardless of x
+
+(lambda (f) (lambda (x) (f x)))
+
+This is Church numeral one
+
+(define one (lambda (f) (lambda (x) (f x))))
+
+The essence of Church numerals is that the number of f procedure appliction corresponds directly to what number Church numeral represents.
+(as long as the nameless function are applied, it is possible to reduce them without a difference in the overall result)
+
+(add-1 one)
+
+(add-1 (lambda (f) (lambda (x) (f x))))
+
+(lambda (f) (lambda (x) (f (((lambda (f) (lambda (x) (f x))) f) x))))
+
+Notice that ((lambda (f) (lambda (x) (f x))) f)
+is (lambda (x) (f x)) regardless of f
+
+(lambda (f) (lambda (x) (f ((lambda (x) (f x)) x))))
+
+Notice that ((lambda (x) (f x)) x) is  (f x) regardless of x
+
+(lambda (f) (lambda (x) (f (f x))))
+
+This is Church numeral two
+
+(define two (lambda (f) (lambda (x) (f (f x)))))
+
+Look at
+
+(define (add-1 n)
+  (lambda (f) (lambda (x) (f ((n f) x)))))
+
+more closely.
+
+(lambda (f) (lambda (x) (((lambda (y) (lambda (z) (y z))) f) ((n f) x))))
+
+((lambda (y) (lambda (z) (y z))) f) is (lambda (z) (f z)) regardless of f
+
+(lambda (f) (lambda (x) ((lambda (z) (f z)) ((n f) x))))
+
+((lambda (z) (f z)) ((n f) x)) is (f ((n f) x)) regardless of ((n f) x)
+
+(lambda (f) (lambda (x) (f ((n f) x))))
+
+(lambda (y) (lambda (z) (y z))) is one.
+                                                                  amount of application is the number
+In general , Church numerals have form (lambda (f) (lambda (x) (f (f (f ....(f x))))))
+
+Apply a this chruch numeral to some procedure k
+
+((lambda (f) (lambda (x) (f (f (f ....(f x)))))) k)
+
+(lambda (x) (k (k (k ....(k x)))))
+
+When applied to some j
+
+(k (k (k ....(k j))))
+
+This procedure, when applied to any data, will apply procedure k Church numeral times.
+
+Notice the analogy
+
+some procedure add-g for Church numerals, therefore, would work as follows:
+
+(lambda (f) (lambda (x) ((church-num-g f) ((n f) x))))
+
+(lambda (f) (lambda (x) ((lambda (x) (f (f (f ....(f x))))) ((n f) x))))
+
+This simplifies to
+(lambda (f) (lambda (x) (f (f (f ....(f ((n f) x)))))))
+
+Again church-num-n would just apply f to x n times
+                                   g + n times
+(lambda (f) (lambda (x) (f (f (f ....(f (f (f (f ...(x))))))
+
+This g + n Church numeral
+
+Therefore, + for Church numeral may be implemented as follows:
+
+(define (+ a b)
+ (lambda (f) (lambda (x) ((a f) ((b f) x)))))
+
+or equivalently
+
+(define (+ a b)
+ (lambda (f) (lambda (x) ((b f) ((a f) x)))))
+
+As the amount of f a+b = b+a

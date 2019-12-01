@@ -1,0 +1,7 @@
+(define (last-element l)
+ (if (null? (cdr l))
+     (car l)
+     (last-element (cdr l))))
+
+(define (last-element l)
+ (car (last-pair l)))

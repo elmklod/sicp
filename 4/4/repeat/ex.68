@@ -1,0 +1,33 @@
+(rule (append-to-form () ?y ?y))
+(rule (append-to-form (?u . ?v) ?y (?u . ?z))
+      (append-to-form ?v ?y ?z))
+
+; Original:
+; some lists ?L1 and ?L2
+; are reverse of each other iff
+; either they are both ()
+; or ?L1 = (?x . ?y), ?L2 = ?u
+; and appending ?x to the reverse of ?y is ?u
+; query language program:
+(rule (reverse () ()))
+(rule (reverse (?x . ?y) ?u)
+ (and (reverse ?y ?p)
+      (append-to-form ?p (?x) ?u)))
+
+; Second version:
+; some lists ?L1 and ?L2
+; are reverse of each other iff
+; either they are both ()
+; or ?L1 = (?x . ?y), ?L2 = ?u
+; and if the list ?p such that (append ?p (list ?x)) = ?u
+; is the reverse of ?y
+(rule (reverse () ()))
+(rule (reverse (?x . ?y) ?u)
+  (and (append-to-form ?p (?x) ?u)
+       (reverse ?y ?p))) ; if the order is reversed *pun*, then the loop is entered
+; possible to write one rule using or-form and same rule
+
+; as of now I know no way to define a rule that would be capable of
+; answering both queries:
+; (reverse (1 2 3) ?x) and (reverse ?x (1 2 3))
+; even lisp-value can't help

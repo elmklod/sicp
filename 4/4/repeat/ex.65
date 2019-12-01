@@ -1,0 +1,72 @@
+(wheel ?who)
+
+; query results:
+(wheel (Warbucks Oliver))
+(wheel (Bitdiddle Ben))
+(wheel (Warbucks Oliver))
+(wheel (Warbucks Oliver))
+(wheel (Warbucks Oliver))
+
+; Inspect the rule definition:
+
+(rule (wheel ?person)
+      (and (supervisor ?middle-manager
+                       ?person)
+           (supervisor ?x ?middle-manager)))
+
+; There are only 2 people in the company who supervise supervisors
+; It's (Bitdiddle Ben) and (Warbucks Oliver)
+; the only possible values for ?person pattern are their names,
+; so even with the repetitions the results are logically correct.
+
+; when the first and-clause of rule body is evaluated, it generates 8 frames, one for each supervisor(value assigned to ?person patt.)
+; and all people being supervised (?middle-manager patt.)
+; but when the assertions db was matched, there were assertions of one person supervising several people at once:
+(supervisor (Aull DeWitt) (Warbucks Oliver))
+(supervisor (Cratchet Robert) (Scrooge Eben))
+(supervisor (Scrooge Eben) (Warbucks Oliver))
+(supervisor (Bitdiddle Ben) (Warbucks Oliver))
+(supervisor (Reasoner Louis)
+            (Hacker Alyssa P))
+(supervisor (Tweakit Lem E) (Bitdiddle Ben))
+(supervisor (Fect Cy D) (Bitdiddle Ben))
+(supervisor (Hacker Alyssa P) (Bitdiddle Ben))
+; and for each such assertion a frame was created regardless of the assignment repetitions
+; there are 3 frames with ?person assigned to (Warbucks Oliver):
+; ?who = ?person is omitted for clarity
+; a) ?person = (Warbucks Oliver); ?middle-manager = (Aull DeWitt)
+; b) ?person = (Warbucks Oliver); ?middle-manager = (Scrooge Eben)
+; c) ?person = (Warbucks Oliver); ?middle-manager = (Bitdiddle Ben)
+;
+; 3 to (Bitdiddle Ben):
+; a) ?person = (Bitdiddle Ben); ?middle-manager = (Tweakit Lem E)
+; b) ?person = (Bitdiddle Ben); ?middle-manager = (Fect Cy D)
+; c) ?person = (Bitdiddle Ben); ?middle-manager = (Hacker Alyssa P)
+;
+; 1 to (Hacker Alyssa P):
+; ?person = (Hacker Alyssa P); ?middle-manager = (Reasoner Louis)
+; 1 to (Scrooge Eben):
+; ?person = (Scrooge Eben); ?middle-manager = (Cratchet Robert)
+; then the second clause is evaluated for each frame.(the numeration is in accordance with how they are listed here)
+; there is no one supervised by (Aull DeWitt), so the query fails for the first frame
+; there is (Cratchet Robert) supervised by (Scrooge Eben) and he supervises no one else, the second frame is extended once:
+; ?person = (Warbucks Oliver); ?middle-manager = (Scrooge Eben); ?x = (Cratchet Robert)
+; there are 3 people supervised by (Bitdiddle Ben), the third frame is extended thrice(three frames are produced):
+; a) ?person = (Warbucks Oliver); ?middle-manager = (Bitdiddle Ben); ?x = (Tweakit Lem E)
+; b) ?person = (Warbucks Oliver); ?middle-manager = (Bitdiddle Ben); ?x = (Fect Cy D)
+; c) ?person = (Warbucks Oliver); ?middle-manager = (Bitdiddle Ben); ?x = (Hacker Alyssa P)
+; there is no one supervised by (Tweakit Lem E), the query fails for the fourth frame.
+; there is no one supervised by (Fect Cy D), the query fails for the fifth frame.
+; there is (Reasoner Louis) supervised by (Hacker Alyssa P) and she supervises no one else, the sixth frame is extended once:
+; ?person = (Bitdiddle Ben); ?middle-manager = (Hacker Alyssa P); ?x = (Reasoner Louis)
+; there is no one supervised by (Reasoner Louis), the query fails for the seventh frame.
+; there is no one supervised by (Cratchet Robert), the query fails for the eighth frame.
+
+; Overall 5 frames are produced:
+; in one of them ?person is bound to (Bitdiddle Ben)
+; in 4 others, it is bound to (Warbucks Oliver)
+; which consequently makes 4 ?who patterns bound to (Warbucks Oliver)
+; and 1 to (Bitdiddle Ben)
+
+; For each such frame the original query is instantiated with the values in frames,
+; that is why Oliver Warbucks is listed four times.

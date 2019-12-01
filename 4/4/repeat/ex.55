@@ -1,0 +1,3 @@
+(supervisor ?employee (Bitdiddle Ben))
+(job ?worker (accounting . ?title))
+(address ?person (Slummervile . ?place))

@@ -1,0 +1,40 @@
+Ben's first complain arises because the queue is represented as pair whose car
+points to the beginning of queue(implemented as a list) and whose cdr points
+to the last sublist of the same list.
+The interpreter simply prints the queue as a list that has some list L0 as its first
+element and then its second elements is the last sublist of the list L0. Therefore,
+it creates the duplication illusion.
+
+The second Ben's complain arises because the implementation of queues by the authors
+treats queues that have the (front-ptr list0) = '()  as empty
+even if the (rear-ptr list0) is not '(). It is not a problem when dealing with
+the queues made by this implementation - there is no way to directly access the last elements
+unless it is the only one.
+
+It is the problem of a weak abstraction barrier that confuses Ben.
+
+Notice that the front-pointer always points to the correct representation of the queue
+Therefore, print-queue can be implemented as:
+
+(define (print-queue q)
+  (front-ptr q))
+
+(define (insert-queue! queue item)
+  (let ((new-pair (cons item '())))
+    (cond ((empty-queue? queue)
+           (set-front-ptr! queue new-pair)
+           (set-rear-ptr! queue new-pair)
+           queue)
+          (else (set-cdr! (rear-ptr queue)
+                          new-pair)
+                (set-rear-ptr! queue new-pair)
+                queue))))
+
+(define (delete-queue! queue)
+  (cond ((empty-queue? queue)
+         (error "DELETE! called with
+                 an empty queue" queue))
+        (else (set-front-ptr!
+               queue
+               (cdr (front-ptr queue)))
+              queue)))

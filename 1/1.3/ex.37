@@ -1,0 +1,111 @@
+(define (cont-frac n d k)
+ (define (fin-frac term)
+  (if (= 0 term)
+      (lambda (x) x)
+      (lambda (x) ((fin-frac (- term 1)) (/ (n term)
+                                            (+ (d term)
+                                               x))))))
+ ((fin-frac k) 0))
+
+-----------------------
+
+(define (cont-frac n d k)
+ (define (fin-frac term)
+    (lambda (x)  (if (= 0 term)
+                     x
+                     ((fin-frac (- term 1)) (/ (n term)
+                                               (+ (d term)
+                                                  x))))))
+ ((fin-frac k) 0))
+
+-----------------------
+
+(define (cont-frac n d k)
+  (define (fin-frac term)
+     (lambda (x) ((if (= 1 term)
+                      (lambda (x) x)
+                      (fin-frac (- term 1))) (/ (n term)
+                                            (+ (d term)
+                                                x)))))
+  ((fin-frac k) 0))
+
+  (define (cont-frac n d k)
+    (define (fin-frac term)
+       (lambda (x) (let ((y (/ (n term)
+                             (+ (d term)
+                                 x))))
+                        (if (= 1 term)
+                            y
+                            ((fin-frac (- term 1)) y)))))
+    ((fin-frac k) 0))
+
+  Equivalent approaches.
+
+
+ ;At this state of knowledge, it is not possible to precisely describe what process this procedure evolves.
+ ;Common sense suggests it is an iterative process, but to show this would require the knowledge of how lambda
+ ;special form is evaluated.
+ ;However, it evolves an iterative process with a great likelihood
+
+ Simpler approaches:
+(define (cont-frac n d k)
+ (define (fraction term)
+       (/ (n k)
+          (+ (d k) (if (= term k)
+                       0
+                       (fraction (+ term 1))))))
+   (fraction 1))
+
+This procedure evolves a linear recursive process
+
+(define (cont-frac n d k)
+ (define (fin-frac term result)
+  (if (= 0 term)
+      result
+      (fin-frac (- term 1)
+            (/ (n term)
+               (+ (d term)
+                  result)))))
+  (fin-frac k 0))
+
+This procedure evolves a linear iterative process.
+
+Notice how similar it is the the first procedure.
+
+It is possible to design something that resembles the 2.
+
+(define (cont-frac n d k)
+ (define (fin-frac term result)
+      ((if (= term 1)
+           (lambda (x y) y)
+           fin-frac) (- term 1)
+            (/ (n term)
+               (+ (d term)
+                  result))))
+ (fin-frac k 0))
+
+
+1 / φ = φ - 1, therefore it is needless to compute a reverse.
+
+.6180 are four decimal places
+
+1 ]=> (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 10)
+
+;Value: .6179775280898876
+
+1 ]=> (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 11)
+
+;Value: .6180555555555556
+
+k = 11
+
+(if considering the digit after 0, ]=> (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 12)
+
+;Value: .6180257510729613
+
+1 ]=>  (cont-frac (lambda (i) 1.0) (lambda (i) 1.0) 13)
+
+;Value: .6180371352785146
+
+hence k = 13, as .6180339,
+  )

@@ -1,0 +1,53 @@
+(define memo-fib
+  (memoize
+   (lambda (n)
+     (cond ((= n 0) 0)
+           ((= n 1) 1)
+           (else
+            (+ (memo-fib (- n 1))
+               (memo-fib (- n 2))))))))
+
+(define (memoize f)
+  (let ((table (make-table > <)))
+    (lambda x
+      (let ((previously-computed-result
+             (lookup x table)))
+        (or previously-computed-result
+            (let ((result (apply f x)))
+              (insert! x result table)
+              result))))))
+
+This modified procedure works with binary-tree tables from ex.26
+
+If the the increase in steps to lookup and insert an entry into the table is disregarded as
+insignificant (especially with a proper table implementation, such as a tree), i.e. considered a constant, then
+the overall number of steps is to lookup and add and insert new n + 1 entries, and lookup n-2 fibbonaci numbers
+that are already computed( f(n) = f(n-1) + f(n-2) --- all f(n-1) terms are computed and f(2) = f(1) + f(0) and f(n-2) is computed once
+all other n-2 terms are looked up. Therefore, if the number of steps to lookup is L and to insert I, then
+there are L(2n - 1) + I(n + 1) steps that are operations on the table)
+There are also steps to add numbers, there are n-1 such steps
+
+Therefore, the overall number of steps is approx. L(2n - 1) + I(n + 1) + n - 1, where L and I - independent positive constants >= 1
+
+R(n)[steps] = Θ(n)
+as it is at least possible to have L*n < R(n) and  (2L + 3I + 2)*n > R(n) for large enough n
+
+
+(define (fib n)
+  (cond ((= n 0) 0)
+        ((= n 1) 1)
+        (else (+ (fib (- n 1))
+                 (fib (- n 2))))))
+
+No, it would not work as desired with
+(define memo-fib
+ (memoize fib))
+
+Right after the first lookup in the empty table, the fib procedure will be called (fib n)
+
+to compute the result, since fib does not call memo-fib, only 1 entry is stored
+the nth fib number.
+It will work in the long term if the memo-fib was called before on the same input.
+Otherwise, it will not provide any decrease in the number of steps when computing
+fib numbers that were not previously computed, even if memo-fib stores the needed entries:
+fib procedure cannot utilize them.

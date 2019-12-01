@@ -1,0 +1,102 @@
+(define (expmod base exp m)
+  (cond ((= exp 0) 1)
+        ((even? exp)
+         (remainder
+          (* (expmod base (/ exp 2) m)
+             (expmod base (/ exp 2) m))
+          m))
+        (else
+         (remainder
+          (* base
+             (expmod base (- exp 1) m))
+          m))))
+
+Louis has done the following:
+
+For every odd n he didn't change the orders of growth for space and steps:
+
+R[space](n) = R[space](n - 1) + 1
+
+R[step](n) = R[step](n - 1) + 1
+
+The order growth here is linear
+
+For even integers, however, the initial orders of growth were:
+
+R[space](n) = R[space](n/2) + 1
+
+R[step](n) = R[step](n/2) + 1
+
+The order growth here is logarithmic since log2 (2n) = log2 (n) + 1
+
+And that was the basis of logarithmic order of growth, since it meant that for n it would take floor(log2(n)) + the number of digits 1 in the bin. form of n.
+
+Louis' version however, explicitly evaluates two procedures that evolve the same process,
+
+Therefore, it takes twice as much, as it takes for one this process to terminate(+ 1 *)
+
+R[space](n) = 2R[space](n/2) + 1
+
+R[step](n) = 2R[step](n/2) + 1
+
+Therefore, for even numbers:
+R[space](n) = Θ(n)
+R[step](n) = Θ(n)
+
+How it all works together:
+
+every time the exponent is even, the number of steps for n/2 is multiplied by 2  and + 1. (this will happen floor(log2(n)) times)
+every time the exp is odd. + 1 step  to the number of  steps for n - 1
+
+R(n) has the the general form: 1 + 2(2(1 + 2(...) + 1) + 1) + 1
+
+
+where the amount of multiplication by 2 and the rightmost + 1 is equal to floor(log2(n)), while the amount of leftmost 1 + is <= floor(log2(n)) + 1
+R(1) = 1, this step is included in floor(log2(n)) + 1, as the exponent is always reduced to 1, then to 0
+
+For n that has the a binary form 111111111...111111, the amount of steps is
+2(2(2(2(2(2(...(1*2 + 2)... +2) + 2) + 2) + 2) + 2) + 2) + 2
+
+                the leftmost 1 for R(1).
+
+The amount of + 2 and 2( is equal. It is floor(log2(n)).
+
+Notice that the innermost expression is 2 + 2.
+
+Therefore, the expression has the following form:
+
+2^floor(log2(n)) + 2^floor(log2(n)) + 2^[floor(log2 (n)) - 1] + 2^[floor(log2 (n)) - 2] ... + 2
+
+2^(floor(log2(n)) + 1) + + 2^[floor(log2 (n)) - 1] + 2^[floor(log2 (n)) - 2] ... + 2 < 2^(floor(log2(n)) + 2), as  2^(floor(log2(n)) + 1) + + 2^[floor(log2 (n))] + 2^[floor(log2 (n)) - 1] ... + 2 + 1 <  2^(floor(log2(n)) + 2)
+
+The n having this form has the maximum amount of steps for a fixed length of binary form of n.
+
+Therefore, for ev. n > 0: R(n) < 2^(floor(log2(n)) + 2)
+
+Let f(n) be a function that for n > 1 does the following :
+
+2^(log2(n) - 1) = n/2
+
+log2(n) - 1 < floor(log2(n))
+
+2^floor(log2(n)) is less than R(n) for steps or space as least 1 digit 1 is in the binary representation and it does not count + 1 for even n.
+
+Ther. n/2 < R(n)
+
+therefore n < R(n) for n > 0
+
+k1 = 1/2
+
+Let g(n) be a function that for n > 0 does the following:
+
+2^(floor(log2(n)) + 2)
+
+2^(floor(log2(n)) + 2) = approx. 4*n. (4n > 2^(floor(log2(n)) + 2))
+
+Therefore, R(n) < 4n
+
+k2 = 4.
+
+Therefore for both steps AND space the R(n) = Θ(n)
+
+Eva is right.

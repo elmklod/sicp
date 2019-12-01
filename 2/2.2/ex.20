@@ -1,0 +1,64 @@
+(define (same-parity x . y)
+  (let ((parx (remainder x 2)))
+
+   (define (iter result y)
+    (cond ((null? y) result)
+          ((= parx (remainder (car y) 2))
+            (iter (cons (car y) result) (cdr y)))
+
+          (else (iter result (cdr y)))))
+ (reverse (iter (list x) y))))
+
+(define (same-parity x . y)
+   (define (iter result y)
+    (cond ((null? y) result)
+
+          ((= (remainder x 2) (remainder (car y) 2))
+            (iter (cons (car y) result) (cdr y)))
+
+          (else (iter result (cdr y)))))
+ (reverse (iter (list x) y)))
+
+(define (same-parity x . y)
+   (define (iter result y)
+    (cond ((null? y) result)
+
+          ((= (remainder x 2) (remainder (car y) 2))
+            (iter (append result (list (car y))) (cdr y)))
+
+          (else (iter result (cdr y)))))
+ (iter (list x) y))
+
+
+(define (same-parity x . y)
+ (define (rec y)
+  (cond ((null? y) '())
+        ((= (remainder x 2)
+            (remainder (car y) 2))
+         (cons (car y)
+               (rec (cdr y))))
+        (else (rec (cdr y)))))
+ (cons x (rec y)))
+
+
+(define (same-parity x . y)
+ (let ((parx (remainder x 2)))
+  (define (rec y)
+    (cond ((null? y) '())
+          ((= parx
+              (remainder (car y) 2))
+          (cons (car y)
+                (rec (cdr y))))
+          (else (rec (cdr y)))))
+  (cons x (rec y))))
+
+
+(define (same-parity x . y)
+ (define (rec x y)
+  (cond ((null? y) (cons x '()))
+        ((= (remainder x 2)
+            (remainder (car y) 2))
+         (cons x
+               (rec (car y) (cdr y))))
+        (else (rec x (cdr y)))))
+ (rec x y))

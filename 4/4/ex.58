@@ -1,0 +1,11 @@
+(rule (big-shot ?person ?division)
+  (and (job ?person (?division . ?position))
+       (or (not (supervised ?person))
+           (and (supervisor ?person ?boss) ; logically redundant but required to match ?boss pattern
+                (not (works-in-division ?boss ?division))))))
+
+(rule (supervised ?worker)
+  (supervisor ?worker ?boss))
+
+(rule (works-in-division ?person ?division)
+  (job ?person (?division . ?position)))

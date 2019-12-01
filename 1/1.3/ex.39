@@ -1,0 +1,16 @@
+Notice that nk for k > 1 is actually (square x)
+while for n1 x.
+(lambda (i) (if (= i 1)
+                x
+                (- (square x))))
+is suitable as well.
+
+dk is the k odd number = 2j + 1 = 2(k - 1) + 1 = 2k - 1.
+
+(define (tan-cf x k)
+ (cont-frac (lambda (k) (* x 1.0
+                           (if (= 1 k)
+                               1
+                               (- x))))
+            (lambda (y) (- (* 2 y) 1.0))
+            k))

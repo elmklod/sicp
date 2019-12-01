@@ -1,0 +1,30 @@
+
+(define (fold-right op init seqs)
+ (define (reverse-low-level l)
+  (define (iter l rev-l)
+   (if (null? l)
+       rev-l
+       (iter (cdr l) (cons (car l) rev-l))))
+  (iter l '()))
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op (car rest) result) (cdr rest))))
+ (iter init (reverse-low-level seqs)))
+
+(define (fold-left op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op result (car rest)) (cdr rest))))
+ (iter init seqs))
+
+(define (reverse seqs)
+ (fold-right (lambda (x result) (append result (list x)))
+             nil
+             seqs))
+
+(define (reverse seqs)
+ (fold-left (lambda (result x) (append (list x) result))
+            nil
+            seqs))

@@ -1,0 +1,35 @@
+One way to accomplish this is to for each pair in the stream that authors created
+create another pair with the order of elements reversed if they are not the same.
+
+(define (pairs s t)
+  (define (pairs-unique s t)
+    (cons-stream
+     (list (stream-car s) (stream-car t))
+     (interleave
+      (stream-map (lambda (x)
+                    (list (stream-car s) x))
+                  (stream-cdr t))
+      (pairs-unique (stream-cdr s) (stream-cdr t)))))
+  (define (reflect s)
+    (let ((pair (stream-car s)))
+      (cons-stream pair
+                   (if (eq? (car pair)
+                            (cadr pair))
+                       (reflect (stream-cdr s))
+                       (cons-stream (reverse pair)
+                                    (reflect (stream-cdr s)))))))
+  (reflect (pairs-unique s t)))
+
+(define (pairs s t)
+  (let ((s-elem (stream-car s))
+        (t-elem (stream-car t)))
+    (cons-stream
+     (list s-elem t-elem)
+     (interleave
+      (interleave
+       (stream-map (lambda (x) (list s-elem x))
+                   (stream-cdr t))
+       (stream-map (lambda (x) (list x t-elem))
+                   (stream-cdr s)))
+      (pairs (stream-cdr s)
+             (stream-cdr t))))))

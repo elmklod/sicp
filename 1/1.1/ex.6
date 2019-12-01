@@ -1,0 +1,69 @@
+(define (new-if predicate
+                then-clause
+                else-clause)
+  (cond (predicate then-clause)
+        (else else-clause)))
+
+(define (sqrt-iter guess x)
+  (new-if (good-enough? guess x)
+          guess
+          (sqrt-iter (improve guess x) x)))
+
+
+Suppose Alyssa starts the evaluation of (sqrt j), where j is any number:
+
+Since the applicative order evaluation is used together with the substitution model:
+
+  compound procedure sqrt is evaluated, its value is a [computer process] (sqrt-iter 1 x).
+
+  j is evaluated to the value of number j.
+
+  the procedure (named) (sqrt-iter 1 x) is applied to the value j:
+
+    The evaluation of (sqrt-iter 1 j) is started: {0}
+
+      sqrt-iter is evaluated, its value is the a [computer process] (new-if (good-enough? guess x)
+                                                                            guess
+                                                                            (sqrt-iter (improve guess x) x)) [0]
+      1 is evaluated to the value 1.
+
+      j is (already evaluated) evaluated to the value of j.
+
+      the procedure (named)  (new-if (good-enough? guess x)              {0}
+                             guess
+                             (sqrt-iter (improve guess x) x))
+      is applied to the values 1, j.
+
+        The evaluation of (new-if (good-enough? 1 j)
+                               1
+                               (sqrt-iter (improve 1 j) j))
+        is started:
+
+          new-if is evaluated to the value of a [computer process] (cond (predicate then-clause)
+                                                                         (else else-clause))
+          the combination (good-enough? 1 j) is evaluated:
+
+            good-enough? is evaluated to its body (computer process) value. (not important)
+
+            1 is evaluated to the value 1.
+
+            j is evaluated to the value j.
+
+            the procedure good-enough is applied to 1 and j:
+
+              the result is either #t or #f (if the procedure was correctly created)
+
+
+            Regardless of the value of the (which is to be seen as a predicate) previous expression
+
+            the evaluation of the 1 results in the value of 1.
+
+            Then the combination (sqrt-iter (improve 1 j) j) is evaluated, and it all repeats, starting from
+
+            the {0}, with the exception that the first operand is now a combination(compound expression)
+
+It NEVER ENDS.
+(except that a maximum recursion depth is reached and the interpreter stops/interrupts the evaluations)
+
+If the interpreter used the normal-order-evaluation, this procedure would work as intended.
+But Eva kept that a secret from  Alyssa.

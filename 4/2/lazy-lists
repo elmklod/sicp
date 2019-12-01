@@ -1,0 +1,25 @@
+(define (cons (lazy-memo a) (lazy-memo b)) (lambda (proc) (proc a b)))
+
+(define (car p) (p (lambda (a b) a)))
+
+(define (cdr p) (p (lambda (a b) b)))
+
+thanks to p being applied, it(a procedure) is always forced.
+
+(define (map proc items)
+  (if (null? items)
+      '()
+      (cons (proc (car items))
+            (map proc (cdr items)))))
+
+(define (integral (lazy-memo integrand) initial-value dt)
+  (define int
+    (cons initial-value
+          (add-lists (scale-list integrand dt)
+                     int)))
+  int)
+
+(define (solve f y0 dt)
+  (define dy (map f y))
+  (define y (integral dy y0 dt))
+  y)

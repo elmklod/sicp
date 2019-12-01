@@ -1,0 +1,10 @@
+(and (supervisor ?employee (Bitdiddle Ben))
+     (address ?employee . ?where))
+
+(and (lisp-value < ?earns ?ben-earnings)
+     (salary (Bitdiddle Ben) ?ben-earnings)
+     (salary ?employee ?earns))
+
+(and (supervisor ?employee ?someone)
+     (not (job ?someone (computer . ?whatever)))
+     (job ?someone ?position))

@@ -1,0 +1,19 @@
+neither car nor cdr force the values stored in pair.
+
+(define loop-1 (cons (cdr loop-1) (car loop-1)))
+
+(define loop-2 (cons (car loop-2) (cdr loop-2)))
+
+These constructs are not possible within a pure applicative-order lang.
+(especially the car-part, which is not possible even in the ordinary Scheme with streams)
+
+Having a delayed car-part, one can construct more than an infinite sequence:
+The car can now store a reference to the pair or its parts or even parts of its parts and so on.
+
+But this is not the main improvement:
+while car is delayed, usually a stream sequence has everything delayed except for the first element.
+
+Instead, one can traverse a lazy list structure without the need to evaluate its elements.
+This allows for a faster traversal through the structure.
+
+More than this, it allows passing parts of structures(sometimes not yet evaluated) and unevaluated elements of it.

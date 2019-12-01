@@ -1,0 +1,27 @@
+Consider, for example, an interval z
+
+it was created during multiplication of intervals x and y
+
+   x    y
+2. -- * ++ : lz = lx*uy;  uz = ux*ly
+
+Consider an interval w
+
+it was created during summation of x and y:
+
+x + y : lw = lx + ly; uw = ux + uy
+
+Now, whatever operation is is applied to w and z, their bounds are incompatible
+
+The only way out of such a situation would be to keep all possible combinations of EVERY operation application to all
+bounds, and use it, when appropriate, also the system must maintain the notion of "similarity" and dependence of the interval on the intervals, from which it was constructed
+when a procedure was applied to them
+
+Suppose, however, another multiplication to z happens, Then the number of combinations to be stored grows exponentially(2^n, upper-bound and lower-bound of some interval) as the amount
+of dependencies increases.
+
+In just 10 dependencies, 1024 result must be stored.
+
+This order of growth O(e^n) is not suitable for any large-scale interval-arithmetic.
+
+But it is possible.

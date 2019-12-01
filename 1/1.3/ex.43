@@ -1,0 +1,59 @@
+Iterative approach
+
+(define (repeated f n)
+ (if (= n 1)
+     (lambda (x) (f x))
+     (lambda (x) ((repeated f (- n 1))  (f x)))))
+
+(define (repeated f n)
+     (lambda (x) ((if (= n 1)
+                      (lambda (y) y)
+                      (repeated f (- n 1)))  (f x))))
+
+(define (repeated f n)
+ (if (= n 1)
+     (lambda (x) (f x))
+     (compose (repeated f (- n 1)) f)))
+
+(define (compose f g)
+ (lambda (x) (f (g x))))
+
+(define (repeated f n)
+     (compose (if (= n 1)
+                  (lambda (y) y)
+                  (repeated f (- n 1))) f))
+
+
+Notice that repeated used with compose creates the n-th application of f at once, because of the
+applicative-order-evaluation.
+It is not clear what happens with lambda special form alone.
+It is quite likely that it is the example of lazy evaluation
+which with the iterative approach would reduce the amount of space, as the (f x) is evaluated first, before it is "composed"
+with another f
+
+(define (repeated f n)
+ (if (= n 1)
+     (lambda (x) (f x))
+     (lambda (x) (f ((repeated f (- n 1)) x)))))
+
+(define (repeated f n)
+     (lambda (x) (f  ((if (= n 1)
+                      (lambda (y) y)
+                      (repeated f (- n 1)))
+                                            x))))
+
+(define (repeated f n)
+ (if (= n 1)
+     (lambda (x) (f x))
+     (compose f (repeated f (- n 1)))))
+
+(define (repeated f n)
+     (compose f  (if (= n 1)
+                      (lambda (y) y)
+                      (repeated f (- n 1)))))
+
+Recursive approach.
+
+Although the processes are, in fact, iterative in both cases.
+It is because the procedure is, in the latter cases, made at once, while in the former
+it is constructed one step at a time for each application to the operand.

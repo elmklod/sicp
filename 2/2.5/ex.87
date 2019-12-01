@@ -1,0 +1,318 @@
+until there is a way to coerce number to polynomial, =zero? should not be implemented
+using the generic equ? procedure
+
+(define (install-polynomial-package)
+
+  (define (make-poly variable term-list)
+    (cons variable term-list))
+  (define (variable p) (car p))
+  (define (term-list p) (cdr p))
+  (define (=zero? p)
+   (empty-termlist? (term-list p)))
+
+  (define (mul-terms L1 L2)
+  (if (empty-termlist? L1)
+      (the-empty-termlist)
+      (add-terms
+       (mul-term-by-all-terms
+        (first-term L1) L2)
+       (mul-terms (rest-terms L1) L2))))
+
+
+  (define (add-terms L1 L2)
+  (cond ((empty-termlist? L1) L2)
+        ((empty-termlist? L2) L1)
+        (else
+         (let ((t1 (first-term L1))
+               (t2 (first-term L2)))
+           (cond ((> (order t1) (order t2))
+                  (adjoin-term
+                   t1
+                   (add-terms (rest-terms L1)
+                              L2)))
+                 ((< (order t1) (order t2))
+                  (adjoin-term
+                   t2
+                   (add-terms
+                    L1
+                    (rest-terms L2))))
+                 (else
+                  (adjoin-term
+                   (make-term
+                    (order t1)
+                    (add (coeff t1)
+                         (coeff t2)))
+                   (add-terms
+                    (rest-terms L1)
+                    (rest-terms L2)))))))))
+  (define (mul-term-by-all-terms t1 L)
+  (if (empty-termlist? L)
+      (the-empty-termlist)
+      (let ((t2 (first-term L)))
+        (adjoin-term
+         (make-term
+          (+ (order t1) (order t2))
+          (mul (coeff t1) (coeff t2)))
+         (mul-term-by-all-terms
+          t1
+          (rest-terms L))))))
+
+
+
+
+(define (sub-terms L1 L2)
+  (add-terms L1 (negate-terms L2)))
+
+
+  (define (div-terms L1 L2)
+    (let ((L1 (if (eq? (type-tag L1) 'dense)
+                  (raise L1)
+                  L1))
+          (L2 (if (eq? (type-tag L2) 'dense)
+                        (raise L2)
+                        L2)))
+    (if (empty-termlist? L1)
+        (list (the-empty-termlist)
+              (the-empty-termlist))
+        (let ((t1 (first-term L1))
+              (t2 (first-term L2)))
+          (if (> (order t2) (order t1))
+              (list (the-empty-termlist) L1)
+              (let ((new-c (div (coeff t1)
+                                (coeff t2)))
+                    (new-o (- (order t1)
+                              (order t2))))
+                (let ((new-term
+                       (make-term new-o
+                                  new-c)))
+                    (let ((rest-of-result
+                           (div-terms
+                              (sub-terms
+                                (rest-terms L1)
+                                (mul-term-by-all-terms
+                                 new-term
+                                 (rest-terms L2)))
+                              L2)))
+                       (list (adjoin-term
+                               new-term
+                               (car rest-of-result))
+                             (cadr rest-of-result))))))))))
+
+
+
+    (define (negate-terms l)
+      (apply-generic 'negate l))
+
+
+  (define (sub-poly p1 p2)
+    (add-poly p1 (neg p2)))
+
+
+  (define (add-poly p1 p2)
+    (let ((var1 (variable p1))
+          (var2 (variable p2)))
+      (if (same-variable? var1
+                          var2)
+          (make-poly
+          (preserve-variable var1 var2)
+          (add-terms (term-list p1)
+                     (term-list p2)))
+          (if (higher-priority?
+               var1
+               var2)
+              (add-poly p1 (make-poly no-var
+                                      (adjoin-term
+                                        (make-term 0 p2)
+                                        (the-empty-termlist))))
+              (add-poly p2 (make-poly no-var
+                                      (adjoin-term
+                                        (make-term 0 p1)
+                                        (the-empty-termlist))))))))
+
+  (define (mul-poly p1 p2)
+    (let ((var1 (variable p1))
+          (var2 (variable p2)))
+      (if (same-variable? var1
+                          var2)
+          (make-poly
+          (preserve-variable var1 var2)
+          (mul-terms (term-list p1)
+                     (term-list p2)))
+          (if (higher-priority?
+               var1
+               var2)
+              (mul-poly p1 (make-poly no-var
+                                      (adjoin-term
+                                        (make-term 0 p2)
+                                        (the-empty-termlist))))
+              (mul-poly p2 (make-poly no-var
+                                      (adjoin-term
+                                        (make-term 0 p1)
+                                        (the-empty-termlist))))))))
+
+  (define (div-poly p1 p2)
+   (if (same-variable? (variable p1)
+                       (variable p2))
+       (let ((div-list
+              (div-terms (term-list p1)
+                         (term-list p2))))
+              (list (make-poly
+                      (variable p1)
+                      (car div-list))
+                    (make-poly
+                      (variable p1)
+                      (cadr div-list))))
+       (if (higher-priority?
+            var1
+            var2)
+           (mul-poly p1 (make-poly no-var
+                                   (adjoin-term
+                                     (make-term 0 (make-rational 1. p2))
+                                     (the-empty-termlist))))
+           (mul-poly p2 (make-poly no-var
+                                   (adjoin-term
+                                     (make-term 0 (make-rational 1. p1))
+                                     (the-empty-termlist)))))))
+
+  (define (preserve-variable var1 var2)
+      (if (not (eq? var1 no-var))
+          var1
+          var2))
+
+  (define (neg p)
+   (make-poly (variable p)
+              (negate-terms (term-list p))))
+  (define (remainder-terms L1 L2)
+    (cadr (div-terms L1 L2)))
+
+  (define (gcd-poly p1 p2)
+  (if (same-variable? (variable p1)
+                        (variable p2))
+        (make-poly
+         (variable p1)
+         (gcd-terms (term-list p1)
+                    (term-list p2)))
+        (error "Polys not in same var:
+                GCD-POLY"
+               (list p1 p2))))
+(define (gcd-terms a b)
+    (let ((a (if (eq? (type-tag a) 'dense)
+                  (raise a)
+                  a))
+          (b (if (eq? (type-tag b) 'dense)
+                        (raise b)
+                        b)))
+  (if (empty-termlist? b)
+      (attach-tag 'sparse (map (lambda (term)
+                                 (make-term (order term)
+                                            (div (coeff term) (common-factor a))))
+                                (contents a)))
+      (gcd-terms b (pseudoremainder-terms a b)))))
+
+(define (pseudoremainder-terms L1 L2)
+  (let ((L1 (if (eq? (type-tag L1) 'dense)
+                (raise L1)
+                L1))
+        (L2 (if (eq? (type-tag L2) 'dense)
+                      (raise L2)
+                      L2)))
+  (if (empty-termlist? L1)
+      (the-empty-termlist)
+      (let ((t1 (first-term L1))
+            (t2 (first-term L2)))
+        (cadr (div-terms
+              (mul-term-by-all-terms
+               (make-term 0 (expt (coeff t2) (+ (- (order t1)
+                                                   (order t2))
+                                                1)))
+               L1)
+              L2))))))
+
+
+(define (common-factor a)
+  (fold-right (lambda (term divisor)
+                  (greatest-common-divisor (coeff term) divisor))
+                0
+                (contents a)))
+
+ (define (reduce-terms L1 L2)
+  (let ((L1 (if (eq? (type-tag L1) 'dense)
+                (raise L1)
+                L1))
+        (L2 (if (eq? (type-tag L2) 'dense)
+                      (raise L2)
+                      L2)))
+(if (empty-termlist? L1)
+       (list L1 L2)
+       (let ((g (gcd-terms L1 L2))
+             (o1 (max (order (first-term L1))
+                      (order (first-term L1)))))
+         (let ((o2 (order (first-term g))))
+            (let ((factor
+                   (make-term 0
+                              (expt (coeff (first-term g))
+                              (+ 1 (- o1 o2))))))
+              (let ((reduced-n
+                      (car (div-terms
+                                  (mul-term-by-all-terms
+                                    factor
+                                    L1)
+                                  g)))
+                    (reduced-d
+                            (car (div-terms
+                                        (mul-term-by-all-terms
+                                          factor
+                                          L2)
+                                        g))))
+                   (let ((g (gcd (common-factor reduced-n)
+                                 (common-factor reduced-d))))
+                      (list
+                                        (attach-tag 'sparse (map (lambda (term) (make-term (order term)
+                                                                       (div (coeff term)
+                                                                            g)))
+                                             (contents reduced-n)))
+                          (attach-tag 'sparse
+                                              (map (lambda (term) (make-term (order term)
+                                                                             (div (coeff term)
+                                                                                  g)))
+                                                   (contents reduced-d))))))))))))
+
+(define (reduce-poly p1 p2)
+  (if (same-variable? (variable p1)
+                      (variable p2))
+      (map (lambda (L) (make-poly
+                          (preserve-variable
+                            (variable p1)
+                            (variable p2))
+                          L))
+           (reduce-terms (term-list p1)
+                         (term-list p2)))
+      (error "Polys not in same var:
+              REDUCE-POLY"
+             (list p1 p2))))
+
+
+
+  (define (tag p) (attach-tag 'polynomial p))
+  (put 'add '(polynomial polynomial)
+       (lambda (p1 p2)
+         (tag (add-poly p1 p2))))
+  (put 'mul '(polynomial polynomial)
+       (lambda (p1 p2)
+         (tag (mul-poly p1 p2))))
+  (put 'make 'polynomial
+       (lambda (var terms)
+         (tag (make-poly var terms))))
+  (put '=zero? '(polinomial) =zero?)
+  (put 'sub '(polynomial polynomial)
+       (lambda (p1 p2) (tag (sub-poly p1 p2))))
+  (put 'div '(polynomial polynomial)
+       (lambda (x y)
+          (let ((result (div-poly x y)))
+              (list (tag (car result))
+                    (tag (cadr result))))))
+  (put 'negate '(polynomial) (lambda (p) (tag (neg p))))
+  (put 'gcd '(polynomial polynomial) (lambda (p1 p2) (tag (gcd-poly p1 p2))))
+  (put 'reduce '(polynomial polynomial)
+  (lambda (p1 p2) (map tag (reduce-poly p1 p2))))
+  'done)

@@ -1,0 +1,42 @@
+(define (traverse-environment empty-evironment-proc
+                              empty-frame-proc
+                              equal-variable-proc
+                              var
+                              env)
+ (define (scan frame-bindings)
+   (cond ((equal? (the-empty-frame) frame-bindings)
+          (empty-frame-proc))
+         (else
+          (let ((binding (frame-first-binding frame-bindings)))
+             (cond ((eq? var (car binding))
+                    (equal-variable-proc binding))
+                   (else
+                    (scan (frame-rest-bindings frame-bindings))))))))
+ (if (eq? env the-empty-environment)
+     (empty-evironment-proc)
+     (scan (first-frame env))))
+
+
+(define (lookup-variable-value var env)
+  (traverse-environment
+   (lambda () (error "Unbound variable" var))
+   (lambda () (lookup-variable-value var (enclosing-environment env)))
+   cadr
+   var
+   env))
+
+(define (set-variable-value! var val env)
+  (traverse-environment
+   (lambda () (error "Unbound variable: SET!" var))
+   (lambda () (set-variable-value! var val (enclosing-environment env)))
+   (lambda (binding) (set-car! (cdr binding) val))
+   var
+   env))
+
+(define (define-variable! var val env)
+ (traverse-environment
+  (lambda () (error "Environment has no frames" env))
+  (lambda () (add-binding-to-frame! var val (first-frame env)))
+  (lambda (binding) (set-car! (cdr binding) val))
+  var
+  env))

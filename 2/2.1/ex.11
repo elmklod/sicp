@@ -1,0 +1,97 @@
+(define (mul-interval x y)
+  (let ((p1 (* (lower-bound x)
+               (lower-bound y)))
+        (p2 (* (lower-bound x)
+               (upper-bound y)))
+        (p3 (* (upper-bound x)
+               (lower-bound y)))
+        (p4 (* (upper-bound x)
+               (upper-bound y))))
+    (make-interval (min p1 p2 p3 p4)
+                   (max p1 p2 p3 p4))))
+
+There are several outcomes of the mul-interval depending on the sign(and sometimes value)
+of endpoints.
+
+Possible variants:
+
+0. ++ * ++ : lz = lx*ly;  uz = ux*uy
+
+1. -+ * ++ : lz = lx*uy;  uz = ux*uy
+
+2. -- * ++ : lz = lx*uy;  uz = ux*ly
+
+3. ++ * -+ : lz = ux*ly;  uz = ux*uy
+
+4. -+ * -+ : special case
+
+5. -- * -+ : lz = lx*uy;  uz = lx*ly
+
+6. ++ * -- : lz = ux*ly;  uz = lx*uy
+
+7. -+ * -- : lz = ux*ly;  uz = lx*ly
+
+8. -- * -- : lz = ux*uy;  uz = lx*ly
+
+
+Treat 0+, -0 and 00 as special cases, but the first finitsh with 4:
+
+in this case lz = (min (* lx uy) (* ux ly)) and uz = (max (* ux uy) (* lx ly))
+
+as it is not clear what product is the greatest/least
+
+without direct comparison(or some elaborate analysis of bounds)
+
+00 mimicks any combination.
+Here it will mimick ++
+
+Notice that 0 can be thought as +, as it behaves the same: 0+ * ++ or ++ * 0+ is like 0.
+                                                           0+ * -+ or -+ * 0+ is like 3 and 1, respectively
+                                                           0+ * -- or -- * 0+ is like 6 and 2, respectively
+                                                           0+ * 0+ is like 0.
+                                                           0+ * 00 or 00 * 0+ is like 0
+
+                                                           -0 * ++ or ++ * -0 is just like 1 and 3, respectively
+                                                           -0 * -+ or -+ * -0 will yield valid results when following 4.
+                                                           -0 * -- or -- * -0  is just like 7 and 5, respectively
+                                                           -0 * -0 will yield valid results when following 4
+                                                           -0 * 00 or 00 * -0 is just like 1 and 3, respectively
+
+                                                           00 * 00 is like 0
+
+                                                          +0 * -0 or -0 * +0 is just like 3 and 1, respectively
+
+Therefore, when checking for a bound to be positive, it will be checked with >=, not >
+
+(define (mul-interval x y)
+  (let ((lx (lower-bound x))
+        (ux (upper-bound x))
+        (ly (lower-bound y))
+        (uy (upper-bound y)))
+    (cond ((and (>= lx 0) (>= ly 0))
+                  (make-interval (* lx ly)
+                                 (* ux uy)))
+          ((and (< lx 0) (>= ux 0) (>= ly 0))
+                  (make-interval (* lx uy)
+                                 (* ux uy)))
+          ((and (< ux 0) (>= ly 0))
+                  (make-interval (* lx uy)
+                                 (* ux ly)))
+          ((and (>= lx 0) (< ly 0) (>= uy 0))
+                  (make-interval (* ux ly)
+                                 (* ux uy)))
+          ((and (< lx 0) (>= ux 0) (< ly 0) (>= uy 0))
+                  (make-interval (min (* lx uy) (* ux ly))
+                                 (max (* ux uy) (* lx ly))))
+          ((and (< ux 0) (< ly 0) (>= uy 0))
+                  (make-interval (* lx uy)
+                                 (* lx ly)))
+          ((and (>= lx 0) (< uy 0))
+                  (make-interval (* ux ly)
+                                 (* lx uy)))
+          ((and (< lx 0) (>= ux 0) (< uy 0))
+                  (make-interval (* ux ly)
+                                 (* lx ly)))
+          ((and (< ux 0) (< uy 0))
+                  (make-interval (* ux uy)
+                                 (* lx ly))))))

@@ -1,0 +1,215 @@
+(define (search-for-primes start end)
+  (define (even? n)
+   (= (remainder n 2) 0))
+
+  (define (timed-prime-test n)
+     (define (start-prime-test n start-time)
+       (if (prime? n)
+           (report-prime (- (runtime)
+                            start-time))))
+
+     (define (report-prime elapsed-time)
+       (display " *** ")
+       (display elapsed-time))
+
+     (newline)
+     (display n)
+     (start-prime-test n (runtime)))
+
+  (define (prime? n)
+     (define (smallest-divisor n)
+      (test-divisor n 2))
+
+     (define (test-divisor n divisor)
+      (cond ((> (square divisor) n) n)
+            ((divides? divisor n) divisor)
+            (else (test-divisor n (+ divisor 1)))))
+
+     (define (divides? divisor n)
+       (= (remainder n divisor) 0))
+
+
+     (= (smallest-divisor n) n))
+
+
+  (cond ((or (and (even? start) (not (= start 2))) (= start 1)) (search-for-primes (+ start 1) end))
+        ((> start end) (newline) (display " End of the interval "))
+        (else (timed-prime-test start) (search-for-primes (+ start (if (= 2 start)
+                                                                       1
+                                                                       2))
+                                                          end))))
+
+
+!!!!!!!!!!!!!!!!
+Warning: timings are for this version
+!!!!!!!!!!!!!!!!!!!
+
+(define (search-for-primes start end)
+
+  (define (even? n)
+   (= (remainder n 2) 0))
+
+  (define (timed-prime-test n)
+     (define (start-prime-test n start-time)
+       (if (prime? n)
+           (report-prime (- (runtime)
+                            start-time))))
+
+     (define (report-prime elapsed-time)
+       (display " *** ")
+       (display elapsed-time))
+
+     (newline)
+     (display n)
+     (start-prime-test n (runtime)))
+
+  (define (prime? n)
+     (define (smallest-divisor n)
+      (test-divisor n 2))
+
+     (define (test-divisor n divisor)
+      (cond ((> (square divisor) n) n)
+            ((divides? divisor n) divisor)
+            (else (test-divisor n (+ divisor 1)))))
+
+     (define (divides? divisor n)
+       (= (remainder n divisor) 0))
+
+     (= (smallest-divisor n) n))
+
+
+  (cond ((even? start) (search-for-primes (+ start 1) end))
+        ((> start end) (newline) (display " End of the interval "))
+        (else (timed-prime-test start) (search-for-primes (+ start 2) end))))
+
+smallest primes > 1000:
+1009 *** 0.
+1013 *** 0.
+1019 *** 0.
+
+smallest primes > 10000:
+10007 *** 0.
+10009 *** 0.
+10037 *** 0.
+
+smallest primes > 100000:
+100003 *** 0.
+100019 *** 0.
+100043 *** 0.
+
+smallest primes > 1000000:
+1000003 *** 0.
+1000033 *** 0.
+1000037 *** 9.999999999999787e-3
+
+As the interpreter is not able to time the testing of numbers this small,
+
+smallest primes > 100000000:
+
+100000001
+100000003
+100000005
+100000007 *** 1.0000000000001563e-2
+100000009
+100000011
+100000013
+100000015
+100000017
+100000019
+100000021
+100000023
+100000025
+100000027
+100000029
+100000031
+100000033
+100000035
+100000037 *** 9.999999999999787e-3
+100000039 *** 9.999999999999787e-3
+
+Average time for first 3 : 1.0000000000000378e-2
+
+smallest primes > 1000000000:
+
+1000000001
+1000000003
+1000000005
+1000000007 *** 3.0000000000001137e-2
+1000000009 *** .02999999999999936
+1000000011
+1000000013
+1000000015
+1000000017
+1000000019
+1000000021 *** 4.0000000000000924e-2
+1000000023
+1000000025
+1000000027
+1000000029
+1000000031
+1000000033 *** .02999999999999936
+1000000035
+
+Average time for first 3: 3.3333333333333805e-2 - 2.6666666666668466e-2
+
+smallest primes > 10000000000:
+
+10000000001
+10000000003
+10000000005
+10000000007
+10000000009
+10000000011
+10000000013
+10000000015
+10000000017
+10000000019 *** .08999999999999986
+10000000021
+10000000023
+10000000025
+10000000027
+10000000029
+10000000031
+10000000033 *** .10999999999999943
+10000000035
+10000000037
+10000000039
+10000000041
+10000000043
+10000000045
+10000000047
+10000000049
+10000000051
+10000000053
+10000000055
+10000000057
+10000000059
+10000000061 *** .120000000000001
+10000000063
+10000000065
+10000000067
+10000000069 *** .129999999999999
+10000000071
+
+Average time for first 3 : .10666666666666676
+
+
+                        3.0000000000001137e-2
+                        2.6666666666668466e-2
+
+1.0000000000000378e-2   3.3333333333333805e-2   .10666666666666676
+
+        x              3.3333333333332544 * x       3.1999999999999575 * 3.3333333333332544 * x
+
+
+sqrt(10) = approx. 3.1622776601683795
+
+For 100000000000 the factor is approx. 3,
+while for 1000000000000 - 3.3473684210526358 - 3.2783505154639228
+for 10000000000000 - 3.0442477876106215 - 3.2452830188679256
+
+Indeed, this strongly supports that for prime?/smallest-divisor procedure R[step](n) = Θ(sqrt(n))
+
+It is compatible with the notion that programs run in time proportional to the number of steps.
+(it is not evident for now that for larger numbers there is extra time spent during application of the primitive procedures,
+except that it takes slightly more time for larger numbers and because of the processor, memory timings)

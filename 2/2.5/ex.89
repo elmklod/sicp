@@ -1,0 +1,63 @@
+(define (adjoin-term term term-list)
+  (if (=zero? (coeff term))
+      term-list
+      (cons term term-list)))
+(define (the-empty-termlist) '())
+(define (first-term term-list) (car term-list))
+(define (rest-terms term-list) (cdr term-list))
+(define (empty-termlist? term-list)
+  (null? term-list))
+(define (make-term order coeff)
+  (list order coeff))
+(define (order term) (car term))
+(define (coeff term) (cadr term))
+
+The essential part is to change the first-term selector and adjoin-term procedure:
+
+Term, when not in the terms-list, will be just like the original terms in the book
+
+When in the terms-list, the term is its coefficient positioned so that
+(= (- (length terms-list) 1)
+   (order term))
+
+is true
+
+(define (first-term term-list)
+  (make-term (- (length term-list)
+                1)
+             (car term-list)))
+
+Since it is ensured that first-term selector is never applied to the empty list,
+This procedure is designed with this assumption in mind
+
+(define (adjoin-term term term-list)
+  (let ((term-order (order term))
+        (max-order (- (length term-list) 1)))
+     (cond  ((=zero? (coeff term)) term-list)
+            ((= (- term-order
+                   max-order)
+                1)
+            (cons (coeff term)
+                  term-list))
+           ((> term-order
+               max-order)
+            (adjoin-term term
+                         (cons 0
+                               term-list))))))
+
+(define (negate-terms l)
+  (map (lambda (term)
+          (negate term)))
+       l)
+
+It is possible to implement a dense polynomial term representation like this:
+first-term procedure would make every element of the term list 0, except the first
+order of the term is the length of this new list minus 1
+coeff of the term is the first element of the list (i.e. the car part)
+
+adjoin-element would implement some functionality of add-poly
+
+The higher order terms are consed until the list containing the term is
+ the same order as the term-list highest order term
+
+then the term-list is appended to the end.

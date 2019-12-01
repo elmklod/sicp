@@ -1,0 +1,79 @@
+(2^a)*3^b
+
+Suppose there exist such nonzero integers k and j so that
+
+(2^a)*3^b = [2^(a + k)] * 3^(b + j)
+
+In other terms for a pair of integers a, b the product (2^a)*3^b is not unique(no bijection)
+
+h^m is never zero if h != 0
+
+Therefore,
+
+3^(-j) = 2^k
+
+-j = k*log3 (2)
+
+-j/k = log3(2)
+
+Notice that -j/k > 0 as log3(2) > 0
+
+-(j/k) = p/q where p, q are natural numbers.
+
+3^(p/q) = 2
+
+3^p = 2^q
+
+odd on one side, even on the other,
+
+p, q do not exist
+log3 (2) and log2 (3) are irrational.
+
+Therefore, -j, k do not exist, j does not exist(every integer has a negated counterpart)
+
+Therefore, (2^a)*3^b is unique for a given pair of integers a, b.
+
+(define (fast-expt b n)
+  (define (square x) (* x x))
+
+  (define (even? n)
+    (= (remainder n 2) 0))
+
+  (define (fast-expt-iter b n a)
+    (cond ((= n 0) a)
+          ((even? n) (fast-expt-iter (square b) (/ n 2) a))
+          (else (fast-expt-iter b (- n 1) (* a b)))))
+  (fast-expt-iter b n 1))
+
+(define (gcd a b)
+  (if (= b 0)
+      a
+      (gcd b (remainder a b))))
+
+;for non-negative integers
+
+(define (cons a b)
+ (* (fast-expt 2 a)
+    (fast-expt 3 b)))
+
+(define (prime-power-in-product product prime)
+ (define (iter product counter)
+   (if (= (gcd product prime) 1)
+       counter
+       (iter (/ product prime) (+ counter 1))))
+ (iter product 0))
+
+(define (car product)
+ (prime-power-in-product product 2))
+
+(define (cdr product)
+ (prime-power-in-product product 3))
+
+
+Notice a reqursive, never-ending process:
+
+(define (car product)
+ (/ product (fast-expt 3 (cdr product))))
+
+(define (cdr product)
+ (/ product (fast-expt 2 (car product))))

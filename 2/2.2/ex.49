@@ -1,0 +1,71 @@
+(define (segments->painter segment-list)
+  (lambda (frame)
+    (for-each
+     (lambda (segment)
+       (draw-line
+        ((frame-coord-map frame)
+         (start-segment segment))
+        ((frame-coord-map frame)
+         (end-segment segment))))
+     segment-list)))
+
+(define origin
+ (make-vect 0 0))
+
+(define x-axis-end
+ (make-vect 1 0))
+
+(define y-axis-end
+ (make-vect 0 1))
+
+(define opposite-origin
+ (make-vect 1 1))
+
+The ordering is not important
+
+(define frame-segments
+ (list (make-segment origin
+                     y-axis-end)
+       (make-segment origin
+                     x-axis-end)
+       (make-segment x-axis-end
+                     opposite-origin)
+       (make-segment y-axis-end
+                     opposite-origin)))
+
+(define outline
+ (segments->painter frame-segments))
+
+The ordering is not important as long as vectors do not change their counterparts
+
+(define X-segments
+ (list (make-segment origin
+                     opposite-origin)
+       (make-segment x-axis-end
+                     y-axis-end)))
+
+(define X-draw
+ (segments->painter X-segments))
+
+(define diamond-segments
+ (let ((y-axis/2 (scale-vect 0.5 y-axis-end))
+       (x-axis/2 (scale-vect 0.5 x-axis-end))
+       (opposite-x/2 (sub-vect
+                               opposite-origin
+                               (scale-vect 0.5 x-axis-end)))
+       (opposite-y/2 (sub-vect
+                               opposite-origin
+                               (scale-vect 0.5 y-axis-end))))
+ (list (make-segment y-axis/2
+                     x-axis/2)
+       (make-segment y-axis/2
+                     opposite-x/2)
+       (make-segment x-axis/2
+                     opposite-y/2)
+       (make-segment opposite-y/2
+                     opposite-x/2))))
+
+Ordering is not important
+
+(define diamond-draw
+ (segments->painter diamond-segments))

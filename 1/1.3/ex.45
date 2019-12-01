@@ -1,0 +1,52 @@
+The average damping applied k times to f(x) has the following form
+
+[f(x) + x(2^(k) - 1)]/2(k)
+
+As a more general approach:
+
+[f(x^r) + x^r(2^(k) - 1)]/2(k)
+
+let f(x) = c/x
+
+f(x^r) = c / x^r
+
+f(x^2r) = c / x^2r
+
+[f(x^r) + x^r(2^(k) - 1)]/2(k) gives a fixed point x^r | x^2r = c
+and it requires only 1 average dumping.
+
+To find x^r/2 do
+
+[f(x^r/2) + x^r/2(2^(k) - 1)]/2(k)
+
+f(y) = x^r/y
+
+which requires 1 average dumping.
+
+repeat this until r = 1, you have found the fixed point of f(x) = c/x^r
+
+Therefore, for r = powers of 2, it requires exactly log2(r) average dampings.
+
+It is not clear how to connect it with the procedure
+
+(define (n-th-root x n)
+ (fixed-point ((repeated (lambda (f) (lambda (z) (average z (f z)))) (floor (/ (log n) (log 2)))) (lambda (y) (/ x (fast-expt y (- n 1))))) 1.0))
+
+(define (fast-expt b n)
+  (define (square x) (* x x))
+
+  (define (even? n)
+    (= (remainder n 2) 0))
+
+  (define (fast-expt-iter b n a)
+    (cond ((= n 0) a)
+          ((even? n) (fast-expt-iter (square b) (/ n 2) a))
+          (else (fast-expt-iter b (- n 1) (* a b)))))
+  (fast-expt-iter b n 1))
+
+(define (repeated f n)
+ (if (= n 1)
+     (lambda (x) (f x))
+     (lambda (x) ((repeated f (- n 1))  (f x)))))
+
+(define (average a b) (/ (+ a b) 2))

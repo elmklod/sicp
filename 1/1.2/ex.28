@@ -1,0 +1,480 @@
+(define (mira-test n)
+ (define (even? n)
+   (= 0 (remainder n 2)))
+ (define (try-it a)
+  (= (expmod a (- n 1)) 1))
+
+ (define (check-and-square a)
+   (define squared-a (square a))
+   (if (and (= (remainder squared-a n) 1)
+            (not (or (= a 1)
+                     (= a (- n 1)))))
+       0
+       squared-a))
+
+ (define (expmod base exp)
+  (remainder (cond ((= exp 1) base)
+                   ((even? exp) (check-and-square (expmod base
+                                                          (/ exp 2))))
+                   (else (* base (expmod base (- exp 1)))))
+             n))
+
+ (try-it (+ 1 (random (- n 1)))))
+
+(mira-test 561) resulted in #t for a small number of tests:
+
+(mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561) (mira-test 561)
+
+
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)(mira-test 1105)
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)(mira-test 1729)
+
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+(mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465) (mira-test 2465)
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+  (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821) (mira-test 2821)
+
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)(mira-test 6601)
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+Quite reliable in practice. Carmichael numbers are usually distinguished from primes
+
+For primes:
+
+(mira-test 2)(mira-test 2)(mira-test 2)(mira-test 2)(mira-test 3)(mira-test 3)(mira-test 3)(mira-test 3)(mira-test 5)(mira-test 5)(mira-test 5)(mira-test 5)(mira-test 100000000019)(mira-test 100000000019)(mira-test 100000000019)(mira-test 100000000019)(mira-test 100000000003)(mira-test 100000000003)(mira-test 100000000003)(mira-test 100000000003)
+
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+for composites that are not Carmichael:
+
+(mira-test 100)(mira-test 2223444446)(mira-test 19999)(mira-test 100)(mira-test 2223444446)(mira-test 19999)(mira-test 100)(mira-test 2223444446)(mira-test 19999)(mira-test 100)(mira-test 2223444446)(mira-test 19999)
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+1 ]=>
+;Value: #f
+
+one mistake is more than 30 tests.
+
+For (mira-test 4) is more likely that 4 is identified as a prime as 2 is the only number below 4 that 2^4 is not conguent to 1 modulo 4
+  (3^4 = 81 = 80 + 1, 1^4 = 1)
+1 ]=> (mira-test 3)
+
+;Value: #t
+
+1 ]=> (mira-test 4)
+
+;Value: #f
+
+1 ]=> (mira-test 4)
+
+;Value: #t
+
+1 ]=> (mira-test 4)
+
+;Value: #f
+
+1 ]=> (mira-test 4)
+
+;Value: #f
+
+1 ]=> (mira-test 4)
+
+;Value: #f
+
+1 ]=> (mira-test 4)
+
+;Value: #t
+
+1 ]=> (mira-test 4)
+
+;Value: #t
+
+1 ]=> (mira-test 4)
+
+;Value: #t
+
+For smaller composites, it is more likely that they will be identified as primes.

@@ -1,0 +1,28 @@
+(define (map proc items)
+ (define (iter items result)
+  (if (null? items)
+      result
+      (iter (cdr items) (cons (proc (car items)) result))))
+ (iter (reverse items) '()))
+
+(define (map proc items)
+ (define (iter items)
+   (lambda (x) (if (null? items)
+                   x
+                   ((iter (cdr items)) (cons (proc (car items)) x)))))
+ ((iter (reverse items)) '()))
+
+(define (map proc items)
+ (define (iter items result)
+  (if (null? items)
+      result
+      (iter (cdr items) (cons (proc (car items)) result))))
+ (reverse (iter items '())))
+
+
+(define (reverse-map proc items)
+ (define (iter items result)
+  (if (null? items)
+      result
+      (iter (cdr items) (cons (proc (car items)) result))))
+ (iter items '()))

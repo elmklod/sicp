@@ -1,0 +1,15 @@
+(define (matrix-*-vector m v)
+  (map (lambda (x) (dot-product v x)) m))
+
+(define (transpose mat)
+  (accumulate-n cons nil mat))
+
+(define (matrix-*-matrix m n)
+  (let ((cols (transpose n)))
+    (map (lambda (x) (matrix-*-vector n x)) m)))
+
+(define (transpose mat)
+  (if (null? (car mat))
+      '()
+      (cons (map car mat)
+            (transpone (map cdr mat)))))

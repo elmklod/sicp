@@ -1,0 +1,14 @@
+(define (or-gate a1 a2 output)
+  (let ((inv-a1 (make-wire))
+        (inv-a2 (make-wire))
+        (c1 (make-wire)))
+    (inverter a1 inv-a1)
+    (inverter a2 inv-a2)
+    (and-gate inv-a1 inv-a2 c1)
+    (inverter c1 output)))
+
+The delay in the real system would be 1 inverter delay + 1 and-gate delay + 1 inverter delay =
+2 inv. + 1 and. (which is what will author's simulation will achieve)
+However the sequential, non-concurrent simulation(which is caused by
+the bad design choices) makes it
+3 inv. + 1 and.

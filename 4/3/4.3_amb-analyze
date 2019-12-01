@@ -1,0 +1,53 @@
+(define (analyze-amb exp)
+  (let ((cprocs
+         (map analyze (amb-choices exp))))
+    (lambda (env succeed fail)
+      (define (try-next choices)
+        (if (null? choices)
+            (fail)
+            ((car choices)
+             env
+             succeed
+             (lambda ()
+               (try-next (cdr choices))))))
+      (try-next cprocs))))
+
+;Instead of constantly redefining try-next procedure whenever another analyzed
+; amb-expression is executed, it may be more optimal to define try-next outside execution procedure
+; This enforces try-next having additional parameters: env succeed and fail that are
+; supplied to the exec-proc as its try-next does not have the frame with them any longer
+; One option is inside analyze-amb proc:
+
+(define (analyze-amb exp)
+  (let ((cprocs
+         (map analyze (amb-choices exp))))
+    (define (try-next choices env succeed fail) ;inside/outside let does not affect the overall time the proc will be defined
+      (if (null? choices)                       ;unless the underlying evaluator uses non-det evaluation itself, then the placement must be analyzed
+          (fail)
+          ((car choices)
+           env
+           succeed
+           (lambda ()
+             (try-next (cdr choices) env succeed fail)))))
+    (lambda (env succeed fail)
+      (try-next cprocs env succeed fail))))
+
+; Even more optimal is to define it as a global procedure
+; since everything is stored in a table, it is still clear and convenient if
+; try-next and analyze-amb procs are placed near each other
+
+
+(define (analyze-amb exp)
+  (let ((cprocs
+         (map analyze (amb-choices exp))))
+    (lambda (env succeed fail)
+      (try-next cprocs env succeed fail))))
+
+(define (try-next choices env succeed fail)
+  (if (null? choices)
+      (fail)
+      ((car choices)
+       env
+       succeed
+       (lambda ()
+         (try-next (cdr choices) env succeed fail)))))

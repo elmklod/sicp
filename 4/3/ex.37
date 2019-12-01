@@ -1,0 +1,12 @@
+; Also check the version in repeat subdir
+
+Yes, he is correct
+
+First, inappropriate combinations of i and j are dismissed before k is computed.
+
+However, sqrt procedure may require some steps to compute k.
+If one ignores sqrt, then only i and j whose sum of squares is less than (square high)
+are chosen to compute k.
+With sqrt, it is unknown.
+Either the original traverses more k's for inappropriate combinations of i and j or
+(sqrt (+ (square i) (square j))) requires more steps.

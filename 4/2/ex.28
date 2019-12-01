@@ -1,0 +1,64 @@
+Otherwise higher-order procedures will fail to apply their arguments procedures
+as they will be delayed and never forced
+It should report an error, but because the environment part of thunk and procedure may refer to the same thunk (indirectly by referring to the environment it is stored in)
+error procedure will run out of stuck and signal instead the maximum recursion depth error.
+Something must be done about it
+Apply may be modified to avoid it.
+Modify eval:
+
+(define (eval exp env)
+  (cond ((self-evaluating? exp)
+         exp)
+        ((variable? exp)
+         (lookup-variable-value exp env))
+        ((compound-expression? exp)
+         (let ((eval-rule (get-evaluation-rule
+                           (expression-type exp))))
+           (cond (eval-rule
+                  (eval-rule exp env))
+                 (else ; application has no type-tag, although it is possible to invent some kind of type-tag that a procedure expression-type would give
+                  (apply (eval (operator exp) env)
+                         (operands exp)
+                         env)))))
+        (else
+         (error "Unknown expression
+                 type: EVAL" exp))))
+
+
+(define (apply procedure arguments env)
+  (cond ((primitive-procedure? procedure)
+         (apply-primitive-procedure
+          procedure
+          (list-of-arg-values
+           arguments
+           env)))  ; changed
+        ((compound-procedure? procedure)
+         (eval-sequence
+          (procedure-body procedure)
+          (extend-environment
+           (procedure-parameters procedure)
+           (list-of-delayed-args
+            arguments
+            env)   ; changed
+           (procedure-environment procedure))))
+        (else (error "Unknown procedure
+                      type: APPLY"))))
+
+Example:
+
+(define (h f x) (f (+ x 1)))
+
+either compound or primitive:
+(define (square x) (* x x))
+
+(h square 2)
+(h + 3)
+
+will fail
+
+(define (m f) (lambda (x) (f x)))
+
+((m square) 3)
+((m -) 3)
+
+will fail

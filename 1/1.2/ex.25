@@ -1,0 +1,79 @@
+(define (timed-prime-test n)
+  (define (fast-prime? times)
+    (define (fermat-test)
+      (define (exptmod base exp)
+        (define (fast-expt b n)
+          (define (square x) (* x x))
+
+          (define (even? n)
+            (= (remainder n 2) 0))
+
+          (define (fast-expt-iter b n a)
+            (cond ((= n 0) a)
+                  ((even? n) (fast-expt-iter (square b) (/ n 2) a))
+                  (else (fast-expt-iter b (- n 1) (* a b)))))
+          (fast-expt-iter b n 1))
+
+        (remainder (fast-expt base exp) n))
+
+      (define (try-it a)
+        (= (exptmod a n) a))
+
+      (try-it (+ 1 (random (- n 1)))))
+
+    (cond ((= times 0) true)
+          ((fermat-test)
+           (fast-prime? (- times 1)))
+          (else false)))
+
+  (define (start-prime-test times start-time)
+    (if (fast-prime? times)
+        (report-prime (- (runtime)
+                         start-time))))
+
+  (define (report-prime elapsed-time)
+    (display " *** ")
+    (display elapsed-time))
+
+  (newline)
+  (display n)
+  (start-prime-test 100 (runtime)))
+
+Alyssa is right to some extent,
+The fast-expt process is iterative, while the process which was described by the procedure in the book,
+is recursive.
+
+They share the order of growth for steps(logarithmic). In, fact, notcounting initial fast-expt procedure application, they have the same amount of steps(of prmitives ).
+the original process has the same order of growth for space.
+It even has more primitive operations per step.
+
+This approach would work marvelously in the world, where the computation of the primitive processes didn't depend on the size of the data(numbers here).
+
+Unfortunately, multiplication is a costly procedure when dealing with large numbers.
+
+With the procedure in the book, multiplication/squaring can at max be (* (- n 1) (- n 1))
+and most of the times the numbers are quite small. Yes, remainder operation is applied more than 1, but it is not as expensive(time-wise) as multiplication.
+
+With Alyssa's approach, however, the multiplication/squaring will, for large (random and n) numbers very soon, exceed (square n),
+  as the exponentiation function gros extremely fast.
+
+At least the half of numbers for n>2, when squared, exceed n, as the n is large and may require, for exanple, 14 steps for a computation as the case with 1000 = n,
+the values to be multiplied sonn will become large enough to slow down the * process considerably. And, possible, remainder procedure as well.
+
+And since the timed-prime-test does a lot of testing for integers, the increase in computational time will soon become very prominent.
+
+100003 *** 92.20000000000005
+100019 *** 92.02999999999997
+100043 *** 92.19000000000005
+
+For 100 tests. The book procedure evolves a process that can test integers 1000 and more times larger in less than 10 seconds(for 100000000003 and similar)
+for 100000 tests.
+
+That makes a really big difference. A factor of 10 for input that differs by (/ 100000000003 100003.) approx 1000000. for smaller it is even greater, as for smaller it took far less time
+Which means that the book procedure is far more efficient.
+
+Therefore, while multiplication remains this slow, Alyssa's procedure is not suitable for anything except showcasing the bad design choice and that carefully designed procedure
+even it evolves a recursive process, can be more optimal than a similar iterative without additional thoughts about the implementation and interpreter properties.
+
+Key to the success is carefully thinking about structure, design of the program, learning to take and taking into considerations the environment(generally)
+in which the procedure is to be applied and the process of that procedure is to be evolved.

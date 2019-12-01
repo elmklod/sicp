@@ -1,0 +1,24 @@
+(define (iterative-improve improve test)
+ (lambda (x) (if (test x)
+                 (improve x) ; not necessary, x will suffice
+                 ((iterative-improve improve test) (improve x)))))
+--------------------------
+(define (iterative-improve improve test)
+ (let ((y (lambda (x)
+       (if (test x)
+           (improve x)
+           (y (improve x))))))
+  y))
+Not working, letrec will work
+--------------------------
+
+(define (average a b) (/ (+ a b) 2))
+
+
+(define (sqrt x)
+ ((iterative-improve (lambda (g) (average g (/ x g))) (lambda (g) (< (abs (- (square g) x)) 0.001))) 1.0))
+
+(define tolerance 0.00001)
+
+(define (fixed-point f first-guess)
+ ((iterative-improve f (lambda (x) (< (abs (- x (f x))) tolerance))) first-guess))

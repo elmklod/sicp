@@ -1,0 +1,119 @@
+(define (fold-right op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op (car rest) result) (cdr rest))))
+ (iter init (reverse seqs)))
+
+(define (fold-right op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op result (car rest)) (cdr rest))))
+ (iter init (reverse seqs)))
+
+it is not clear in which order should arguments/operands to op procedure be
+
+Choose one and for the reverse order use lambda functions/terms that swap arguments
+
+The second is more "left"
+
+
+(define (fold-left op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op (car rest) result) (cdr rest))))
+ (iter init seqs))
+
+(define (fold-left op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op result (car rest)) (cdr rest))))
+ (iter init seqs))
+
+The first is more "right"
+
+
+For the same direction procedure applications to be equal, the op must be commutative,
+For the oposite directions procedure applications to be equal, the op must be at least associative
+(and usually commutative, as they may apply op in different orders)
+
+0 right != 1 right:
+
+(fold-right / 1 (list 1 2 3))
+
+;Value: 3/2 vs  != ;Value: 1/6
+
+
+0 left != 1 left
+
+(fold-left  / 1 (list 1 2 3))
+
+;Value: 3/2 !=  ;Value: 1/6
+
+
+0 right != 0 left:
+
+1 ]=>  (fold-right / 1 (list 12 14 16 18))
+
+;Value: 16/21
+
+1 ]=> (fold-left / 1 (list 12 14 16 18))
+
+;Value: 21/16
+
+0 right != 1 left:
+
+1 ]=>
+ (fold-left / 1 (list 12 14 16 18))
+
+;Value: 1/48384
+
+1 ]=>  (fold-right / 1 (list 12 14 16 18))
+
+;Value: 16/21
+
+1 right != 0 left:
+
+1 ]=> (fold-right / 1 (list 12 14 16 18))
+
+;Value: 1/48384
+
+1 ]=>  (fold-left / 1 (list 12 14 16 18))
+
+;Value: 21/16
+
+1 right != 1 left:
+
+ (fold-right cons '()(list 1 2 3)) (fold-left cons '() (list 1 2 3))
+
+;Value: (((() . 3) . 2) . 1)
+
+1 ]=>
+;Value: (((() . 1) . 2) . 3)
+
+-----------------------------------
+
+
+
+(fold-right / 1 (list 1 2 3))   - 3/2
+(fold-left  / 1 (list 1 2 3))   - 1/6
+(fold-right list nil (list 1 2 3)) - (1 (2 (3 ())))
+(fold-left  list nil (list 1 2 3)) - (((() 1) 2) 3)
+
+
+indeed:
+
+
+;Value: 3/2
+
+1 ]=>
+;Value: 1/6
+
+1 ]=>
+;Value: (1 (2 (3 ())))
+
+1 ]=>
+;Value: (((() 1) 2) 3)

@@ -1,0 +1,81 @@
+(son Adam Cain) (son Cain Enoch)
+(son Enoch Irad) (son Irad Mehujael)
+(son Mehujael Methushael)
+(son Methushael Lamech)
+(wife Lamech Ada) (son Ada Jabal)
+(son Ada Jubal)
+
+(rule (grandson ?g ?gs)
+  (and (son ?f ?gs)
+       (son ?g ?f)))
+
+(rule (son ?f ?s) ; It is better to rename this rule into son-by-wife to avoid problems listed below:
+  (and (wife ?f ?w) ; the position of subquery is important
+       (son ?w ?s))) ; it will enter an infinite loop otherwise
+
+(grandson Cain ?x)
+(son Lamech ?son)
+(grandson Methushael ?gs)
+;------------------------
+(rule ((great . ?rel) ?older ?younger)
+  (and (son ?older ?less-old)
+       (?rel ?less-old ?younger)))
+
+(rule ((great grandson) ?older ?younger)
+  (and (son ?older ?less-old)
+       (grandson ?less-old ?younger)))
+
+; it is also possible to introduce a uniformity in syntax by defining this interface rule
+(rule ((grandson) ?older ?younger)
+  (grandson ?older ?younger))
+
+which is a substitute for the second rule
+; Less redundant and easier to reason with
+
+((great grandson) ?g ?ggs)
+(?relationship Adam Irad)
+
+; Notice that it is possible to extend 'great' relationship beyond just grandson
+; It may be desirable to add additional clause to the general rule to limit it to 'grandson' so no confusing relationships arise
+
+(rule ((great . ?rel) ?older ?younger)
+  (and (son ?older ?less-old)
+       (?rel ?less-old ?younger)
+       (last-pair ?rel (grandson)))) ; from ex4.62
+
+; There can be another syntax for the rule conclusion
+; Something like ((great (great (grandson))) ?x ?y) ; (great (grandson)) can come as a (great grandson), it depends on the desire for syntax uniformity
+; and the evaluator will produce 2 similar instantiations because of the way rules are implemented:
+; one with the (great (grandson)) and one with the (great grandson)
+; so avoid (great (grandson))
+; for any reason
+; The rules require some incompatible modifications to work this syntax
+
+(rule ((great ?rel) ?older ?younger)
+  (and (son ?older ?less-old)
+       (?rel ?less-old ?younger)))
+
+(rule ((great grandson) ?older ?younger)
+  (and (son ?older ?less-old)
+       (grandson ?less-old ?younger)))
+
+; Or
+
+(rule ((grandson) ?older ?younger) ; this is not needed(as well as the first one) if (great grandson) is used
+  (grandson ?older ?younger))
+
+; However, this syntax may lead to invalid relationships being deduced such as (great (great wife))
+; Also it requires a more elaborate rule to find that its last element of hierarchy is grandson
+; This rule is not suitable for the first syntax model
+(rule (last-hier-elem ?hier ?elem) ; last is a misnomer as element itself may be a subhierarchy
+  (or (and (last-pair ?hier (?subhier))
+           (not (same ?elem ?subhier))
+           (last-hier-elem ?subhier ?elem))
+      (last-pair ?hier (?elem))))
+
+(rule ((great ?rel) ?older ?younger)
+  (and (son ?older ?less-old)
+       (?rel ?less-old ?younger)
+       (last-hier-elem ?rel grandson)))
+
+; Testing is required

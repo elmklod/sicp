@@ -1,0 +1,185 @@
+(define (cube x) (* x x x))
+
+(define (p x)
+ (- (* 3 x)
+    (* 4 (cube x))))
+
+(define (sine angle)
+  (if (<= (abs angle) 0.1)
+      angle
+      (p (sine (/ angle 3)))))
+
+The procedure sine will terminate only when angle/3 <= 0.1
+
+Notice that the amount of procedures p to be applied is equal to the amount of all sine procedures to be applied(except the first one, it is not counted,
+) minus 1 (the last sine procedure, which application results in the evaluation of the argument angle, which is its value,
+i.e. it terminates)
+
+Therefore, it is enough to count only sine procedures, that do not terminate, to find the amount of steps to be performed
+
+Each time it does not terminate the angle is divided by 3 and another, exactly 1 new procedure sine is called on the argument
+, which is now angle/3
+
+Suppose there are n (n is an integer) sine procedures that did not terminate, and the n + 1 sine procedure
+successfully terminated:
+
+Therefore, the following inequality holds:
+
+angle != 0. for angle = 0 there is exactly 1 sine procedure which evaluates to the consequent of its body if-expression,
+i.e. angle itself, which evaluates to its value.
+
+On the n+1 sine procedure:
+
+abs(angle) > 0
+
+abs(angle)/(3^n) <= 0.1
+
+abs(angle)*3^(-n) <= 0.1
+
+3^(-n) <= 0.1/abs(angle)
+
+3 > 1, therefore a <= b translates to the log3(a) <= log3(b)
+
+-n <= log3(0.1/abs(angle)) = log3(1/[10*abs(angle)]) = - log3(10*abs(angle));
+
+n >= log3(10*abs(angle)) = log3(10) + log3(abs(angle))
+
+n can only grow in positive direction. Therefore, for the first integer n, for which this inequality holds,
+the process will terminate.
+
+As  log3(10) + log3(abs(angle)) is not necessarily integer, it is only the lower bound for n.
+
+The real upper(and lower) bound is ceil(log3(10) + log3(abs(angle))).
+
+For the sake of simplicity,
+
+the lower bound will be log3(10) + log3(abs(angle)) and the upper bound
+
+log3(10) + log3(abs(angle)) + 1 [ceil(log3(10) + log3(abs(angle))) increases log3(10) + log3(abs(angle)) by a value < 1.]
+
+Translate bound so that the logarithm of n is natural.
+
+log3(10) + log3(abs(angle)) = log3(10) + log[e^log3](abs(angle)) = log3(10) + ((log3)^-1)*log(abs(angle));
+
+log3(10) + log3(abs(angle)) + 1 = log3(30) + ((log3)^-1)*log(abs(angle));
+------------------------------------------------------
+
+counting the last sine procedure process, which terminates and is the process/step in itself:
+
+log3(10) + ((log3)^-1)*log(abs(angle)) + 1 <= R[step](angle) <= log3(30) + ((log3)^-1)*log(abs(angle)) + 1
+
+log3(30) + ((log3)^-1)*log(abs(angle)) + 1 <= R[step](angle) <= log3(90) + ((log3)^-1)*log(abs(angle))
+
+
+These bounds can be approximated by K*log(abs(angle):
+
+lower:
+
+log3(30) + ((log3)^-1)*log(abs(angle)) >= K1*log(abs(angle)) [abs(angle) >> 1]
+
+log3(30)/log(abs(angle)) + (log3)^-1 >= K1 [abs(angle) >> 1]
+
+For large abs(angle) the K1 is approximately (log3)^-1 = log3 (e)
+
+[for abs(angle) >= 1 it will hold true, for abs(angle) < 1 - only approximately]
+
+------------------------
+
+upper:
+
+log3(90) + log3(abs(angle)) <= K2*log(abs(angle))
+
+log3(90)/log(abs(angle)) + log3(e) <= K2
+
+For large abs(angle) the K2 is approximately log3 (e)
+[For abs(angle) >= 1 it is only approximately true, for abs(angle) < 1 - true]
+
+===========================
+
+Therefore R[step](angle) = Θ(log(amount))
+
+Since the process sine procedure generates is a recursive process, that is not tree-recursive (sine evaluates
+ itself only once during its application->[body]evaluation), R[memory/space](angle) required
+ is equal to all deferred procedures, i.e. p procedures.
+R[step](angle) is the amount of all deferred procedures, as
+
+Therefore, R[space](angle) = R[step](angle) - 1 [if counting sine procedures as steps : (R[step](angle) - 1)/2]
+as the last sine procedure is not stored, but evaluates almost immediately to angle, which evaluates to its value[number]
+
+Therefore,
+
+log3(30) - 1 + ((log3)^-1)*log(abs(angle)) <= R[space](angle) <= log3(90) - 1 + ((log3)^-1)*log(abs(angle))
+
+log3(10) + ((log3)^-1)*log(abs(angle)) <= R[space](angle) <= log3(30) + ((log3)^-1)*log(abs(angle))
+
+These bounds can be approximated by K*log(abs(angle):
+
+lower:
+
+log3(10) + ((log3)^-1)*log(abs(angle)) >= K1*log(abs(angle)) [abs(angle) >> 1]
+
+log3(10)/log(abs(angle)) + (log3)^-1 >= K1 [abs(angle) >> 1]
+
+For large abs(angle) the K1 is approximately (log3)^-1 = log3 (e)
+
+[for abs(angle) >= 1 it will hold true, for abs(angle) < 1 - only approximately]
+
+------------------------
+
+upper:
+
+log3(30) + log3(abs(angle)) <= K2*log(abs(angle))
+
+log3(30)/log(abs(angle)) + log3(e) <= K2
+
+For large abs(angle) the K2 is approximately log3 (e)
+[For abs(angle) >= 1 it is only approximately true, for abs(angle) < 1 - true]
+
+========================
+
+Therefore R[space](angle) = Θ(log(amount))
+
+
+=========================
+
+If "steps" mean procedure application, however, then boundaries for R[steps](amount):
+
+2ceil(log3(10) + log3(abs(angle)))
+
+or more approximately 2(log3(10) + log3(abs(angle))) + 2 + 1 (> 2ceil(log3(10) + log3(abs(angle))) + 1) - upper
+
+                      2(log3(10) + log3(abs(angle))) + 1 (the least possible result of 2ceil(log3(10) + log3(abs(angle))) + 1,)- lower
+
+It changes little, as K1 and K2 are increased by 2, when those bounds are approximated by K*log(amount)
+
+Therefore, R[space](angle) = Θ(log(amount)) invariantly.
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ceil(log3(10) + log3(abs(angle))) = is the number  of sine procedure applications/processes that do not terminate:
+
+fo angle = 12.5:
+
+ceil(log3(10) + log3(abs(12.5))) =  5
+
+
+
+Indeed:
+
+computations are done with approximations
+
+(sine 12.5)
+(p (sine 4.17)))
+(p (p (sine 1.39))))
+(p (p (p (sine 0.463)))))
+(p (p (p (p (sine 0.1543))))))
+(p (p (p (p (p (sine 0.05144)))))))
+(p (p (p (p (p 0.05144))))))
+(p (p (p (p .1537765)))))
+(p (p (p .44678401)))
+(p (p .9836112))
+(p -.8557061)
+-6.081377e-2
+
+checked with the scheme interpreter.

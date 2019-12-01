@@ -1,0 +1,10 @@
+(define (f g) (g 2))
+
+(f f)
+Substitution model for application
+
+(f 2)
+
+(2 2)
+
+;The object 2 is not applicable.

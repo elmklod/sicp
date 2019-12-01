@@ -1,0 +1,64 @@
+(define count-pairs
+  (let ((unique-pairs '()))
+    (let ((count-amount (lambda (L)
+                          (cond ((not (pair? L)) 0)
+                                ((memq L unique-pairs) 0)
+                                (else (set! unique-pairs (cons L unique-pairs))
+                                      (+ (count-pairs (car L) 'no-reset)
+                                         (count-pairs (cdr L) 'no-reset)
+                                         1))))))
+        (lambda (structure . signal)
+          (let ((val (count-amount structure)))
+            (set! unique-pairs (if (null? signal)
+                                   '()
+                                   unique-pairs))
+            val)))))
+
+no explicit definitions, requires 2-frame(3 with the grolal frame) long environment
+when bound.
+creates environment(s) 2 frames longer when applied
+not suitable for concurrently running processes.
+
+(define (count-pairs L)
+  (let ((unique-pairs '()))
+    (define (count-amount L)
+      (cond ((not (pair? L)) 0)
+            ((memq L unique-pairs) 0)
+            (else (set! unique-pairs (cons L unique-pairs))
+                  (+ (count-amount (car L))
+                     (count-amount (cdr L))
+                     1))))
+    (count-amount L)))
+
+(define (count-pairs L)
+  (define (cp unique-pairs)
+    (define (count-amount L)
+      (cond ((not (pair? L)) 0)
+            ((memq L unique-pairs) 0)
+            (else (set! unique-pairs (cons L unique-pairs))
+                  (+ (count-amount (car L))
+                     (count-amount (cdr L))
+                     1))))
+    (count-amount L))
+    (cp '()))
+
+equivalent with the exception that the encapsulating environment is now created
+by a procedure that is bound to the name cp in the environment, created during the evaluation of count-pairs
+requires only the global environment during the binding
+Requires 2-(3-)frame-environment(s) long when applied
+
+
+(define (count-pairs L)
+  (define unique-pairs '())
+  (define (count-amount L)
+    (cond ((not (pair? L)) 0)
+          ((memq L unique-pairs) 0)
+          (else (set! unique-pairs (cons L unique-pairs))
+                (+ (count-amount (car L))
+                   (count-amount (cdr L))
+                   1))))
+  (count-amount L))
+
+requires only the global environment during the binding
+Requires 1-(2-)frame long environment(s) when applied.
+Encapsulates the local state in the original environment of count-pairs.

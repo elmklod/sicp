@@ -1,0 +1,11 @@
+(define (smooth input-data)
+  (stream-map average input-data (stream-cdr input-data)))
+
+
+(define (make-zero-crossings sense-data)
+  (stream-map sign-change-detector
+              sense-data
+              (stream-cdr sense-data)))
+
+(define (make-zero-crossings-smoothed sense-data)
+  (make-zero-crossings (smooth sense-data)))

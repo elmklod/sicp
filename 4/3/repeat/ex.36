@@ -1,0 +1,60 @@
+first, the current amb expression does a depth-first search, which means that
+using the procedures in the book, the procedure will start either
+with 1 or 0
+(0 0 0) is a pyth. triple
+(1 1 1)
+is not a pyth. triple, but from this moment
+no triples will be found, the last amb expression will never exhaust its choices:
+(0 0 n)
+(1 1 n), n >= 1
+
+are never pyth. triples
+
+0 != n^2
+2 != n^2 where n is an integer.
+
+choose a number n.
+choose a number m >= n
+the closest integer square is (m + 1)^2
+once it is greater than the sum of squares(sqrt(n^2 + m^2) is not integer), n should be discarded
+(m + 1)^2 > n^2 + m^2
+m^2 + 2m + 1 > n^2 + m^2
+2m + 1 > n^2
+m > (n^2 - 1)/2
+
+that means that the limit should be at least [(n^2 - 1) div 2]
+
+
+k <= k^2/2
+
+2k - k^2 <= 0
+
+k(2 - k) <= 0
+
+k = 0
+k = 2
+
+at 1 the sign of the poly is +,
+
+(0, 2) +
+(2, +inf) -
+for any integer greater than or equal to 2 the inequality holds
+it also holds for 0, but does not hold for 1. the the distance between 1 and (1^2)/2 is 0.5
+therefore, the search for the root should be done in the interval
+(k^2 div 2) + 1
+
+k <= [(i^2 + j^2) div 2] + 1
+
+(define (a-pythagorean-triple low)
+  (let ((i (an-integer-starting-from low)))
+    (let ((isq (square i)))
+      (let ((j (an-integer-between i
+                                   (quotient
+                                    (- isq 1)
+                                    2))))
+        (let ((sum-of-sq (+ (square j) isq)))
+          (let ((k (an-integer-between j
+                                      (+1 (quotient sum-of-sq 2)))))
+            (require (= sum-of-sq
+                        (square k)))
+            (list i j k)))))))

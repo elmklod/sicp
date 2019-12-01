@@ -1,0 +1,16 @@
+Because the arguments are delayed, the innermost id application in the definitions of w is delayed,
+while the outermost is evaluated and its end value is the delayed (id 10) and count is incremented by 1.
+
+When w is accessed, driver-loop forces evaluation of the thunk which increments count by 1 and returns 10.
+
+However, the value of w is still a think, maybe evaluated thunk.
+
+If the thunk result is not memoized, it will increment count by 1 with each access to w.
+
+1
+
+10
+
+2
+
+count may stay at 2 or increase indefinitely depending on the choice to use memoization.

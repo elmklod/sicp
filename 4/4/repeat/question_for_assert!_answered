@@ -1,0 +1,7 @@
+Why not adding it to qeval
+why complicate driver-loop?
+
+Answer:
+To avoid introducing new assertions and rules
+during computation(the definitions always have the global scope)
+thus simplifying reasoning about programs in the query language.

@@ -1,0 +1,55 @@
+; It is wrong, the correct version is in the repeat subdir
+
+Suppose that (sqrt (+ (square i)
+                      (square j)))
+is irrational.
+
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-starting-from low)))
+    (let ((j (an-integer-starting-from i)))
+      (let ((k (an-integer-starting-from j)))
+        (require (= (+ (* i i) (* j j))
+                    (* k k)))
+        (list i j k)))))
+
+then the procedure will never terminate and increase k indefinitely
+There is no point in searching for k as its possible value is already preditermined by i and j
+It is a redundant search most of the times
+(But sqrt procedure may actually require more searches)
+
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-starting-from low)))
+    (let ((j (an-integer-starting-from i)))
+      (let ((ksq (+ (square i) (square j))))
+        (let ((k (sqrt ksq)))
+          (require (integer? k))
+          (list i j k))))))
+
+(define (a-pythagorean-triple-between low high)
+  (let* ((i (an-integer-starting-from low))
+         (j (an-integer-starting-from i))
+         (ksq (+ (square i) (square j)))
+         (k (sqrt ksq)))
+    (require (integer? k))
+    (list i j k)))
+
+(define (a-pythagorean-triple-between low high)
+  (define (generate-integer low sum)
+    (let ((integer
+           (an-integer-between
+            low
+            (/ (+ sum ; could have used ceil (ceil (/ sum 2))
+                  (if (even? sum)
+                      0
+                      1))
+               2))))
+      (require (= (square integer)
+                  sum))))
+  (let* ((i (an-integer-starting-from low))
+         (j (an-integer-starting-from i)))
+    (list
+     i
+     j
+     (generate-integer
+      j
+      (+ (square i) (square j))))))

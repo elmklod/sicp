@@ -1,0 +1,35 @@
+It splits the given set into several parts:
+
+the first part is the left branch:
+n - 1 div 2 = (floor (k/2))
+first elements will be into it
+
+the element after them, which becomes a tree entry
+
+n - (n - 1 div 2)  - 1 = k - k div 2 = (ceil (k/2))
+
+elements after it will be into the right branch
+
+then it all recursively repeats itself until
+
+the two basic cases are reached:
+
+ (partial-tree elts 2) and (partial-tree elts 1)
+
+The latter will generate an empty left branch and an extract the first element from the list, making it the tree entry
+with a (generated before) left branch and an empty right branch.
+
+The former will now generate an empty left branch and extract the first element in the list, making it the entry
+Then it creates the right branch with (partial-tree elts(first-elem extracted) 1):
+creating a subtree with 1 being the second element in the list, then it makes a tree with an empty left branch and this right branch
+with the entry point being the first element
+
+It works because no element remains: observe that at each step the process extracts 1 element from the list
+while creating the branches with (floor (k/2)) and (ceil (k/2)) [k is a parameter] entries
+up until it reaches the base case (partial elts 1) where it simply extracts the first element in a list
+
+observe that R(n) requires R(floor((n-1)/2)) and R(ceil((n-1)/2)) resources.
+
+This can be approximated to R(n) = 2*R(n/2), which is a linear growth.
+
+Therefore, R(n) = Θ(n)

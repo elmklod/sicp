@@ -1,0 +1,7 @@
+(car ''abracadabra)
+
+is equivalent to (car (quote (quote abracadabra)))
+
+which is equivalent to (car '(quote abracadabra))
+
+symbol quote is the first element of the list (quote abracadabra)

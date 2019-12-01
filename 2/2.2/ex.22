@@ -1,0 +1,59 @@
+(define (square-list items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (cons (square (car things))
+                    answer))))
+  (iter items nil))
+
+
+The process of this procedure takes the first element of the list and makes it come AFTER the elements it actually PRECEDED
+ [a| -> [b| -> .... -> [z|/
+
+will be       (cons (square z) (....(cons (square b) (cons (square a) '()))))
+
+(define (square-list items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (cons answer
+                    (square
+                     (car things))))))
+  (iter items '()))
+
+Observe that this procedure, when applied, produces a malformed list:
+
+cdr of every pair is now pointing to a value, not a sublist,
+
+car of every pair is now pointing to a next malformed sublist, not a value
+
+because answer, which is a list, is now in a first  arg. to cons, which places it a car part of the pair
+
+This representation can be called a real reverse list, but it is not a list.
+
+Louis did revert a list in its structure, but didn't revert positions of its elements:
+
+the first element of the items is now the deepest, i.e. the latest.
+
+ (square-list (list 1 2 3 4))
+
+;Value: ((((() . 1) . 4) . 9) . 16)
+
+Although it seemingly makes 1 the closest, it is actually the deepest, while 16 is the closest,
+
+cdr applied to it would produce 16
+
+in box and pointer notation this would be clearer
+
+Fixed version
+
+(define (square-list items)
+  (define (iter things answer)
+    (if (null? things)
+        answer
+        (iter (cdr things)
+              (cons (square (car things))
+                    answer))))
+  (iter (reverse items) '()))

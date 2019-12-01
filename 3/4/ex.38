@@ -1,0 +1,28 @@
+Peter: (set! balance (+ balance 10))
+Paul:  (set! balance (- balance 20))
+Mary:  (set! balance (- balance
+                        (/ balance 2)))
+
+0: Pet. Paul, Mary
+    110  90    45
+
+1: Pet. Mary, Paul
+    110  55    35
+
+2:  Paul, Pet., Mary
+      80   90   45
+
+3:  Paul, Mary, Pet.
+      80   40    50
+
+4:  Mary, Pet., Paul
+      50  60     40
+
+5:  Mary, Paul, Pet.
+      50   30    40
+
+Overall, six variants.
+
+The only important positions are the positions of Mary's transaction and the ones
+that go before and after hers.
+If Paul's and Peter's happen one after another then their order is not important.

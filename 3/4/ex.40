@@ -1,0 +1,60 @@
+(define x 10)
+(parallel-execute
+ (lambda () (set! x (* x x))) ; P1
+ (lambda () (set! x (* x x x)))) ; P2
+
+P1: sets x to 100 = 10^2, P2: sets x to 10^6 = 1000000
+
+P2: sets x to 1000 = 10^3, P1: sets x to 10^6.
+
+P1: access x = 10 twice, P2: accesses x = 10 thrice(any order), P1: sets x to 100 = 10^2,
+P2: sets x to 10^3
+
+P1: access x = 10 twice, P2: accesses x = 10 thrice, P2: sets x to 10^3
+P1: sets x to 100 = 10^2,
+
+P1: accesses x = 10, P2 = sets x to 1000, P1: accesses x = 1000, sets x to 10000 = 10^4
+
+P2: acceses x = 10 twice, P1: sets x to 100, P2: accesses x = 100, sets x to 10^4
+
+P2: acceses x = 10, P1: sets x to 100, P2: acceses x = 100 twice, sets x = 100000 = 10^5
+
+It is possible to get values 10^n |  2 <= n <= 6 and n is an integer.
+
+It is not possible to get any smaller because the resulting value is at least 10^2
+
+It is not possible to get any greater because the resulting value cannot exceed
+the value that is the result of (10^3)^2 = (10^2)^3 = 10^6
+
+The reason is that x in the first procedure cannot be greater than 1000
+while x in the second one cann't be greater than 100
+
+Since there are only natural powers of ten used in the multiplication,
+the result will be a natural power of 10 as well.
+
+The possibility of a garbage in case of the concurrent assignments must also be kept in mind,
+but the resulting value will be quite random(although all of the possibilities
+are predictable since the binary form for each assigned number is known)
+
+100, 1000, 10000, 100000, 1000000
+
+(define x 10)
+(define s (make-serializer))
+(parallel-execute
+ (s (lambda () (set! x (* x x))))
+ (s (lambda () (set! x (* x x x)))))
+
+The only possibilitie(s) is(are):
+
+P1: sets x to 100, P2: sets x to 10^6
+
+P2: sets x to 1000, P1: sets x to 10^6
+
+10^6
+
+This is because all of the operators are commutative
+(or better the operations are associative, though it is not the same as commutative,
+but swapping operators allows one to talk about commutative operators)
+
+If they were not, they it would yield different results based on the order of the evaluation
+(execution)

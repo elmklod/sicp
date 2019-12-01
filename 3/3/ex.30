@@ -1,0 +1,121 @@
+(define (ripple-adder A-wires B-wires S-wires c)
+  (define (iter A B S c-in)
+    (let ((c-out (make-wire)))
+      (full-adder (car A)
+                  (car B)
+                  (car S)
+                  c-in
+                  c-out)
+      (if (> (length A)
+             1)
+          (iter (cdr A)
+                (cdr B)
+                (cdr S)
+                c-out))))
+  (if (= (length S-wires)
+         (length A-wires)
+         (length B-wires))
+      (iter A-wires
+            B-wires
+            S-wires
+            c)
+      (error "RIPPLE-ADDER called with
+              unequal wire amount for numbers"
+              A-wires
+              B-wires
+              S-wires)))
+
+
+; Exploiting assignment
+(define (ripple-adder A-wires B-wires S-wires c)
+  (define (iter c-in)
+    (let ((c-out (make-wire)))
+      (full-adder (car A-wires)
+                  (car B-wires)
+                  (car S-wires)
+                  c-in
+                  c-out)
+      (cond ((> (length A-wires)
+             1)
+             (set! A-wires (cdr A-wires))
+             (set! B-wires (cdr B-wires))
+             (set! S-wires (cdr S-wires))
+             (iter c-out)))))
+  (if (= (length S-wires)
+         (length A-wires)
+         (length B-wires))
+      (iter A-wires
+            B-wires
+            S-wires
+            c)
+      (error "RIPPLE-ADDER called with
+              unequal wire amount for numbers"
+              A-wires
+              B-wires
+              S-wires)))
+
+; Introducing more error-checking
+(define (ripple-adder A-wires B-wires S-wires c)
+  (define (iter A B S c-in)
+    (let ((c-out (make-wire)))
+      (full-adder (car A)
+                  (car B)
+                  (car S)
+                  c-in
+                  c-out)
+      (if (> (length A)
+             1)
+          (iter (cdr A)
+                (cdr B)
+                (cdr S)
+                c-out))))
+  (cond ((or (null? A-wires)
+             (null? B-wires)
+             (null? S-wires))
+          (error "RIPPLE-ADDER called with
+                  no wires for one of the numbers"
+                  A-wires
+                  B-wires
+                  S-wires))
+        ((not (= (length S-wires)
+              (length A-wires)
+              (length B-wires)))
+         (error "RIPPLE-ADDER called with
+                unequal wire amount for numbers"
+                A-wires
+                B-wires
+                S-wires))
+        (else (iter A-wires
+                    B-wires
+                    S-wires
+                    c))))
+
+(define (full-adder a b c-in sum c-out)
+  (let ((c1 (make-wire))
+        (c2 (make-wire))
+        (s  (make-wire)))
+    (half-adder b c-in s c1)
+    (half-adder a s sum c2)
+    (or-gate c1 c2 c-out)
+    'ok))
+
+(define (half-adder a b s c)
+  (let ((d (make-wire)) (e (make-wire)))
+    (or-gate a b d)
+    (and-gate a b c)
+    (inverter c e)
+    (and-gate d e s)
+    'ok))
+
+
+For n bits, the delay is 2n * half-adder delay + n * or-gate delay.
+
+A complete output from half-adder can be obtained
+after (max or-gate delay, and-gate delay + inverter delay) + and-gate delay
+
+There., the overall delay =
+ 2n*(max or-gate delay, and-gate delay + inverter delay) + 2n*and-gate delay + n*or-gate delay
+(although it is possible to make it shorter if the procedures are curried in the appropriate way and
+partially applied during the evaluation)
+
+ if A + B <  2^(log2(n) + 1) then the effective delay will be shorter.

@@ -1,0 +1,239 @@
+ φ = ( 1 + sqrt(5) ) / 2
+ ψ = ( 1 − sqrt(5) ) / 2 = ( 1 + 1 - 1 − sqrt(5) ) / 2 =( 2 - 1 − sqrt(5) ) / 2  =
+ ( 2 - 2φ) / 2 = 1 - φ
+
+ φ^2 = φ + 1
+
+ ψ^2 = (1 - φ)^2 = 1 -2φ + φ^2 = 1 - 2φ + 1 + φ = 1 + 1 - φ = 1 + ψ
+
+
+for ev. n >= 0 { [( φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5)] = [( φ^n − ψ^n ) / sqrt(5)]}:
+
+ Let n be arbitrary:
+
+  [( φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5)] =
+
+  [φ^(n-2) + φ^(n-1) −( ψ^(n-2) + ψ^(n-1))]/sqrt(5) =
+
+  [{φ^(n-2)}(1  + φ^(n-1 - n + 2)) − {ψ^(n-2)}(1 + ψ^(n-1 - n + 2))]/sqrt(5) =
+
+  [{φ^(n-2)}(1  + φ) − {ψ^(n-2)}(1 + ψ)]/sqrt(5) =
+
+  [{φ^(n-2)}*(φ^2) − {ψ^(n-2)}*ψ^2)]/sqrt(5) =
+
+  [φ^n − ψ^n]/sqrt(5).
+
+
+ Ther. [( φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5)] = [( φ^n − ψ^n ) / sqrt(5)]
+Ther.for ev. n >= 0 { [( φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5)] = [( φ^n − ψ^n ) / sqrt(5)]}
+
+
+======================================================================================
+
+
+for ev. n, k {[( φ^(n-2) − ψ^(n-2) ) / sqrt(5) is a Fib. num(k) and ( φ^(n-1) − ψ^(n-1) ) / sqrt(5) is a Fib. num(k + 1))] -> ( φ^n − ψ^n ) / sqrt(5) is a Fib. num(k + 2)}
+
+    Let n, k be arbitrary integer numbers:
+      Suppose [( φ^(n-2) − ψ^(n-2) ) / sqrt(5) is a Fib. num(k) and ( φ^(n-1) − ψ^(n-1) ) / sqrt(5) is a Fib. num(k + 1))]:
+
+                From the theorem above
+
+                (φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5) = ( φ^n − ψ^n ) / sqrt(5) =
+
+                = Fib(k) + Fib(k + 1) = Fib(k + 2)
+
+
+
+      Ther. ( φ^n − ψ^n ) / sqrt(5) is a Fib. num(k + 2)
+    Ther. {[( φ^(n-2) − ψ^(n-2) ) / sqrt(5) is a Fib. num(k) and ( φ^(n-1) − ψ^(n-1) ) / sqrt(5) is a Fib. num(k + 1))] -> ( φ^n − ψ^n ) / sqrt(5) is a Fib. num(k + 2)}
+Ther. for ev. n, k {[( φ^(n-2) − ψ^(n-2) ) / sqrt(5) is a Fib. num(k) and ( φ^(n-1) − ψ^(n-1) ) / sqrt(5) is a Fib. num(k + 1))] -> ( φ^n − ψ^n ) / sqrt(5) is a Fib. num(k + 2)}
+
+---------------------------------------------------------------------------------
+
+for ev. integer t {[( φ^(t-2) − ψ^(t-2) ) / sqrt(5) is a Fib. num(t) and ( φ^(t-1) − ψ^(t-1) ) / sqrt(5) is a Fib. num(t + 1))] -> ( φ^t − ψ^t ) / sqrt(5) is a Fib. num(t + 2)}:
+ Let t be an arbitaraty integer
+  apply the above theorem twice to n, for n and k.
+
+
+  Ther.{[( φ^(t-2) − ψ^(t-2) ) / sqrt(5) is a Fib. num(t) and ( φ^(t-1) − ψ^(t-1) ) / sqrt(5) is a Fib. num(t + 1))] -> ( φ^t − ψ^t ) / sqrt(5) is a Fib. num(t + 2)}
+Ther. for ev. integer t {[( φ^(t-2) − ψ^(t-2) ) / sqrt(5) is a Fib. num(t) and ( φ^(t-1) − ψ^(t-1) ) / sqrt(5) is a Fib. num(t + 1))] -> ( φ^t − ψ^t ) / sqrt(5) is a Fib. num(t + 2)}
+
+=====================================================================================
+
+for ev. integer n. Fib(n) = [( φ^n − ψ^n ) / sqrt(5)] and is the closest integer to φ^n / sqrt(5):
+
+
+   φ = ( 1 + sqrt(5) ) / 2 > (1 + sqrt(4))/2 = 3/2 = 1.5
+
+  Therefore φ^n > 0; for n > 0, φ^n > φ^(n - 1) > ... > φ > φ^0 = 1
+
+  Therefore, φ^n / sqrt(5) > 0
+
+  It's proved that for ev. n >= 0 { [( φ^(n-2) − ψ^(n-2) ) / sqrt(5)] + [( φ^(n-1) − ψ^(n-1) ) / sqrt(5)] = [( φ^n − ψ^n ) / sqrt(5)]}
+
+  It's proved that for ev. integer t {[( φ^(t-2) − ψ^(t-2) ) / sqrt(5) is a Fib. num(t) and ( φ^(t-1) − ψ^(t-1) ) / sqrt(5) is a Fib. num(t + 1))] -> ( φ^t − ψ^t ) / sqrt(5) is a Fib. num(t + 2)}
+
+  F(0) = 0 = [( φ^0 − ψ^0) / sqrt(5)] = [( 1 − 1) / sqrt(5)] = [0 / sqrt(5)] = 0
+
+  F(1) = 1 = [( φ^1 − ψ^1) / sqrt(5)] = [( φ − ψ) / sqrt(5)] = [( φ − (1 - φ) / sqrt(5)] =
+
+  = [( 2φ − 1 ) / sqrt(5)] = [( 1 + sqrt(5) − 1 ) / sqrt(5)] = [sqrt(5)/sqrt(5)] = 1
+
+  Ther. F(n) = [( φ^n − ψ^n ) / sqrt(5)] for integer n.
+
+  Since F(n) is an Integer, [( φ^n − ψ^n ) / sqrt(5)] is an integer.
+
+  abs(φ^n / sqrt(5) - F(n)) = abs(φ^n / sqrt(5) - [( φ^n − ψ^n ) / sqrt(5)]) =  abs(ψ^n  / sqrt(5));
+
+   ψ = ( 1 − sqrt(5) ) / 2
+
+   sqrt(4) < sqrt(5) < sqrt (9)
+
+   -sqrt(4) > -sqrt(5) > -sqrt (9)
+
+   1 - sqrt(4) > 1 - sqrt(5) > 1 - sqrt (9)
+
+   (1 - sqrt(4))/2 > (1 - sqrt(5))/2 > (1 - sqrt (9))/2
+
+   (1 - 2)/2 > (1 - sqrt(5))/2 > (1 - 3)/2
+
+   -0.5 > (1 - sqrt(5))/2 > -1
+
+   0 > (1 - sqrt(5))/2 > -1
+
+   0 > ψ > -1
+
+   0 < abs[ψ] < 1
+
+   for ev. n in Z+ un. {0}  abs(ψ^n) < abs(ψ^[n - 1]) < ... < abs(ψ) < abs(ψ^0 = 1) = 1;
+
+   Ther. for ev. n in Z+ un. {0}  abs(ψ^n)/sqrt(5) < abs(ψ^[n - 1])/sqrt(5) < ... < abs(ψ)/sqrt(5) < abs(ψ^0 = 1)/sqrt(5) = 1/sqrt(5);
+
+        1/sqrt(9)  < 1/sqrt(5) < 1/sqrt(4)
+
+        1/3 < 1/sqrt(5) < 1/2 = 0.5
+
+  Ther. for ev. n in Z+ un. {0}  abs(ψ^n)/sqrt(5) < abs(ψ^[n - 1])/sqrt(5) < ... < abs(ψ)/sqrt(5) < abs(ψ^0 = 1)/sqrt(5) = 1/sqrt(5) < 0.5
+
+
+  Ther. for ev. n in Z+ un. {0}  abs(ψ^n)  / sqrt(5) < 0.5
+
+  4 cases:
+  a) the closest integer to φ^n / sqrt(5) is less than φ^n / sqrt(5)
+
+  b) the closest integer to φ^n / sqrt(5) is greater than φ^n / sqrt(5)
+
+  c) the closest integer to φ^n / sqrt(5) is = to φ^n / sqrt(5)
+
+  d) φ^n / sqrt(5) is equally distanced from 2 closest integers
+
+    c.i - the closest integer.
+
+    nx.in - any integer after c.i
+
+    pr.in - any integer before c.i
+
+    prev.in - previous integer before c.i
+
+    next.in - next integer after c.i
+
+  Case c):
+
+      Fib(n) is an integer as well, the distance between φ^n / sqrt(5) and Fib(n)    = abs(ψ^n)/sqrt(5) < 0.5 < 1,
+
+      but all integers are distanced from each other by 1, by their definition.
+
+      Therefore , φ^n / sqrt(5) and Fib(n) can not be both integers.
+
+      This case is impossible.
+
+  case d)
+
+      In that case there are two closest integers and φ^n / sqrt(5) is distanced from each by 0.5
+
+      But Fib(n) is an integer as well, the distance between φ^n / sqrt(5) and Fib(n) = abs(ψ^n)/sqrt(5) < 0.5 < 1
+
+      Therefore, Fib(n) is closer to φ^n / sqrt(5) than its closest integers.
+
+      Therefore, there can not be 2 equally distanced closest integers to the φ^n / sqrt(5) with
+      Fib(n) being an integer as well.
+
+      This case is impossible.
+
+
+  Therefore, φ^n / sqrt(5) is not an integer and is never distance from any integer by 0.5.
+
+  Therefore, 0 < abs(φ^n / sqrt(5) - c.i.) < 0.5
+
+  case a):
+
+      If c.i < φ^n / sqrt(5), then abs(φ^n / sqrt(5) - c.i) = φ^n / sqrt(5) - c.i and all integers less than c.i., are distanced from φ^n / sqrt(5)
+      by c.i - pr.in + φ^n / sqrt(5) - c.i = k + φ^n / sqrt(5) - c.i, k >= 1.
+      k + φ^n / sqrt(5) - c.i > 1
+
+      Therefore, they all previous integers before c.i are never the closest.
+      The next integer after it is distanced from the c.i by 1;
+      next.i = c.i + 1 > c.i + 0.5 > c.i + φ^n / sqrt(5) - c.i = φ^n / sqrt(5)
+
+      abs(next.i - φ^n / sqrt(5)) = c.i + 1 - (c.i + φ^n / sqrt(5) - c.i) =
+      1 - (φ^n / sqrt(5) - c.i) > 1 - 0.5 = 0.5
+
+      1 - (φ^n / sqrt(5) - c.i) = next.i - φ^n / sqrt(5) = abs(next.i - φ^n / sqrt(5)).
+
+      next.i - φ^n / sqrt(5) > 0.5
+      next.i > φ^n / sqrt(5) + 0.5 > φ^n / sqrt(5)
+
+      Therefore. the next integer after c.i is not the closest integer as well.
+
+      All the next integers after this next integer are distanced from it by j, j >= 1
+
+      next.i + j > next.i > φ^n / sqrt(5)
+
+      abs((next.i + j) - φ^n / sqrt(5)) = j + 1 - (φ^n / sqrt(5) - c.i) > 1 - (φ^n / sqrt(5) - c.i) > 0.5.
+
+      Therefore, all the next integers after(next.i, and consequently) c.i are not the closest.
+
+      Therefore, there can only be one closest integer. And it is c.i
+
+      abs(φ^n / sqrt(5) - Fib(n)) = abs(ψ^n  / sqrt(5)) < 0.5, which makes Fib(n)
+
+      the closest integer. But there can be only one such integer, c.i
+
+      Therefore c.i = Fib(n).
+
+  case b):
+
+      If c.i > φ^n / sqrt(5), then abs(φ^n / sqrt(5) - c.i) = c.i - φ^n / sqrt(5) and all integers greater than c.i., are distanced from φ^n / sqrt(5)
+      by nx.in - (c.i - [c.i - φ^n / sqrt(5)]) = k + c.i - φ^n / sqrt(5), k >= 1.
+      k + c.i - φ^n / sqrt(5) > 1
+
+      Therefore, they all next integers after c.i are never the closest.
+      The previous integer before it is distanced from the c.i by 1;
+      prev.i = c.i - 1 < c.i - 0.5 < c.i - (c.i - φ^n / sqrt(5)) = φ^n / sqrt(5)
+
+      abs(φ^n / sqrt(5) - prev.i) = φ^n / sqrt(5) - c.i + 1 = 1 - abs(φ^n / sqrt(5) - c.i) > 1 - 0.5 = 0.5
+
+      Therefore, prev.i is not the closest integer to φ^n / sqrt(5)
+
+      All integers before prev.i are distanced from it by some y >= 1
+
+      pr.i < prev.i < φ^n / sqrt(5)
+
+      pr.i = prev.i - y < φ^n / sqrt(5)
+
+      abs(pr.i - φ^n / sqrt(5)) = φ^n / sqrt(5) - pr. i =  φ^n / sqrt(5) - prev.i + y >  φ^n / sqrt(5) - prev.i > 0.5
+
+      Therefore, all the previous integers before (prev.i, and consequently) c.i are not the closest.
+
+      Therefore, there can only be one closest integer. And it is c.i
+
+      abs(φ^n / sqrt(5) - Fib(n)) = abs(ψ^n  / sqrt(5)) < 0.5, which makes Fib(n)
+
+      the closest integer. But there can be only one such integer, c.i.
+
+      Therefore c.i = Fib(n).
+
+
+Therefore, in all possible cases, F(n) is the closest integer to φ^n / sqrt(5).
+
+Therefore, Fib(n) = [( φ^n − ψ^n ) / sqrt(5)] and is the closest integer to φ^n / sqrt(5).

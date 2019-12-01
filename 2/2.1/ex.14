@@ -1,0 +1,3 @@
+(define ia (make-interval 44 45))
+
+(define ib (make-interval 23 25))

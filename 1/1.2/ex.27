@@ -1,0 +1,92 @@
+(define (fermat-test n)
+  (define (check-all base)
+    (define (exptmod-base exp)
+     (remainder (cond ((= 1 exp) base)
+                      ((even? exp)
+                        (square (exptmod-base (/ exp 2))))
+                      (else
+                        (* base (exptmod-base (- exp 1)))))
+                n))
+
+    (define (try-it)
+      (= (exptmod-base n) base))
+
+    (cond ((= 1 base) true)
+          ((try-it) (check-all (- base 1)))
+          (else false)))
+
+  (if (> n 1)
+      (check-all (- n 1))
+      false))
+
+561, 1105, 1729, 2465, 2821, and 6601
+
+1 ]=> (fermat-test 561) (fermat-test 1105) (fermat-test 1729) (fermat-test 2465) (fermat-test 2821) (fermat-test 6601)
+
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+1 ]=>
+;Value: #t
+
+
+
+Example
+
+(define (search-for-primes-and-carmichael start end)
+  (define (next n)
+    (if (= n 2)
+        3
+        (+ n 2)))
+
+  (define (even? n)
+   (= (remainder n 2) 0))
+
+  (define (timed-prime-test n)
+    (define (fermat-test)
+      (define (check-all base)
+        (define (exptmod-base exp)
+         (remainder (cond ((= 1 exp) base)
+                          ((even? exp)
+                            (square (exptmod-base (/ exp 2))))
+                          (else
+                            (* base (exptmod-base (- exp 1)))))
+                    n))
+
+        (define (try-it)
+          (= (exptmod-base n) base))
+
+        (cond ((= 1 base) true)
+              ((try-it) (check-all (- base 1)))
+              (else false)))
+
+    (if (> n 1)
+        (check-all (- n 1))
+        false))
+     (define (start-prime-test start-time)
+       (if (fermat-test)
+           (report-prime (- (runtime)
+                            start-time))))
+
+     (define (report-prime elapsed-time)
+       (display " *** ")
+       (display elapsed-time))
+
+     (newline)
+     (display n)
+     (start-prime-test (runtime)))
+
+  (cond ((or (and (even? start) (not (= start 2))) (= start 1)) (search-for-primes-and-carmichael (+ start 1) end))
+        ((> start end) (newline) (display " End of the interval "))
+        (else (timed-prime-test start) (search-for-primes-and-carmichael (next start) end))))

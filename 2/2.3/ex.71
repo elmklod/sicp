@@ -1,0 +1,3 @@
+The most frequent symbol will require 1 bit to encode.
+
+The least frequent symbol will require n - 1 bits to encode

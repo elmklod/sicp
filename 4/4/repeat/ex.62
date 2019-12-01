@@ -1,0 +1,25 @@
+(rule (last-pair (?x) (?x)))
+
+(rule (last-pair (?x . ?u) ?y)
+  (last-pair ?u ?y))
+
+; one possible optimization to avoid extra rule db traversal:
+
+(rule (last-pair (?x ?v . ?u) ?y)
+  (last-pair (?v . ?u) ?y))
+; It avoids traversing dbs with
+; queries like (last-pair () ?y)
+; that are created from applying the second rule to
+; one-element lists, whose last pair is needed.
+
+To be tested:
+(last-pair (3) ?x)
+(last-pair (1 2 3) ?x)
+(last-pair (2 ?x) (3))
+
+(last-pair ?x (3))
+; It will probably go into an infinite loop
+; because it will determine all possible lists of increasing length
+; with (3) as the last pair. (for any particular length it will not find other elements)
+; because there infinitely many lengths for lists, it will
+; not stop until the process exhausts all of its memory resources.

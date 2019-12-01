@@ -1,0 +1,13 @@
+(define right-split (split beside below))
+(define up-split (split below beside))
+
+(define (split position position-split)
+ (define (oriented-split painter times-split)
+  (if (= 0 times-split)
+      painter
+      (let ((split-painter (oriented-split painter
+                                           (- times-split 1))))
+        (position painter
+                  (position-split split-painter
+                                  split-painter)))))
+ oriented-split)

@@ -1,0 +1,53 @@
+(define (eval exp env)
+  (cond ((self-evaluating? exp)
+         exp)
+        ((variable? exp)
+         (lookup-variable-value exp env))
+        ((quoted? exp)
+         (text-of-quotation exp))
+        ((application? exp)
+         (apply (eval (operator exp) env)
+                (list-of-values
+                 (operands exp)
+                 env)))
+        ((assignment? exp)
+         (eval-assignment exp env))
+        ((definition? exp)
+         (eval-definition exp env))
+        ((if? exp)
+         (eval-if exp env))
+        ((lambda? exp)
+         (make-procedure
+          (lambda-parameters exp)
+          (lambda-body exp)
+          env))
+        ((begin? exp)
+         (eval-sequence
+          (begin-actions exp)
+          env))
+        ((cond? exp)
+         (eval (cond->if exp) env))
+        (else
+         (error "Unknown expression
+                 type: EVAL" exp))))
+
+Because application? selector is implemented using pair? predicate, it cannot distinguish between
+any expressions that are are constructed from pairs, including assignment, definitions and almost every
+other special form.
+
+(define x 3) will fail as the interpreter will see it as an application, not a definition.
+(because it has the same structure as a normal combination) - there is no procedure define per se, that is why
+the evaluation of the operator define will fail.
+Most likely, the evaluation of the first operand x will fail as well if there is no
+former binding for it.
+
+(call [operator] [operands])
+
+(define (application? exp) (tagged-list? exp 'call))
+(define (operator exp) (cadr exp))
+(define (operands exp) (cddr exp))
+(define (no-operands? ops) (null? ops))
+(define (first-operand ops) (car ops))
+(define (rest-operands ops) (cdr ops))
+
+This will help Louis realize his idea.

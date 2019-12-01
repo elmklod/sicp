@@ -1,0 +1,6 @@
+Execute, which applies the predicate to the arguments, must eval the predicate expression to get the procedure to apply. However, it must not evaluate the arguments, since they are already the actual arguments, not expressions whose evaluation (in Lisp) will produce the arguments. Note that execute is implemented using eval and apply from the underlying Lisp system.
+
+Does the underlying interpreter still evaluate symbols and pairs(is symbol == pair?)?
+What they meant to say, I believe, is that the operands of the predicate are just symbols and pairs that are to be interpreted literally, not as some expression other than a value-exp, which will be done in the underlying LISP
+For numbers it is harmless, for symbols and pairs - not.
+They may be interpreted as a variable whose value is needed and application/special form respectively.

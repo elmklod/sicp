@@ -1,0 +1,33 @@
+the answer is not affected, it is the commutativity law.
+
+The theoretical(without the program implementation)
+minimum of steps is:
+3 + 2 + 4 + 5 = 14 varints before the answer is ontained if amb uses depth-first search
+
+However, the amount of time IS affected, sometimes greatly.
+
+for example, if one puts first four requirements on the end, then many unsuitable
+variants will be checked for other requirements.
+Even more, if one puts the distinct-floors requirement on the end, then
+MANY variants like '(1 1 1 1 2 2) and (3 3 3 3 3) will be checked for other requirements
+
+What is more important(some are still generated with the original program) is that such variants may be suitable for some and unsuitable for others, especially
+on the end.
+One unsuitable requirement may produce another unsuitable and they will take far more time to check their validity
+(1 1 1 3 5) -> (1 1 1 4 5) and so forth
+
+Because it is known that kaber lives on the third floor, the requirement b != 5 is actually always met
+Baker is the bottleneck. His real requirement is of floors being distinct and it does not come to realisation until the distinct checks
+either all of the variants before the answer as in the original(incl. perm with repet.)
+or all the variants before the answer are checked by it or some other requirement.
+distinct? takes a qudratic time to check, others are constant. Therefore, it is better to use them before distinct?
+(however, distinct may actully take less than these requirements combined, but it is emperically established that it takes more in most cases.)
+
+cooper's  cooper != 1 should come first
+then f != 1
+| f - c | != 1
+f != 5 ;not sure from here(although this one seems correct)
+ m > c
+| f - s | != 1 ; to here
+distinct
+b ! = 5

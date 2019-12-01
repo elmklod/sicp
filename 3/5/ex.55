@@ -1,0 +1,32 @@
+(define (partial-sums s)
+  (if (stream-null? s)
+      the-empty-stream
+      (let ((elem (stream-car s)))
+        (cons-stream elem
+                     (stream-map (lambda (x) (+ elem x))
+                                 (partial-sums (stream-cdr s)))))))
+
+(define (partial-sums s)
+  (define partial-sum
+    (if (stream-null? s)
+        the-empty-stream
+        (cons-stream (stream-car s)
+                     (add-streams (stream-cdr s)
+                                  partial-sum))))
+  partial-sum)
+
+(define (partial-sums s)
+  (add-streams s (cons-stream 0 (partial-sums s))))
+
+The same, ads s shifted instead of partial-sum per se (which is the same)
+(define (partial-sums s)
+  (define (add-s)
+    (add-streams s (cons-stream 0 (add-s))))
+  (add-s))
+
+It is also possible to:
+
+(define (partial-sums s)
+  (define partial-sum
+          (add-streams s (cons-stream 0 partial-sum)))
+  partial-sum)

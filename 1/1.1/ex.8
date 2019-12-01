@@ -1,0 +1,56 @@
+(define (cbrt x)
+  (cbrt-iter 1.0 x))
+
+(define (cbrt-iter guess x)
+  (if  (cbrt-good-enough? guess x)
+       guess
+       (cbrt-iter (improve-cbrt guess x) x)))
+
+(define (cbrt-good-enough? guess x)
+  (< (/ (abs (- (cube guess)
+                x))
+        (cube guess))
+     diff))
+
+(define (cube x)
+  (* x x x))
+
+(define (improve-cbrt guess x)
+  (/ (+ (* 2 guess)
+        (/ x
+           (square guess)))
+     3))
+
+
+-----------------------------------------------
+
+(define (cbrt-good-enough? guess x)
+  (< (abs (- x
+             (cube guess)))
+     diff)))
+
+good for big numbers, that don't suffer from rounding errors.
+suboptimal for small.
+
+
+(define (cbrt-good-enough? guess x)
+  (< (/ (abs (- (improve-cbrt guess x)
+                guess))
+        guess)
+     diff))
+
+book-like from ex.7
+
+Bad for big numbers, as is it similar to first(original) one, but the denom is (* 3 (square guess))
+The quotient is smaller for bigger numbers, therefore.
+
+But it is better for smaller number.
+
+
+(define (cbrt-good-enough? guess x)
+  (< (/ (abs (- (improve-cbrt guess x)
+                guess))
+        (improve-cbrt guess x))
+     diff))
+
+Just like(tested, never proved) the book-like.

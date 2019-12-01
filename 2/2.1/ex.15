@@ -1,0 +1,7 @@
+Yes, Eva is right. The problem with the systems is that it has no notion of similar objects.
+
+For example a + b - a = b
+
+The system, however, a + b - a is treated as  i0 + i1 - i2
+
+And bounds of the same interval get mixed together.

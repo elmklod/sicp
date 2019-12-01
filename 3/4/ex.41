@@ -1,0 +1,66 @@
+There are 3 known cases that introduce bugs into the concurrently running processes:
+
+0. Assumption about some value is outdated by the assignment after the accessing.
+
+1. The expressions may be evaluated based on the outdated assumption, which renders their result incorrect
+
+2. The assignment based on the incorrect result of the expression may change the state of the system to the incorrect,
+thus, making the whole system inadequate for world modeling right after the assignment.
+I.E. No expression result can be considered correct without additional inspection.
+
+
+The cases are ordered in the cause -> event, increased severity ordering
+It may be thought that all of the problems arise from the outdated assumption about the state.
+
+The first case only affects user's view of the model, its particular state.
+
+The second may affect the model, causing some errors and the user, causing some perplexion about
+some ideas.
+
+The third does everything above and also makes further execution/evaluation of the process
+unreliable.
+
+Therefore, Ben is right, the access should be serialized. It can prevent the problems described above
+
+
+
+However it cannot prevent all occurrences of these problems.
+
+Consider the serialized access to the bank account with the current balance being 100$.
+Suppose, Mary ask Peter to deposit more money so that she could withdraw 120$:
+She is in trouble and needs to rent a room in a hotel which costs 120$. She is also low on battery for her cellular.
+Peter could do the the following(in the real world the computation is about counting banknotes in the wallet):
+(deposit! acc (- 120 (balance acc))) because he is sure that balance < 120
+During the evaluation of this expression
+the balance of the account is accessed. Right when it starts,
+Paul calls withdraw procedure, withdrawing 99$ - he has to pay the tax right now.
+Peter's process successfully accesses the value of balance at that moment, it is 100$
+Then, in any order, since the deposit and withdraw procedures are serialized and +, - are associative,
+balance of the acc will be 21$, not 120 dollars as Mary expects.
+Now Mary's cellular has ran out of energy, she is confident that she can go to the hotel and rent a room.
+In reality, however, she will not be able to do so.
+
+Notice that if the evaluation was normal order, the problem would not arise.
+
+The general idea here is that accessing(0) some values and evaluating(1) expressions that
+operate on these values(including assignments) should be serialized.
+
+Ben's idea is concerned with (0) alone.
+Indeed, even if the accessing procedure is serialized, it is still possible to introduce bugs:
+Suppose that Peter accessed acc balance before Paul set it to 1$, the result would be just as described above.
+
+If it was Paul's process to run first, then balance would indeed be 120$ in the end.
+
+But it would be possible even without serializing accessing procedure.
+Serializing simply enforces some ordering, not necessarily the desired(for Mary and Peter it could be called correct) one.
+
+Therefore, it may help, but at the same time it does not eliminate the problem completely.
+
+To solve this problem, it would require to serialize ALL possible computations involving the accessed value ALWAYS together with accessing
+with the assignment that changes the concerned value(changes the state).
+
+
+Extrapolating the problem further, if there are successive processes that change the state
+and in the middle of their execution this state is accessed, it value may seem random
+random for the user. And with that intermediate value several processes may return
+abnormal result.

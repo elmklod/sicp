@@ -1,0 +1,47 @@
+(define (negate n)
+  (apply-generic 'negate n))
+
+scheme-num:
+(put 'negate '(scheme-number) (lambda (x) (tag (- x))))
+
+rational:
+(define (negate n)
+   (make-rational (- (numer n))
+                  (- (denom n))))
+
+(put 'negate '(rational) (lambda (x) (tag (negate x))))
+
+
+complex:
+(define (neg n)
+  (let (((mul-by-i
+          (lambda (z) (mul (make-complex-from-real-imag 0 1)
+                           z)))))
+    (mul-by-i (mul-by-i n))))
+
+like this:
+
+(put 'negate '(complex) (lambda (x) (tag (negate x))))
+in the complex package
+
+to negate a polynomial is to negate its terms
+
+(define (neg p)
+ (make-poly (variable p)
+            (negate-terms (term-list p))))
+
+(define (negate-terms l)
+  (map (lambda (term)
+          (make-term (order term)
+                     (negate (coeff term))))
+       l))
+
+(put 'negate '(polynomial) (lambda (p) (tag (neg p))))
+
+Should be put into the polynomial package with
+
+(define (sub-poly p1 p2)
+  (add-poly p1 (negate p2)))
+
+(put 'sub '(polynomial polynomial)
+     (lambda (p1 p2) (tag (sub-poly p1 p2))))

@@ -1,0 +1,8 @@
+what happens when not and lisp-value forms are given
+new patterns?
+In case of not it seems that a valid option is to check whether the match(unification) is consistent
+even if some patterns are unassigned
+For lisp-value it is not clear what to do. Signaling an error is one solution.
+
+Answer: It is really unclear and almost every reasonable solution is about delaying
+filtering until there is enough bindings in the frame for filters to work properly

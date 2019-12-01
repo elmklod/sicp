@@ -1,0 +1,10 @@
+(define rand
+  (let ((value 1))
+    (lambda (m)
+      (cond ((eq? m 'generate)
+             (set! value (rand-update value))
+             value)
+            ((eq? m 'reset)
+             (lambda (x)
+               (set! value x)
+               value))))))

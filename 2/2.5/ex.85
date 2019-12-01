@@ -1,0 +1,140 @@
+authors seem to imply to that there is no need to drop to rational type
+Indeed, the reason for that irrational numbers are represented by their
+rational approximation anyway
+
+(define (raise n)
+  (let ((up (get-coercion 'raise (list (type-tag n)))))
+    (if up
+        (up n)
+        (error "Type cannot be raised:"
+               (type-tag n)))))
+
+(define (proj-rational->scheme-number n)
+  (make-scheme-number (round (/ (numer n)
+                                (denom n)))))
+
+
+This procedure is not necessary,
+but is defined to provide an abstraction
+to the implementation of projection procedure
+
+(define (proj-complex->rational n)
+  (define (real->rational n)
+    (define (iter numerator denominator)
+      (if (integer? numerator)
+          (make-rational numerator denominator)
+          (iter (* numerator 10)
+                (* denominator 10))))
+    (iter n 1))
+  (real->rational (real-part n)))
+
+(put-coercion 'project 'rational proj-rational->scheme-number)
+(put-coercion 'project 'complex proj-complex->rational)
+
+(define (drop n)
+ (let ((proj (get 'project (type-tag n))))
+    (if (and proj
+             (equ? (raise (proj n))
+                   n))
+        (drop (proj n))
+        n)))
+
+(define (drop n)
+ (let ((proj (get 'project (type-tag n))))
+    (let ((projection (if proj
+                          (proj n))))
+      (if (and proj
+               (equ? (raise projection)
+                     n))
+          (drop projection)
+          n))))
+
+(define (drop n)
+ (let ((proj (get 'project (type-tag n))))
+   (if proj
+       (let ((projection (proj n)))
+        (if (equ? n (raise projection))
+            (drop projection)
+            n))
+       n)))
+
+Designs are equivalent
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (drop (apply proc (map contents args)))
+          (let ((raised-args (raise-args args)))
+             (if (not (equal? args raised-args))
+                 (apply apply-generic '(cons op raised-args))
+                 (error
+                  "No method for these types"
+                   (list op type-tags))))))))
+
+(define (apply-generic op . args)
+  (define (raise-args args)
+    (define (find-uppermost-level args)
+      (fold-left (lambda (res arg)
+                   (let ((lvl (level arg)))
+                        (if (< res lvl)
+                            res
+                            lvl)))
+                 (level (car args))
+                 (cdr args)))
+    (define (make-graded-arg arg level)
+      (cons arg level))
+    (define (argument graded-arg)
+      (car graded-arg))
+    (define (level graded-arg)
+      (cdr graded-arg))
+    (define (type-level arg)
+      (define (iter arg level)
+        (let ((raise (get 'raise (list (type-tag arg)))))
+          (if raise
+              (iter (raise arg) (+ level 1))
+              level)))
+      (iter arg 0))
+    (define (raise-n-times arg n)
+     (if (= n 0)
+         arg
+         (raise-n-times (raise arg) (- n 1))))
+    (define (grade-args)
+     (let ((graded-to-top (map (lambda (arg)
+                                 (make-graded-arg
+                                   arg
+                                   (type-level arg)))
+                               args)))
+          (let ((uppermost-level (find-uppermost-level graded-to-top)))
+               (map (lambda (graded-arg) (make-graded-arg (argument graded-arg)
+                                                          (- (level graded-arg)
+                                                             uppermost-level)))
+                    graded-to-top))))
+    (if (null? args)
+       '()
+       (map (lambda (graded-arg) (raise-n-times (argument graded-arg)
+                                                (level graded-arg)))
+            (grade-args))))
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (drop (apply proc (map contents args)))
+          (let ((raised-args (raise-args args)))
+             (if (not (equal? args raised-args))
+                 (apply apply-generic (cons op raised-args))
+                 (error
+                  "No method for these types"
+                   (list op type-tags))))))))
+
+
+Either all values must have types or procedures that produce untyped values
+should not be implemented via apply-generic
+
+(define (=zero? x)
+  (let ((type (list (type-tag x))))
+    (let ((proc (get '=zero? type)))
+      (if proc
+          (proc (contents x))
+          (error
+           "No method for this type"
+           (list '=zero? type))))))

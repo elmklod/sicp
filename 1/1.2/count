@@ -1,0 +1,22 @@
+(define (count-change amount)
+
+  (define (denomination kinds-of-coins) (cond ((= kinds-of-coins 1) (* 100 1/2))
+                                              ((= kinds-of-coins 2) (* 100 1/4))
+                                              ((= kinds-of-coins 3) (* 100 1/10))
+                                              ((= kinds-of-coins 4) (* 100 1/20))
+                                              ((= kinds-of-coins 5) (* 100 1/100))))
+
+  (define (count-rec amount kinds-of-coins)
+      (cond ((= amount 0) 1)
+            ((< amount 0) 0)
+            ((= kinds-of-coins 0) 0)
+            (else (+ (count-rec amount (- kinds-of-coins 1))
+                     (count-rec (- amount (denomination kinds-of-coins)) kinds-of-coins)))))
+
+  (count-rec amount 5))
+
+Denomination is the procedure inside count block structure and not in the count-rec
+ block structure either as a procedure or a variable because:
+
+ Having the interpreter constantly recreate (store) variables and procedure requires memory and steps(operations),
+ which is redundant.

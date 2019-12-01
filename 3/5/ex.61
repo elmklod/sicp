@@ -1,0 +1,11 @@
+(define (invert-series s)
+  (cons-stream (stream-car s)
+               (scale-stream -1
+                             (mul-series (stream-cdr s) (invert-series s)))))
+
+(define (invert-series s)
+  (define inverted
+    (cons-stream (stream-car s)
+                 (scale-stream -1
+                               (mul-series (stream-cdr s) inverted))))
+  inverted)

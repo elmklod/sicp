@@ -1,0 +1,184 @@
+A tree is represented as nested lists(list structures, when concerning leaves)
+at each nesting level there is a node.
+
+A tree is a node with its branches being either empty or another node
+ It is possible to use selectors record-node,
+left-branch-node, right-branch-node and empty-node?
+right branches have keys that are preceding(less) the node node key in some ordering
+left branches have keys that follow(greater) the node key in some ordering
+make-empty-node constructor is used to create empty nodes
+Mutators:
+set-record-node!
+initialize-node! mutates an empty node by setting its branches to empty nodes
+and its record to the given record
+
+There is assoc procedure that traverses a one-dimensional table implemented as a binary tree.
+
+A record has the last key associated with the entry and the entry itself
+
+selector entry-record is used to access the entry withing the record
+key-record is used to access the key within the record
+constructor make-record is used to create new records.
+mutator - set-entry-record!
+
+An entry is either a leaf node that stores a value or a subtable(tree)
+constructor make-leaf-node
+selector leaf-node? checks whether the entry is a leaf
+value-leaf extracts the value from the leaf.
+
+All tables have headers, subtables have headers that store the last name
+under which the subtable is indexed, i.e. the last record
+
+
+
+lookup procedure is used to access the entry,
+if there is no entry under the given keys, it returns false
+
+
+
+
+
+
+
+
+
+
+(define (make-table greater? less?)
+  (define (make-empty-node)
+    (list '() '() '()))
+
+  (define (record-node node)
+    (car node))
+
+  (define (left-branch-node node)
+    (cadr node))
+
+  (define (right-branch-node node)
+    (caddr node))
+
+  (define (empty-node? node)
+    (null? (record-node node)))
+
+  (define (set-record-node! node record)
+    (set-car! node record))
+
+  (define (initialize-node! node record)
+    (set-record-node! node record)
+    (set-car! (cdr node) (make-empty-node)) ; left branch
+    (set-car! (cddr node) (make-empty-node))
+    node) ; right branch
+
+  (define leaf-mark (list 'leaf))
+
+  (define (make-record key value)
+    (cons key value))
+
+  (define (entry-record record)
+    (cdr record))
+
+  (define (key-record record)
+    (car record))
+
+  (define (set-entry-record! record entry)
+    (set-cdr! record entry))
+
+  (define (make-leaf-node value)
+    (initialize-node! (make-empty-node)
+                      (make-record leaf-mark value)))
+
+  (define (leaf-node? node)
+    (eq? (key-record (record-node node))
+         leaf-mark))
+
+  (define (value-leaf leaf)
+   (entry-record (record-node leaf)))
+
+  (define (strip-header table)
+    (entry-record table))
+
+  (define (assoc key node)
+    (if (or (empty-node? node)
+            (leaf-node? node))
+        false
+        (let ((record (record-node node)))
+            (cond ((eq? key (key-record record))
+                   record)
+                  ((greater? key (key-record record))
+                   (assoc key (left-branch-node node)))
+                  ((less? key (key-record record))
+                   (assoc key (right-branch-node node)))
+                  (else (error "ASSOC called
+                                with an unordered table"))))))
+
+  (define (lookup keys)
+    (define (iter subtable)
+      (let ((key (car keys)))
+        (set! keys (cdr keys))
+        (let ((record (assoc key (strip-header subtable))))
+          (if record
+              ((if (null? keys)
+                   (lambda (x)
+                     (let ((entry (entry-record x)))
+                       (if (leaf-node? entry)
+                           (value-leaf entry)
+                           entry)))
+                   iter)
+               record)
+              false))))
+    (if (null? keys)
+        (error "LOOKUP called with no keys")
+        (iter table)))
+
+  (define (insert! keys value)
+    (define current-node '())
+    (define (assoc key node)
+      (if (or (empty-node? node)
+              (leaf-node? node))
+          (begin (set! current-node node) false)
+          (let ((record (record-node node)))
+              (cond ((eq? key (key-record record))
+                     record)
+                    ((greater? key (key-record record))
+                     (assoc key (left-branch-node node)))
+                    ((less? key (key-record record))
+                     (assoc key (right-branch-node node)))
+                    (else (error "ASSOC called
+                                  with an unordered table"))))))
+
+      (define (iter subtable)
+          (let ((key (car keys)))
+            (set! keys (cdr keys))
+            (let ((record (assoc key (strip-header subtable))))
+              (cond  ((and record (null? keys))
+                      (set-entry-record! record (make-leaf-node value)))
+                     (record
+                      (iter record))
+                     (else
+                      (let ((intermediate-record
+                             (make-record key (make-empty-node))))
+                          (initialize-node!
+                            current-node
+                            intermediate-record)
+                          (if (null? keys)
+                              (set-entry-record!
+                                intermediate-record
+                                (make-leaf-node value))
+                              (iter intermediate-record))))))))
+      (iter table)
+      'ok)
+      (define table (make-record leaf-mark
+                                 (make-empty-node)))
+      (define (dispatch m)
+        (cond ((eq? m 'insert!) insert!)
+              ((eq? m 'lookup) lookup)
+              ((eq? m 'assoc) assoc)
+              (else (error "Unknown operation:
+                            TABLE" m))))
+      dispatch)
+
+
+(define (lookup keys table)
+  ((table 'lookup) keys))
+
+(define (insert! keys value table)
+  ((table 'insert!) keys value))

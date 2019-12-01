@@ -1,0 +1,129 @@
+(define (install-sparse-polynomial-package)
+  (define (adjoin-term term term-list)
+    (if (=zero? (coeff term))
+        term-list
+        (cons term term-list)))
+  (define (first-term term-list) (car term-list))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (negate-terms l)
+    (map (lambda (term)
+            (make-term (order term)
+                       (negate (coeff term))))
+         l))
+  (define (the-empty-termlist) '())
+  (define (empty-termlist? term-list)
+    (null? term-list))
+  (define (tag x)
+     (attach-tag 'sparse x))
+  (put 'adjoin-term 'sparse
+       (lambda (term term-list)
+          (tag (adjoin-term term term-list))))
+  (put 'first-term 'sparse first-term)
+  (put 'rest-terms 'sparse
+       (lambda (term-list) (tag (rest-terms term-list))))
+  (put 'negate '(sparse)
+       (lambda (term-list) (tag (negate-terms term-list))))
+  (put 'the-empty-termlist 'sparse (tag (the-empty-termlist)))
+  (put 'empty-termlist? 'sparse empty-termlist?))
+  'done)
+
+
+These procedures should remain available for each of the packages by defining them in the general polynomial package
+  (define (empty-termlist? term-list)
+    ((get 'empty-termlist? (type-tag term-list))
+      term-list))
+  (define (make-term order coeff)
+    (list order coeff))
+  (define (order term) (car term))
+  (define (coeff term) (cadr term))
+  (define (the-empty-termlist) (get 'the-empty-termlist 'sparse))
+  (define (the-dense-empty-termlist) (get 'the-empty-termlist 'dense))
+  (define (the-sparse-empty-termlist) (get 'the-empty-termlist 'sparse))
+
+
+(define (install-dense-polynomial-package)
+  (define (adjoin-term term term-list)
+    (let ((term-order (order term))
+          (max-order (- (length term-list) 1)))
+       (cond  ((=zero? (coeff term)) term-list)
+              ((= (- term-order
+                     max-order)
+                 1)
+              (cons (coeff term)
+                    term-list))
+             (else (adjoin-term term
+                                (cons 0
+                                      term-list))))))
+  (define (first-term term-list)
+    (make-term (- (length term-list)
+                  1)
+               (car term-list)))
+  (define (rest-terms term-list) (cdr term-list))
+  (define (negate-terms l)
+    (map (lambda (term)
+            (negate term)))
+         l)
+  (define (the-empty-termlist) '())
+  (define (empty-termlist? term-list)
+    (null? term-list))
+  (define (tag x)
+     (attach-tag 'dense x))
+  (put 'adjoin-term 'dense
+       (lambda (term term-list)
+          (tag (adjoin-term term term-list))))
+  (put 'first-term 'dense first-term)
+  (put 'rest-terms 'dense
+       (lambda (term-list) (tag (rest-terms term-list))))
+  (put 'negate '(dense)
+       (lambda (term-list) (tag (negate-terms term-list))))
+  (put 'the-empty-termlist 'dense (tag (the-empty-termlist)))
+  (put 'empty-termlist? 'dense empty-termlist?))
+  'done)
+(put-coercion 'raise '(dense) dense->sparse)
+
+(define (adjoin-term term term-list)
+  ((get 'adjoin-term (type-tag term-list))
+    term (contents term-list)))
+
+(define (first-term term-list)
+  ((get 'first-term (type-tag term-list))
+    (contents term-list)))
+
+(define (empty-termlist? term-list)
+  ((get 'empty-termlist? (type-tag term-list))
+    (contents term-list)))
+
+(define (rest-terms term-list)
+  ((get 'rest-terms (type-tag term-list))
+    (contents term-list)))
+
+(define (negate-terms term-list)
+  ((get 'negate (type-tag term-list))
+    (contents term-list)))
+
+(define (sparse->dense L)
+  (fold-right adjoin-term (attach-tag 'dense '()) (contents L)))
+
+(define (dense->sparse L)
+  (define (iter l result)
+    (if (empty-termlist? l)
+        (reverse result)
+        (iter
+         (rest-terms l)
+         (cons (first-term l) result))))
+  (attach-tag 'sparse (filter (lambda (term) (not (=zero? (coeff term))))
+                              (iter L '()))))
+
+(put-coercion 'sparse 'dense sparse->dense)
+(put-coercion 'dense 'sparse dense->sparse)
+
+
+Another possible implementation for negate-terms:
+(define (negate-terms L)
+  (let ((type (type-tag L)))
+    (fold-right (lambda (term termlist)
+                  ((get 'adjoin-term type) (negate term) termlist))
+                (get 'the-empty-termlist type)
+                (contents L))))
+
+It is generic

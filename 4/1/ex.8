@@ -1,0 +1,74 @@
+  (define (let->combination exp)
+    (let* ((bindings (let-processed-bindings exp))
+           (proc-name (let-proc-name exp))
+           (body-proc
+            (make-lambda (let-arguments bindings)
+                         (let-body exp)))
+           (values (let-vals bindings)))
+      (if proc-name
+          (make-let
+           (the-empty-bindings-list)
+           (add-to-sequence-first
+            (make-definition
+             proc-name
+             body-proc)
+            (add-to-sequence-first
+             (make-application proc-name
+                               values)
+             (the-empty-sequence))))
+          (make-application
+            body-proc
+            values))))
+
+(define (let-arguments bindings)
+  (car bindings))
+
+(define (make-binding variable value)
+  (list variable value))
+
+(define (the-empty-bindings-list)
+  '())
+
+(define (let-body exp)
+  (let ((let-elements (cdr exp)))
+    (if (list? (car let-elements))
+        (cdr let-elements)
+        (cddr let-elements))))
+
+(define (let-vals bindings)
+  (cadr bindings))
+
+(define (let-processed-bindings exp)
+  (define (iter exp result)
+    (let ((variables (car result))
+          (values (cadr result)))
+      (if (null? exp)
+          (list (reverse variables)
+                (reverse values))
+          (iter (cdr exp)
+                (list (cons (caar exp)
+                            variables)
+                      (cons (cadar exp)
+                            values))))))
+  (iter (let ((bindings-or-not-1 (cadr exp))
+              (bindings-or-not-2 (caddr exp)))
+          (if (list? bindings-or-not-1)
+              bindings-or-not-1
+              bindings-or-not-2))
+          '(() ())))
+
+
+(define (let-proc-name exp)
+  (let ((name-or-not (cadr exp)))
+    (if (list? name-or-not)
+        false
+        name-or-not)))
+
+(define (add-to-sequence-first elem seq)
+  (cons elem seq))
+
+(define (the-empty-sequence)
+  '())
+
+(define (make-definition name body)
+  (list 'define name body))

@@ -1,0 +1,15 @@
+(define primitive-procedures
+  (list (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?))) ;more primitives
+
+This primitive applies the procedure object from the
+new evaluator implementation as the object in the underlying scheme,
+which is not applicable there as its apply/map apparently utilizez a different implementation of procedure objects.
+
+(define (map proc L)
+  (if (null? L)
+      '()
+      (cons (proc (car L))
+            (map proc (cdr L)))))

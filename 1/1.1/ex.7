@@ -1,0 +1,358 @@
+(define (good-enough? guess x)
+  (< (abs (- (square guess) x)) diff))
+
+
+Analyze this algorithm:
+
+From the the structure of good-enough? body it follows that it will yield #t for numbers in the interval:
+
+(x - diff, x + diff) [x - diff may be negative, this point is important].
+
+so the values suitable for guess lie withing the interval(sqrt(g) is a monotonous function, which is always increasing its output value as the input increases):
+
+(sqrt(x - diff), sqrt(x + diff)). (sqrt here is the mathematical function that computes absolutely precise square roots, not the procedure above)
+
+The real square root of x is sqrt(x).
+
+Calculate the distance between the border points:
+
+d(x) = sqrt(x + diff) - sqrt(x - diff) | again since the sqrt(g) is monotonous and
+                                          is growing, this expression gives tha same values as the abs(sqrt(x + diff) - sqrt(x - diff))
+
+Find if the interval shrinks or grows in length:
+
+d d(x)/dx = 1/2(sqrt[x + diff]) - 1/2(sqrt[x - diff]) = (sqrt[x - diff] - sqrt[x + diff])/(2{sqrt(x^2 - diff^2)});
+
+The denominator is always positive(assume sqrt(x - diff) exists, i.e x >= diff)
+
+The numerator is negative, as sqrt(x) is a monotonous growing func.
+
+Therefore, as the value of x grows, the range of suitable values for guess shrinks and for a very large the guess (in theory) should be extremely close to the real sqrt(x).
+It also means that for small enough x the distance is larger than  for a greater value of x.
+
+Consider the value of x such that x - diff <= 0:
+
+  The range of guess values is  now reduced to: (gues-enough? will yeild true for
+                                                nonpositive numbers regardless, if such a value will be somehow the result of evaluating the compund expression (square guess))
+( or [ 0, sqrt(x + diff))
+
+The distance between borders is :
+
+d(x) = sqrt(x + diff) for x <= diff
+
+It always grows  with the value of x growing up to x = diff, then it shrinks just like the more general border distance:
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+Suppose x = diff - dl, with dl approx. 0:
+
+lim(d(x)) with dl applox 0, = sqrt(2diff) = sqrt(2) * sqrt(diff).
+
+And for a general distance with x = diff + dl :
+lim(d(x)), with dl approaching 0 = lim sqrt(2diff +dl) - sqrt(dl), with dl approaching 0 = sqrt(2diff) = sqrt(2) * sqrt(diff).
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+suppose x is approaching 0:
+
+for x <= diff > 0
+
+lim d(x) = sqrt(diff).
+
+Suppose x = diff - dl, with dl approx. 0:
+
+lim(d(x)) with dl applox 0, = sqrt(2diff) = sqrt(2) * sqrt(diff).
+
+
+
+
+
+
+
+for x > diff:
+
+x can only approach diff:
+
+lim d(x) = sqrt(2diff) = sqrt(2) * sqrt(diff);
+
+For diff < 1, sqrt(diff) > diff,
+
+
+
+
+Let a real number k > 1.
+
+(k is the multiplier of distance in the naive guess range: (sqrt(x) - diff, sqrt(x) + diff] and ( / [ 0, sqrt(x) + diff))
+
+k*diff <= sqrt(diff) for x: 0 < x <= diff,
+
+k <= sqrt(diff)/diff
+
+for diff = 0.001 k <= approx. 31.622776602
+
+k^2*diff^2 - diff <= 0
+
+diff(k^2*diff - 1) <= 0
+
+only for diff: 0 < diff <= 1/[k^2]
+
+Since usually diff is chosen to be small, smaller than 1/4 usually, it is possible to
+achieve that the range of guess values for small x(small includes x close to diff,
+sqrt(2)*sqrt(diff) is even greater than sqrt(diff) for diff: 0 < diff <= 1/[k^2], ther. sqrt(2)*sqrt(diff) > k*diff)
+ is actally greater than the specified precision diff "seems" to allow (it specifies the precision for squares, not for the square roots)
+ k*diff | <= sqrt(diff) |
+
+As an example, original diff value was 0.001. (according to the above statements, it is possible(not always) to achieve that guess precision is actually almost 32*diff or less.
+since k <= approx. 31.622776602 )
+
+Choosing x close to it, but not smaller than diff:
+
+(sqrt 0.0016) =  .04669259597054016, greater than 0.04 by approx. 0.007 = 7 * diff
+(sqrt 0.001024) =  .04147053022957352, greater than 0.032 by approx.0.009 = 9 * diff
+
+Choosing x close to it, but smaller than diff:
+
+(sqrt 0.0009) = .04030062264654547, greater than 0.03 by approx 0.01 = 10 * diff
+(sqrt 0.000729) = .03865866233099501, greater than 0.027 by approx 0.011 = 11 * diff
+
+choosing x close to 0, x < diff:
+
+(sqrt (square 0.00001)) = .03125000106562499, greater than 0.00001 by approx 0.031 = 31 * diff
+(sqrt (square 0.002)) =.03129261341049664, greater than 0.002 by approx 0.029 = 29 * diff
+
+that guess is always > diff is explained as follows: the initial guess 1 is > than diff, therefore the computation approaches the value from the right, decreasing the guess.
+up until the guess is within the range of length 31.3*diff where x and guess may be distanced by any amount of length less than 31.3
+
+it is enough to get the just 31.2*diff, but the averaging part may skip this value of guess. (this in not to be taken as a proved statement.)
+
+
+For large numbers(assume x >> diff) there are several critical points:
+
+0) Large numbers can have approximated representations initially, the sqrt procedure will always be inadequate for them, not matter how much the diff is decreased.
+This is because for large numbers the interval for guess values shrinks, and it shrinks to 0:
+lim d(x) x -> + eternity = lim  sqrt(x + diff) - sqrt(x - diff) x -> + et. = lim sqrt(+et.) - sqrt(+et) x -> +et = 0
+
+Therefore, for a really large number the value found(without approximations during operations) almost certainly guarantees that it is
+a square root of this number, or at least its very-very close approximation.
+
+For larger numbers there are larger square roots.
+
+ceil/floor(x) = x + delta p. delta p << x, > 0 in case of ceil, < 0 if floor
+
+d(x) = sqrt(x + delta p + diff) - sqrt(x + delta p - diff) approx = sqrt(x + diff) - sqrt(x - diff).
+
+max possible value for guess without rounding sqrt(x + diff);
+min possible value for guess without rounding sqrt(x - diff);
+min possible value for guess with ceiling sqrt(x + delta p - diff).
+max possible value with guess with floor sqrt(x + delta p + diff).
+
+It should be noted that in this case delta p >> diff -> delta p - diff >> 0  and
+
+(x + delta p - diff) is greater than (x + diff):
+
+sqrt(x + diff) < sqrt(x + delta p - diff)
+
+the least distance between the ranges is distance between these values:
+
+d(x) = sqrt(x + delta p - diff) - sqrt(x + diff), according to the above statement that first val is always greater.
+
+look if the distance increases or decreases as x increases.
+
+d d(x) / dx = 1/2sqrt(x + delta p - diff) - 1/2sqrt(x + diff) =
+ { sqrt(x + diff) - sqrt(x + delta p - diff) }/2[sqrt(x + delta p - diff)*sqrt(x + diff)];
+
+ <=  0.
+
+ the distance decreases as x grows.
+
+ But at extremely slow pace for large x
+
+ suppose truncation happens at the the 20 digit.
+
+ delta p = 100000000000000000000 - 91320923997867935605 = 8679076002132064395
+
+ Calculate d(5791320923997867935605) = sqrt(5800000000000000000000 - 0.001) - sqrt(5791320923997867935605 + 0.001) =(calculated on a far more powerful calculator, a way to bootstrap)
+ = 57002257.9379168015229902676529152562154511455822927565223459
+
+ d(5891320923997867935605) = 56516764.762864399187817146988529488292186758901452753696493 (same delta p)
+
+ Calculate d(5799320923997867935605) =  4458482.8799506416094570836923130708309355273656118947412014
+
+delta p = 100000000000000000000 - 99320923997867935605 = 679076002132064395
+
+As can be seen, even for a quite large number, the expected root differs from the actual one by more than diff.
+
+Therefore, for such a truncated number, it is inadequate.
+
+case of floor:
+
+sqrt(x - diff) > sqrt(x + delta p + diff) as delta p < 0 and abs(delta p) >> diff
+
+calculate the distance:
+
+d(x) = sqrt(x - diff) - sqrt(x + delta p + diff)
+
+the increase/decrease:
+
+{sqrt(x + delta p + diff) - sqrt(x - diff)}/2[sqrt(x + delta p + diff)*sqrt(x - diff)];
+
+always < 0;
+
+Calculate d(5791320923997867935605) = sqrt(5791320923997867935605 - 0.001) - sqrt(5700000000000000000000 + 0.001) =
+
+= 602384447.9936690827242456060070929082130259604872310649073715
+
+d(5891320923997867935605) = 597209655.284134501894916695497509044363595456379495589728944 (the same delta p as above)
+
+d(5799320923997867935605) = 654928223.0516352426377787990342831674563161460181626653055512
+
+
+
+
+
+1)Suppose there is such guess, that, when squared, gets truncated to the same value as x does, then it will be a "square root" of x:
+
+square(4847834587988965) = 23501500192502138034642961771225 = x
+
+                                 p
+
+square(4847838876528965) = 23501541772785617558366483971225 = square(guess)
+
+digits up to and including p are truncated, then those values are the same. (case of floor)
+
+
+in case of ceil:
+
+square(4847834587988965) = 23501500192502138034642961771225 = x
+
+                                 p
+
+square(4847834007988965) = 23501494569014352367443561771225 = square(guess)
+
+digits up to and including p are truncated, then those values are the same.
+
+This concludes the theoretical part of the exercise, examples for large numbers, are not terminanating.
+Probably still computing.
+ In fact, there is a possibility, that truncation will never let the loop end as the value of squared guess is always greater or less than x.
+ Since, even if guess is extremely close to sqrt(x), guess * guess will never be close enough to x, as it is floored or ceiled.
+
+Refined compound procedure named good-enough?:
+
+(define (good-enough? guess x)
+  (< (/ (abs (- (improve guess x)
+                guess))
+        guess)
+  diff))
+
+  This procedure works remarkably well for small numbers, because for a small guess, either close to or less than diff,
+  to be less than diff, (abs (- (improve guess) guess)) must be smaller than diff.
+  (this is because for guess close to or less than diff < 1: 1/guess > diff, therefore the distance between iterations should be less than diff)
+
+  For a large number guess, far larger than diff and 1, 1/diff, it is, in theory, is not that good:
+
+  1/guess << diff, therefore (abs (- (improve guess) guess)) can actually be large, greater than diff.
+
+  however, it allows avoiding never-ending recursion for larger guess values, that would get truncated when squared.
+  The value of guess may be off the the real sqrt(x) by far more than diff, but it will be computable, and with large numbers, humans usually expect the loss of precision.
+
+  Although this could be avoided by the checking the value of  ven truncated square(guess) divided  by x, to be close to 1. or in other works:
+  (< (/ (abs (- (square guess)
+                x))
+        x)
+     diff)
+
+Tests:
+
+Before:
+
+(sqrt 0.0016) =  .04669259597054016, greater than 0.04 by approx. 0.007 = 7 * diff
+(sqrt 0.001024) =  .04147053022957352, greater than 0.032 by approx.0.009 = 9 * diff
+
+(sqrt 0.0009) = .04030062264654547, greater than 0.03 by approx 0.01 = 10 * diff
+(sqrt 0.000729) = .03865866233099501, greater than 0.027 by approx 0.011 = 11 * diff
+
+(sqrt (square 0.00001)) = .03125000106562499, greater than 0.00001 by approx 0.031 = 31 * diff
+(sqrt (square 0.002)) =.03129261341049664, greater than 0.002 by approx 0.029 = 29 * diff
+
+(sqrt 5873498989865) - never terminated
+(sqrt 5791320923997867935605) - never terminated
+
+After:
+
+(sqrt 0.0016) = .04000284155333112
+(sqrt 0.001024) = .03201767438762186
+
+(sqrt 0.0009) =  .03002766742182557
+(sqrt 0.000729) = .02700005336392152
+
+(sqrt (square 0.00001)) = 1.0000558643074985e-5
+(sqrt (square 0.002)) = 2.001107733030763e-3
+
+(sqrt 5873498989865) =  2423534.979122149 - way off ,
+                          square(2423534.979122149) = 5873521795028.595189314662378201
+                          the real root is 2423530.274179590272361447574405901784799978812041252588896141,
+                          difference is 4(not that much)
+
+(sqrt 5791320923997867935605) = 76100809651.62973, the real root is
+                                76100728800.701166055091106868369360313458888991814838328165069
+      5791333229633580667524.4450198729 = square((sqrt 5791320923997867935605))
+                                difference here is almost 80000 for guess and the real root.
+
+
+
+
+---------------------------------
+(define (good-enough? guess x)
+  (< (/ (abs (- (square guess)
+                x))
+        x)
+     diff))
+
+In fact, this is a better(for some numbers, especially small, worse for bigger ones.) version.
+
+The one from the book is (/ (abs (- (improve g) g)) g) is equal to the the implem. above
+with the x in denom subs. with (* 2 (square guess)).
+
+For now, these new expressions yield the same value for almost each x ,but as 2*guess^2 will, when guess approaches sqrt(x)
+ be bigger than x, the last expression yields better values, but the difference is quite small:
+Usually the root from the book procedure lacks behind my root by just one improvement,
+which can be explained by the additional 2 in the denominator.
+
+Especially when (> (/ (abs (- (square guess)           (< (/ (abs (- (square guess)
+                            x))              is #t and               x))c             is #t as well
+                      x)                                    (* 2 (square guess)))
+                   diff)                                  diff)
+
+
+for x = 69498
+
+263.62473328578257662631434300366796568563755811037945526269232 -real
+263.6248275284356 - last
+263.84773871570775 - from the book
+69498.04968939741654052658334736 - mine square
+69615.6292253923863253765834100625 - books
+
+usually the expression from the book works just like mine.
+
+(sqrt 70000) = 264.5752311179063 - mine, better , square -  70000.05292109353
+(sqrt 70000) = 264.80527696884934 - book, worse, square - 70121.83471054901
+
+It should be noted that my procedure will not be able to compute sqrt(0) = 0, because the division by 0 is involved.
+
+ The one from the book is not capable as well in general, its test first operand always evaluates to 0.5, even if diff is > 0.5, the aqrt-iter will stop at the first guess
+
+ The original one computes it without a problem, except that it is extremely imprecise, to the point of being k*diff = sqrt(diff)/diff * diff = sqrt(diff), instead of 0 and even diff
+sqrt(diff) for small diff is > diff.
+
+It is possible to modify the last procedure by substituting x in the denominator for (square guess).
+
+The resulting procedure will be almost like mine, but it will not perform division by 0 when x = 0;
+
+instead the first operand in the predicate will always evaluate to 1. If diff <= 1, it will not terminate and will result in underflow.
+
+It is better than the book one. In the book one, a denominator is *2, which decreases the first operand, resulting in less precise roots.
+
+But the book one can be modified, so the denominator is the improved guess, but tests show it is just like the book one, even when the book one is worse than mine, this one is worse as well.
+
+all done.

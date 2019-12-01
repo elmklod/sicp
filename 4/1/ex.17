@@ -1,0 +1,81 @@
+The raison d'etre of this extra frame is because of the let special form.
+Since let is actually an application of a lambda expression, there will always be an extra frame
+for internal definitions, because they are treated as parameters of this applied lambda-expression.
+
+Unless program exploits environments is some way, this extra frame cannot be found by any means:
+1. It is the innermost frame of the environment, so its bindings always shadow similar bindings
+in the enclosing environment.
+2. Its enclosing environment is that of a original procedure parameters(which come in their own second-innermost frame)
+and of the environment that the procedure stored.
+
+Therefore, if the program does not inspect environment implementation,
+it cannot distinguish between a single frame and multiple frames
+for procedure parameters and internal definitions.
+Even if it does, it will usually behave the same way as if the 2 frames were a single one.
+(with the exception of inspecting and using the enclosing environment
+of the environment procedure body(that is the body of a generated let) is executed within)
+
+It is possible to avoid the need for the extra frame
+by collecting all the definitions and putting them before any other expression of the procedure
+body is evaluated.
+In effect it will enforce the style the book adhered to:
+definitions must come first.
+
+However, if the definitions come first without being initialized, then
+when some internal definition refers to the one that is yet to be assigned a value,
+the error produced will be of the unbound variable , not the unassigned one.
+Therefore, variable must be initialized first to the '*unassigned*
+and later after all of the initializations, the assignment to those variables to their respective values
+must come before any other expression.
+
+(define (body-first-exp body)
+  (car body))
+(define (body-rest-exps body)
+  (cdr body))
+(define (body-no-exps? body)
+  (null? body))
+(define (definition->assignment definition)
+  (make-assignment (definition-variable definition)
+                   (definition-value definition)))
+(define (make-initialization var)
+  (make-definition var ''*unassigned*))
+(define (scan-out-defines body-original)
+  (define (iter body
+                reversed-new-body
+                reversed-initializations
+                reversed-assignments)
+   (if (body-no-exps? body)
+       (if (empty-sequence? reversed-initializations)
+           body-original
+           (append-sequences
+            reversed-initializations
+            (append-sequences reversed-assignments
+                              (reverse-sequence reversed-new-body))))
+       (let ((first-exp
+              (body-first-exp body)))
+         (if (tagged-list? first-exp 'define)
+             (iter (body-rest-exps body)
+                   reversed-new-body
+                   (add-to-sequence-first
+                    (make-initialization
+                      (definition-variable first-exp))
+                    reversed-initializations)
+                   (add-to-sequence-first
+                    (definition->assignment first-exp)
+                    reversed-assignments))
+             (iter (body-rest-exps body)
+                   (add-to-sequence-first
+                    first-exp
+                    reversed-new-body)
+                   reversed-initializations
+                   reversed-assignments)))))
+  (iter body-original
+        (the-empty-sequence)
+        (the-empty-sequence)
+        (the-empty-sequence)))
+
+
+
+;It is also possible to add new binding to the innermost frame
+; first by (map (lambda (name) ("add-binding procedure" "current-env" name '*unassigned*)) "names")
+; and later (map (lambda (name val) ("set-val" "current-env" name (eval val "current-env")) "names" "vals"))

@@ -1,0 +1,153 @@
+(define (equ? n m)
+ (apply-generic 'equ? n m))
+
+(define (install-scheme-number-package)
+  (define (tag x)
+    (attach-tag 'scheme-number x))
+  (put 'add '(scheme-number scheme-number)
+       (lambda (x y) (tag (+ x y))))
+  (put 'sub '(scheme-number scheme-number)
+       (lambda (x y) (tag (- x y))))
+  (put 'mul '(scheme-number scheme-number)
+       (lambda (x y) (tag (* x y))))
+  (put 'div '(scheme-number scheme-number)
+       (lambda (x y) (tag (/ x y))))
+  (put 'make 'scheme-number
+       (lambda (x) (tag x)))
+  (put 'equ? '(scheme-number scheme-number)
+       =)
+  'done)
+
+(define (install-rational-package)
+  ;; internal procedures
+  (define (numer x) (car x))
+  (define (denom x) (cdr x))
+  (define (make-rat n d)
+    (let ((g (gcd n d)))
+      (cons (/ n g) (/ d g))))
+  (define (add-rat x y)
+    (make-rat (+ (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+  (define (sub-rat x y)
+    (make-rat (- (* (numer x) (denom y))
+                 (* (numer y) (denom x)))
+              (* (denom x) (denom y))))
+  (define (mul-rat x y)
+    (make-rat (* (numer x) (numer y))
+              (* (denom x) (denom y))))
+  (define (div-rat x y)
+    (make-rat (* (numer x) (denom y))
+              (* (denom x) (numer y))))
+  (define (equ? x y)
+    (= (* (numer x) (denom y))
+       (* (numer y) (denom x))))
+  ;; interface to rest of the system
+  (define (tag x) (attach-tag 'rational x))
+  (put 'add '(rational rational)
+       (lambda (x y) (tag (add-rat x y))))
+  (put 'sub '(rational rational)
+       (lambda (x y) (tag (sub-rat x y))))
+  (put 'mul '(rational rational)
+       (lambda (x y) (tag (mul-rat x y))))
+  (put 'div '(rational rational)
+       (lambda (x y) (tag (div-rat x y))))
+  (put 'make 'rational
+       (lambda (n d) (tag (make-rat n d))))
+  (put 'equ? '(rational rational) equ?)
+  'done)
+
+Here a question arises, whether to compare the result of multiplication by a generic equ? predicate or just =
+
+(define (install-complex-package)
+  ;; imported procedures from rectangular
+  ;; and polar packages
+  (define (make-from-real-imag x y)
+    ((get 'make-from-real-imag
+          'rectangular)
+     x y))
+  (define (make-from-mag-ang r a)
+    ((get 'make-from-mag-ang 'polar)
+     r a))
+  ;; internal procedures
+  (define (add-complex z1 z2)
+    (make-from-real-imag
+     (+ (real-part z1) (real-part z2))
+     (+ (imag-part z1) (imag-part z2))))
+  (define (sub-complex z1 z2)
+    (make-from-real-imag
+     (- (real-part z1) (real-part z2))
+     (- (imag-part z1) (imag-part z2))))
+  (define (mul-complex z1 z2)
+    (make-from-mag-ang
+     (* (magnitude z1) (magnitude z2))
+     (+ (angle z1) (angle z2))))
+  (define (div-complex z1 z2)
+    (make-from-mag-ang
+     (/ (magnitude z1) (magnitude z2))
+     (- (angle z1) (angle z2))))
+  (define (equal-complex? z1 z2)
+    (and (equ? (real-part z1)
+               (real-part z2))
+         (equ? (imag-part z1)
+               (imag-part z2))
+         (equ? (angle z1)
+               (angle z2))
+         (equ? (magnitude z1)
+               (magnitude z2))))
+  ;; interface to rest of the system
+  (define (tag z) (attach-tag 'complex z))
+  (put 'add '(complex complex)
+       (lambda (z1 z2)
+         (tag (add-complex z1 z2))))
+  (put 'sub '(complex complex)
+       (lambda (z1 z2)
+         (tag (sub-complex z1 z2))))
+  (put 'mul '(complex complex)
+       (lambda (z1 z2)
+         (tag (mul-complex z1 z2))))
+  (put 'div '(complex complex)
+       (lambda (z1 z2)
+         (tag (div-complex z1 z2))))
+  (put 'make-from-real-imag 'complex
+       (lambda (x y)
+         (tag (make-from-real-imag x y))))
+  (put 'make-from-mag-ang 'complex
+       (lambda (r a)
+         (tag (make-from-mag-ang r a))))
+  (put 'real-part '(complex) real-part)
+  (put 'imag-part '(complex) imag-part)
+  (put 'magnitude '(complex) magnitude)
+  (put 'angle '(complex) angle)
+  (put 'equ? '(complex complex) equal-complex?)
+  'done)
+
+Since there are roundoff errors when dealing with different representations for complex numbers,
+The equ? procedure will compare BOTH real parts and imaginary parts as well as angles and magnitudes.
+This is less efficient, but more error-prone.
+
+Another solution would be just like Alyssa's for Louis' problem in ex. 77
+To take advantage of the generic procedure equ? and dispatch it twice on the numbers by stripping their type tags
+sequentially
+
+Therefore, Equality predicate for Ben's package would be:
+(define (equ? z1 z1)
+  (and (= (real-part z1)
+          (real-part z2))
+       (= (imag-part z1)
+          (imag-part z2))))
+He should add it to the table of procedures(using his package installing procedure):
+
+(put 'equ? '(rectangular rectangular) equ?)
+
+Alyssa's predicate:
+
+(define (equ? z1 z1)
+  (and (= (magnitude z1)
+          (magnitude z2))
+       (= (angle z1)
+          (angle z2))))
+
+she should add it to the table of procedures(using her package installing procedure):
+
+(put 'equ? '(polar polar) equ?)

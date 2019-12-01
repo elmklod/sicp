@@ -1,0 +1,91 @@
+(define (make-frame variables values)
+  (if (null? variables)
+      '(())
+      (cons (list (car variables)
+                  (car values))
+            (make-frame (cdr variables)
+                        (cdr values)))))
+
+; or
+
+(define (make-frame variables values)
+  (define (iter variables values result)
+    (if (null? variables)
+        (reverse (cons '() result))
+        (iter (cdr variables)
+              (cdr values)
+              (cons (list (car variables)
+                          (car values))
+                    result))))
+  (iter variables values '()))
+
+(define (frame-first-binding frame)
+  (car frame))
+(define (frame-rest-bindings frame)
+  (cdr frame))
+; The empty frame os respesented as '(())
+(define (the-empty-frame) (list '()))
+(define (add-binding-to-frame! var val frame)
+  (set-cdr! frame (cons (frame-first-binding frame)
+                        (frame-rest-bindings frame)))
+  (set-car! frame (list var val)))
+
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied"
+                 vars
+                 vals)
+          (error "Too few arguments supplied"
+                 vars
+                 vals))))
+
+(define (lookup-variable-value var env) ;
+  (define (env-loop env)
+    (define (scan frame-bindings)
+      (cond ((equal? (the-empty-frame) frame-bindings)
+             (env-loop
+              (enclosing-environment env)))
+            (else
+             (let ((binding (frame-first-binding frame-bindings)))
+                (cond ((eq? var (car binding))
+                       (cadr binding))
+                      (else
+                       (scan (frame-rest-bindings frame-bindings))))))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable" var)
+        (scan (first-frame env))))
+  (env-loop env))
+
+(define (set-variable-value! var val env) ;
+  (define (env-loop env)
+    (define (scan frame-bindings)
+      (cond ((equal? (the-empty-frame) frame-bindings)
+             (env-loop
+              (enclosing-environment env)))
+            (else
+             (let ((binding (frame-first-binding frame-bindings)))
+                (cond ((eq? var (car binding))
+                       (set-car! (cdr binding) val))
+                      (else
+                       (scan (frame-rest-bindings frame-bindings))))))))
+    (if (eq? env the-empty-environment)
+        (error "Unbound variable: SET!" var)
+        (scan (first-frame env))))
+  (env-loop env))
+
+
+(define (define-variable! var val env) ;
+  (let ((frame (first-frame env)))
+    (define (scan frame-bindings)
+      (cond ((equal? (the-empty-frame) frame-bindings)
+             (add-binding-to-frame!
+              var val frame))
+            (else
+             (let ((binding (frame-first-binding frame-bindings)))
+                (cond ((eq? var (car binding))
+                       (set-car! (cdr binding) val))
+                      (else
+                       (scan (frame-rest-bindings frame-bindings))))))))
+    (scan frame)))

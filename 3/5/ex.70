@@ -1,0 +1,107 @@
+(define (merge-weighted s1 s2 weight)
+  (cond ((stream-null? s1) s2)
+        ((stream-null? s2) s1)
+        (else
+         (let ((s1car (stream-car s1))
+               (s2car (stream-car s2)))
+           (let ((s1car-weight (weight s1car))
+                 (s2car-weight (weight s2car)))
+              (cond ((< s1car-weight s2car-weight)
+                     (cons-stream
+                      s1car
+                      (merge-weighted
+                       (stream-cdr s1)
+                       s2
+                       weight)))
+                    ((> s1car-weight s2car-weight)
+                     (cons-stream
+                      s2car
+                      (merge-weighted
+                       s1
+                       (stream-cdr s2)
+                       weight)))
+                    (else
+                     (cons-stream
+                      s1car
+                      (let ((merged-s
+                             (merge-weighted
+                              (stream-cdr s1)
+                              (stream-cdr s2)
+                              weight)))
+                         (if (equal? s1car s2car)
+                             merged-s
+                             (cons-stream s2car
+                                          merged-s)))))))))))
+
+(define (weighted-pairs s t weight)
+  (let ((s-elem (stream-car s))
+        (t-elem (stream-car t)))
+    (cons-stream
+     (list s-elem t-elem)
+     (merge-weighted
+      (merge-weighted
+       (stream-map (lambda (x) (list s-elem x))
+                   (stream-cdr t))
+       (stream-map (lambda (x) (list x t-elem))
+                   (stream-cdr s))
+       weight)
+      (weighted-pairs (stream-cdr s)
+             (stream-cdr t)
+             weight)
+      weight))))
+
+
+(define pairs-1
+  (stream-filter
+   (lambda (pair)
+    (<= (car pair)
+        (cadr pair)))
+   (weighted-pairs
+    integers
+    integers
+    (lambda (pair)
+      (+ (car pair)
+         (cadr pair))))))
+
+(define (divisible? n m)
+ (= (remainder n m) 0))
+
+(define (divisible-235? n)
+  (or (divisible? n 2)
+      (divisible? n 3)
+      (divisible? n 5)))
+
+(define pairs-2
+  (stream-filter
+   (lambda (pair)
+    (let ((pair-car (car pair))
+          (pair-cadr (cadr pair)))
+     (and (<= pair-car pair-cadr)
+          (not (divisible-235? pair-car))
+          (not (divisible-235? pair-cadr)))))
+     (weighted-pairs
+      integers
+      integers
+      (lambda (pair)
+       (let ((pair-car (car pair))
+             (pair-cadr (cadr pair)))
+        (+ (* 2 pair-car)
+           (* 3 pair-cadr)
+           (* 5 pair-car pair-cadr)))))))
+
+
+(define pairs-2
+  (stream-filter
+   (lambda (pair)
+    (<= (car pair) (cadr pair)))
+     (let ((filtered-235
+            (stream-filter (lambda (x) (not (divisible-235? x))) integers)))
+      (weighted-pairs
+       filtered-235
+       filtered-235
+       (lambda (pair)
+        (let ((pair-car (car pair))
+              (pair-cadr (cadr pair)))
+         (+ (* 2 pair-car)
+            (* 3 pair-cadr)
+            (* 5 pair-car pair-cadr))))))))

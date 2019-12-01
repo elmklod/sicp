@@ -1,0 +1,34 @@
+(define ramanujan-numbers
+  (let ((ram-weight
+         (lambda (pair)
+          (+ (cube (car pair))
+             (cube (cadr pair))))))
+   (define (filter-ram s prev)
+     (let ((s1 (stream-car s))
+           (s2 (stream-car (stream-cdr s))))
+       (let ((s1-ram-num (ram-weight s1))
+             (s2-ram-num (ram-weight s2)))
+        (if (and (= s1-ram-num
+                    s2-ram-num)
+                 (not (= s1-ram-num
+                         prev)))
+            (cons-stream (list s1-ram-num s1 s2)
+                         (filter-ram (stream-cdr (stream-cdr s))
+                                   s1-ram-num))
+            (filter-ram (stream-cdr s) prev)))))
+   (filter-ram
+    (stream-filter
+     (lambda (pair)
+      (<= (car pair) (cadr pair)))
+     (weighted-pairs
+      integers
+      integers
+      ram-weight))
+    0)))
+
+0.(1729 (1 12) (9 10))
+1.(4104 (2 16) (9 15))
+2.(13832 (2 24) (18 20))
+3.(20683 (10 27) (19 24))
+4.(32832 (4 32) (18 30))
+5.(39312 (2 34) (15 33))

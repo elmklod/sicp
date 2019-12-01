@@ -1,0 +1,106 @@
+The division file must include information about the division, i.e. its ID/name, which can be extracted by
+a UNIVERSAL selector procedure division-ID and an untagged set of of all records extracted by a universal records-file selector procedure,
+for example, which means each division should include the type tag
+the same way and combine it with the set of all their records in a universal manner
+
+It is assumed that each division already has implemented a procedure get-record(or any other name as long as they index it under 'get-record) which returns the given employee
+record given his name/ID and an untagged division file. (notice that records should include the ID as well, returned
+ by some selector procedure ID-record, specific to each division)
+
+They should add entries to a centralized table of procedures under the indexes of a division and a generic name for a procedure
+to apply. [0]
+
+(define (get-record employee file)
+ ((get 'get-record (division-ID file))
+  employee
+  (records file)))
+
+or they may ignore the untagged data and make their internal implementation tagged from the start, but it is doubtful that many divisions did so initially.
+
+
+The employee record should include the information from which division it is(in addition to the above)
+and a set of untagged information about the employee, at least the division tag should be extractable by a generic selector procedure
+division-record and an untagged data should be extractable by info-record. which requires structuring the tagged record in a universal way for each division.
+
+Also each division should implement a selector procedure get-salary (or any other name as long as they index it under 'get-salary)
+which returns the salary from the given untagged record
+
+They also should do [0] as well for their procedures concerning records
+
+(define (get-salary record)
+ ((get 'get-salary (division-record record))
+  (info-record record)))
+
+There are 2 ways to handle this problem:
+0.each division should implement get-record in a way that, when given a non-existent employee's ID, it would return false (just like get)
+then the required procedure would  be implemented as follows
+(define (find-employee-record employee files)
+  (let ((employees (filter (lambda (file) (get-record employee file))
+                           files)))
+    (cond   ((= (length employees) 1) (car employees))
+            ((> (length employees) 1) employees)
+            (else (error "No employee:
+                   FIND-EMPLOYEE-RECORD" employee files)))))
+
+
+(define (find-employee-record employee files)
+    (if   (not (null? files))
+          (let ((file (car files)))
+            (let ((record (get-record employee file)))
+              (if record
+                  record
+                  (find-employee-record (cdr files)))))
+          (error "No employee:
+                 FIND-EMPLOYEE-RECORD" employee files)))
+
+
+1. make each division implement the find-employee-record selector procedure
+ in their preferrable way operating on a single personel file returning the record of the specified employee
+if it is there and returning false otherwise
+ and add it to the table
+(define (find-employee-record employee files)
+    (if   (not (null? files))
+          (let ((file (car files)))
+            (let ((record ((get 'find-employee-record
+                                (division-ID file))
+                            employee
+                            file)))
+              (if record
+                  record
+                  (find-employee-record (cdr files)))))
+          (error "No employee:
+                 FIND-EMPLOYEE-RECORD" employee files)))
+
+
+(define (find-employee-record employee files)
+  (let ((employees (filter (lambda (file)
+                              ((get 'find-employee-record
+                                    (division-ID file)) employee file))
+                           files)))
+    (cond   ((= (length employees) 1) (car employees))
+            ((> (length employees) 1) employees)
+            (else (error "No employee:
+                   FIND-EMPLOYEE-RECORD" employee files)))))
+
+The choice is not that importnat, but the use of get-record is more convenient:
+Every divisions still has to specify what should the procedure evaluate to if there is no such employee
+Therefore, taking advantage of it by making the return value false unversal is possible and useful, because it removes unnecessary redundancy
+
+the implementations using filter allow for the same employee working in several divisions at the same time.
+
+
+The only changes to the absorptions it to make the new division tag their records and personnel file with their division id when sending it to other divisions or headquarters
+and to add their appropriate selectors and (maybe, depending on the need) constructors to the centralized table.
+And define some procedures that start the required processes, if they are missing initially
+Other than this, no changes are needed.
+
+Some ideas about searching the proper employee record may be taken from the lookup procedure
+
+(define (lookup given-key set-of-records)
+  (cond ((null? set-of-records) false)
+        ((equal? given-key
+                 (key (car set-of-records)))
+         (car set-of-records))
+        (else
+         (lookup given-key
+                 (cdr set-of-records)))))

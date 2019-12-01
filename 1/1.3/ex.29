@@ -1,0 +1,141 @@
+(define (sum term a next b)
+  (if (> a b)
+      0
+      (+ (term a)
+         (sum term (next a) next b))))
+
+(define (simpson-integration f a b n)
+  (define h (/ (- b a) n))
+  (define (add-h a)
+    (+ a h))
+
+  (define (y-multiply kterm)
+    (define (even? x)
+      (= 0 (remainder x 2)))
+    (define position-number (/ (- kterm a) h))
+    (* (f kterm)
+       (cond ((or (= 0 position-number)
+                  (= n position-number))
+              1)
+             ((even? position-number) 2)
+             (else 4))))
+
+  (* (/ h 3)
+     (sum y-multiply a add-h b)
+     1.0))
+
+This procedure is precise even for n = 2.
+
+1 ]=>  (simpson-integration cube 0 1 100)
+
+;Value: .25
+
+1 ]=> (simpson-integration cube 0 1 1000)
+
+;Value: .25
+
+
+(define (simpson-integration f a b n)
+  (define h (/ (- b a) n))
+  (define (add-h a)
+    (+ a h))
+  (define (sum-simps term a next b counter)
+    (define (even? x)
+      (= 0 (remainder x 2)))
+          (if (> a b)
+              0
+              (+ (* (term a)
+                    (cond ((= (remainder counter n) 0)
+                           1)
+                          ((even? counter) 2)
+                          (else 4)))
+                 (sum-simps term (next a) next b (+ counter 1)))))
+
+  (* (/ h 3)
+     (sum-simps f a add-h b 0)
+     1.0))
+
+This procedure is extremely pricise as well.
+1 ]=> (simpson-integration cube 0 1 100)
+
+;Value: .25
+
+1 ]=> (simpson-integration cube 0 1 1000)
+
+;Value: .25
+
+It is possible to make the procedure imprecise enough:
+
+(define (simpson-integration f a b n)
+  (define h (* 1.0 (/ (- b a) n)))
+  (define (add-h a)
+    (+ a h))
+  (define (sum-simps term a next b counter)
+    (define (even? x)
+      (= 0 (remainder x 2)))
+          (if (> a b)
+              0
+              (+ (* (term a)
+                    (cond ((= (remainder counter n) 0)
+                           1)
+                          ((even? counter) 2)
+                          (else 4)))
+                 (sum-simps term (next a) next b (+ counter 1)))))
+
+  (* (/ h 3)
+     (sum-simps f a add-h b 0)))
+
+This "imprecision" is not really what the authors has asked about.
+It is caused by the rounding errors, not by the Simpson's rule imprecision itself.
+
+
+It is possible to measure the imprecision using other intervals:
+
+(integral cube 0 0.5 0.01)
+;Value: 1.5621875000000023e-2
+
+(integral cube 0 .5 0.001)
+1.5624968750000062e-2
+
+(simpson-integration cube 0 .5 100)
+
+;Value: .01541666666666668
+
+(simpson-integration cube 0 .5 1000)
+
+;Value: 1.5604166666666721e-2
+
+Not that good. ( the value is .015625)
+
+Try another
+
+(integral cube 0 1.5 0.01)
+
+1.2655968750000033
+
+(simpson-integration cube 0 1.5 100)
+
+;Value: 1.265624999999998
+
+(integral cube 0 1.5 0.001)
+
+;Value: 1.2656247187499314
+
+(simpson-integration cube 0 1.5 1000)
+
+;Value: 1.2639374999999737
+
+There is a giant loss in precision during computation.
+
+For example, when using powers of 2:
+(simpson-integration cube 0 1.5 1024)
+
+1.265625 - the exact Value
+
+(simpson-integration cube 0 1.5 128)
+
+(integral cube 0 1.5 .0009765625)
+
+;Value: 1.2656247317790985
+
+This is because of how the decimals are represented. Nothing to do as of now.

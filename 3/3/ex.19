@@ -1,0 +1,58 @@
+Warning:
+The list passed to this procedure will be mutated irreversibly unless it is an empty list.
+
+The choice of mark is arbitrary. The only condition it must meet is that it must be a unique object
+so that (eq? mark "mark implementation") is false.
+To that extent only pairs and lists have such properties
+
+(define cycle?
+  (let ((mark (cons '() '())))
+    (lambda (L)
+      (cond ((null? L) false)
+            ((eq? (car L) mark) true)
+            (else (set-car! L mark)
+                  (cycle? (cdr L)))))))
+
+This, however, is closed under the lists. It can give wrong results when applied
+to the lists it was applied to previously. (define test (list 1 2))
+(cycle? test)
+(cycle? test) will evaluate to true.
+It is because the encapsulated mark is made once during the evaluation of the procedure definition(let form).
+This makes it unique. At the same time it makes the procedure to remember its mark,
+which is a bug, it breaks the algorithm.
+
+(define (cycle? L)
+  (let ((mark (list '())))
+    (define (cyclic? L)
+      (cond ((null? L) false)
+            ((eq? (car L) mark) true)
+            (else (set-car! L mark)
+                  (cyclic? (cdr L)))))
+    (cyclic? L)))
+
+It works because the list is a unique object consisting of unique pairs.
+
+
+Marking each unique pair with something unique provides a way to notice if the structure is cyclic.
+Since the mark is unique, it requires only the constant amount of space to store the mark
+and marked pairs all refer to a single object, which is generated anew every time cycle? procedure
+is called.
+
+It works with any list.
+
+(define (cycle? L)
+  (define (traverse fixed moving times maximum)
+    (cond ((null? moving) false)
+          ((eq? fixed moving) true)
+          ((= 0 times)
+           (let ((new-max (+ maximum 1)))
+              (traverse (cdr fixed) moving new-max new-max)))
+          (else (traverse fixed (cdr moving) (- times 1) maximum))))
+  (if (null? L)
+      false
+      (traverse L (cdr L) 1 1)))
+
+This process displays a worst-case performance of d, where d is the distance in pairs to the first cycle entry
+when d is more than the period of the said cycle.
+otherwise the worst-case performance is the period of the cycle - 1
+usually it is better.

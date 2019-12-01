@@ -1,0 +1,22 @@
+(and (supervisor ?employee (Ben Bitdiddle))
+     (address ?employee ?place))
+
+(and (salary (Ben Bitdiddle) ?ben-sal)
+     (salary ?poor ?sal)
+     (lisp-value < ?sal ?ben-sal))
+; question concerning implementation:
+; can lisp-value(and 'not') form be intermixed with other queries?
+; can it go first or in the middle?
+; implementation dependent
+; does the order of queries affect the way the search is performed?
+; if so, it affects performance greatly
+
+; more declarative and less repititive, better in many cases, unless pattern matching is very cheap
+; and traversing a db is not(to get to the rule db)
+(and (job ?supv (?department . ?rank))
+     (not (same computer ?department))
+     (supervisor ?employee ?supv))
+
+(and (job ?supv (?department . ?rank))
+     (not (job ?supv (computer . ?rank)))
+     (supervisor ?employee ?supv))

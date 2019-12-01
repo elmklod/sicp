@@ -1,0 +1,88 @@
+; Also check the version in repeat subdir
+
+(define (a-pythagorean-triple-between low high)
+  (let ((i (an-integer-between low high)))
+    (let ((j (an-integer-between i high)))
+      (let ((k (an-integer-between j high)))
+        (require (= (+ (* i i) (* j j))
+                    (* k k)))
+        (list i j k)))))
+
+(define (an-integer-between bound-1 bound-2)
+  (let ((integer
+         (amb
+          bound-1
+          (an-integer-between
+           (+ bound-1 (cond ((> bound-1 bound-2)
+                             -1)
+                            ((< bound-1 bound-2)
+                             1)
+                            (else 0)))
+           bound-2))))
+    (require (= (abs (- bound-1 bound-2))
+                (+ (abs (- bound-1 integer))
+                   (abs (- bound-2 integer)))))
+    integer))
+; The best unopt. for the closed.
+(define (an-integer-between bound-1 bound-2)
+ (if (= bound-1 bound-2)
+     bound-1
+     (amb
+      bound-1
+      (an-integer-between
+       (+ bound-1 (cond ((> bound-1 bound-2)
+                         -1)
+                        (else
+                         1)))
+       bound-2))))
+
+; The best unopt. for the open.
+(define (an-integer-between bound-1 bound-2)
+ (let ((distance (abs (- bound-1 bound-2))))
+  (if (< distance 2)
+      (error
+       "an-integer-between: and interval has no elements"
+       (list bound-1 bound-2)))
+  (let ((integer
+         (+ bound-1
+            (cond ((> bound-1 bound-2)
+                   -1)
+                  (else
+                   1)))))
+   (if (= distance 2)
+       integer
+       (amb
+        integer
+        (an-integer-between
+         integer
+         bound-2))))))
+
+; an optimized version for the open interval
+
+(define (an-integer-between bound-1 bound-2)
+  (define (generate-integer low high)
+    (let ((integer (+ low 1)))
+      (if (= 2 (- high low))
+          integer
+          (amb integer
+               (generate-integer integer high)))))
+  (if (< (abs (- bound-1 bound-2)) 2)
+      (error
+       "an-integer-between: and interval has no elements"
+       (list bound-1 bound-2)))
+  (if (> bound-1 bound-2)
+      (generate-integer bound-2 bound-1)
+      (generate-integer bound-1 bound-2)))
+
+; an optimized one for the closed interval
+
+(define (an-integer-between bound-1 bound-2)
+  (define (generate-integer low high)
+    (let ((integer low))
+      (if (= 0 (- high low))
+          integer
+          (amb integer
+               (generate-integer (+ integer 1) high)))))
+  (if (> bound-1 bound-2) ; strict or non-strict - no difference
+      (generate-integer bound-2 bound-1)
+      (generate-integer bound-1 bound-2)))

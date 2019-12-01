@@ -1,0 +1,111 @@
+; A question of interest:
+; can there be queries and rule conclusions of the same structures?
+; e.g first assertions db is searched for a match, then rules db is searched and applied
+; also it may be beneficial to update the simple db with the inferenced conclusions
+
+; Answer:
+; thereotically possible with some restrictions:
+; the rule body should not include the conclusions of itself in any form
+; While in some cases(the conclucion is in the assertion db or the rule is never reached inside the query(i.e. and, or compound queries))
+; The rule matching will terminate, in others it will not
+; This is the consequence of databases travering strategy
+
+; I believe authors used the strategy of consequent search through assertion db and then rule db
+; which leads to the problems outlined above
+
+
+; there are several instances where self-reference is allowed, one of them will be displayed here:
+; NB it is not related to "similar assertions - similar conclusions" question
+
+(rule (can-replace ?p1 ?p2)
+  (and (not (same ?p1 ?p2))
+       (job ?p1 ?t1)
+       (job ?p2 ?t2)
+       (can-drop-in ?t1 ?t2)))
+
+(rule (can-drop-in ?t1 ?t2)
+      (or (same ?t1 ?t2)
+          (and (can-do-job ?t1 ?someone)
+               (can-drop-in ?someone ?t2))))
+; this implementation nicely encompasses every possibility
+; by which title1 can drop in for a title2
+
+; However, it is also possible to implement rule in an other way:
+; But the first implementation has a very clear resposibilities delegation:
+; only one rule answers the question if one title can replace another
+; and rules make no assumptions about the equality of the values unlike the second case,
+; making the first implementation more modular and concise/readable
+
+(rule (can-replace ?p1 ?p2)
+  (and (not (same ?p1 ?p2))
+       (and (job ?p1 ?t1)
+            (or (job ?p2 ?t1)
+                (and (job ?p2 ?t2)
+                     (can-drop-in ?t1 ?t2))))))
+;-------!!!!
+(rule (can-drop-in ?t1 ?t2)
+  (and (can-do-job ?t1 ?someone)
+       (or (same ?someone ?t2)
+           (can-drop-in ?someone ?t2))))
+; It is incorrect.
+; suppose ?t1 ?t2 have the same values and that means ?t1 can drop in for ?t2
+; and that there are no other job that ?t1 and ?t2 can do except their own
+; but this rule will not consider it a valid set of values.
+; as the first query of and-query will not be satisfied making the query fail for these values.
+;-------!!!!
+;----------
+; notice that the first implementation still works
+; so well thought it is.
+; But it does extra work comparing first titles as they are already compared
+(rule (can-drop-in ?t1 ?t2)
+      (or (same ?t1 ?t2)
+          (and (can-do-job ?t1 ?someone)
+               (can-drop-in ?someone ?t2))))
+;--------
+
+; This is less readable and, probably, efficient.
+
+;Also it it possible to include unnecessary queries in the first implementation
+(rule (can-drop-in ?t1 ?t2)
+      (or (same ?t1 ?t2)
+          (or (can-do-job ?t1 ?t2)
+              (and (can-do-job ?t1 ?someone)
+                   (can-drop-in ?someone ?t2)))))
+; less efficient, will be constructed by novices and the ones who do not fully understand the process that is started by the interpreter
+
+
+
+
+(can-replace ?x (Fect Cy D))
+
+(and (salary ?p1 ?p1-sal)
+     (salary ?p2 ?p2-sal)
+     (lisp-value > ?p1-sal ?p2-sal)
+     (can-replace ?p2 ?p1))
+
+;-----------------------------
+(rule (can-drop-in ?t1 ?t2)
+      (or (same ?t1 ?t2)
+          (and (can-do-job ?t1 ?someone)
+               (can-drop-in ?someone ?t2))))
+
+can be split in two rules:
+(rule (can-drop-in ?t1 ?t1))
+(rule (can-drop-in ?t1 ?t2)
+      (and (can-do-job ?t1 ?someone)
+           (can-drop-in ?someone ?t2))))
+
+; This way the second rule will be redundantly applied to the set of values that already satisfy the first one
+; until the intermediate job title(?someone or ?t1(if the initial title can't do any other job))
+; can't do any other job
+
+; Fix:
+(rule (can-drop-in ?t1 ?t1))
+(rule (can-drop-in ?t1 ?t2)
+      (and (not (same ?t1 ?t2))
+           (can-do-job ?t1 ?someone)
+           (can-drop-in ?someone ?t2))))
+
+; This way it works as the initial rule,
+; but is more lengthy.
+; the original is still preferred

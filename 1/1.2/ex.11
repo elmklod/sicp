@@ -1,0 +1,83 @@
+(define (f n)
+  (if (< n 3)
+      n
+      (+ (f (- n 1))
+         (* 2 (f (- n 2)))
+         (* 3 (f (- n 3))))))
+
+ternary tree-recursive process.
+
+
+(define (f n)
+  (define (f-iter a b c counter)
+    (if (= counter 0)
+        c
+        (f-iter (+ a
+                  (* 2 b)
+                  (* 3 c))
+                a
+                b
+                (- counter 1))))
+  (if  (< n 3)
+       n
+       (f-iter 2 1 0 n)))
+
+ (define (f n)
+   (define (f-iter a b c counter)
+     (cond ((< n 3) n)
+           ((= counter 0)  c)
+           (else (f-iter (+ a
+                           (* 2 b)
+                           (* 3 c))
+                         a
+                         b
+                         (- counter 1)))))
+    (f-iter 2 1 0 n))
+
+(define (f n)
+  (define (f-iter a b c counter)
+    (if (= counter 0)
+        a
+        (f-iter (+ a
+                  (* 2 b)
+                  (* 3 c))
+                a
+                b
+                (- counter 1))))
+  (if  (< n 3)
+       n
+       (f-iter 2 1 0 (- n 2))))
+
+A linear iterative process.
+
+(define (f n)
+  (define (f-iter a b c counter)
+    (if (= counter (- n 2))
+        a
+        (f-iter (+ a
+                  (* 2 b)
+                  (* 3 c))
+                a
+                b
+                (+ counter 1))))
+  (if  (< n 3)
+       n
+       (f-iter 2 1 0 0)))
+
+A linear iterative process.
+
+(counting from left and right, respectively)
+
+(define (f n)
+  (define (f-iter a b c counter)
+    (if (= counter 2)
+        a
+        (f-iter (+ a
+                  (* 2 b)
+                  (* 3 c))
+                a
+                b
+                (- counter 1))))
+  (if  (< n 3)
+       n
+       (f-iter 2 1 0 n)))

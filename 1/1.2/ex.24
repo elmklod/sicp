@@ -1,0 +1,124 @@
+(define (timed-prime-test n)
+  (define (fast-prime? times)
+    (define (fermat-test)
+      (define (exptmod base exp)
+       (remainder (cond ((= 0 exp) 1)
+                        ((even? exp)
+                          (square (exptmod base (/ exp 2))))
+                        (else
+                          (* base (exptmod base (- exp 1)))))
+                  n))
+
+      (define (try-it a)
+        (= (exptmod a n) a))
+
+      (try-it (+ 1 (random (- n 1)))))
+
+    (cond ((= times 0) true)
+          ((fermat-test)
+           (fast-prime? (- times 1)))
+          (else false)))
+
+  (define (start-prime-test times start-time)
+    (if (fast-prime? times)
+        (report-prime (- (runtime)
+                         start-time))))
+
+  (define (report-prime elapsed-time)
+    (display " *** ")
+    (display elapsed-time))
+
+  (newline)
+  (display n)
+  (start-prime-test 100000 (runtime)))
+
+for times =
+100000007 *** 1.0000000000000231e-2
+100000037 *** 1.0000000000000231e-2
+100000039 *** 1.0000000000000231e-2
+
+
+1000000007 *** 1.0000000000000231e-2
+1000000009 *** 1.0000000000000231e-2
+1000000021 *** 1.0000000000000231e-2
+
+10000000019 *** 1.0000000000000231e-2
+10000000033 *** 1.0000000000000231e-2
+10000000061 *** 1.0000000000000231e-2
+
+100000000003 *** 1.0000000000000675e-2 -- 2.0000000000000462e-2(abnormal)
+100000000019 *** 1.0000000000000675e-2 -- 2.0000000000000462e-2
+100000000057 *** 1.0000000000000675e-2 -- 2.0000000000000462e-2
+
+As can be seen, the process is extremely fast, The clock cannot time the real time properly because everything is done in 1 CPU cycle.
+Except the last 3. For them it may require more time, but just because they may need more cycles.
+Sometimes last operations may require 1 more cycle, which takes more time that it would in theory.
+
+suppose 100 is changed to 1, then even for the largest among 12,
+100000000057 *** 0.
+
+Change 100 to 100000
+
+Expectation: for 100000007 and 100000000003 the difference should be approximately 100000*log(1000) steps.
+ More concise: The ratio of computation times should be log(100000007)/log(100000000003) = approx log(100000000)/log(100000000000) = log{100000000000} (100000000);
+
+Or when reversed. log{100000000} (100000000000) = log{100000000} (100000000 * 1000) = 1 + log{100000000} (1000) = 1 + 1/8 log{10} (1000) = 1 + 3/8 = 1.375
+
+Check:
+100000007 *** 5.75
+100000037 *** 5.730000000000004
+100000039 *** 5.849999999999994
+
+Average: 5.776666666666666
+
+1000000007 *** 7.090000000000003
+1000000009 *** 6.769999999999982
+1000000021 *** 6.889999999999986
+
+Average: 6.916666666666657
+
+10000000019 *** 8.300000000000011
+10000000033 *** 8.170000000000016
+10000000061 *** 8.639999999999986
+
+Average: 8.370000000000005
+
+100000000003 *** 9.210000000000036
+100000000019 *** 9.330000000000041
+100000000057 *** 9.509999999999991
+
+Average: 9.350000000000023
+
+The ratio is 1.6185804962492827.
+
+In general, the ratio should have been 1 + log{100000000} (difference between the first border and the one in question) = 1 + 1/8 log{10} (difference between the first border and the one in question).
+
+which is <= 1.375
+the number of steps is also dependent on the number of 1's in the binary representation of a number.
+And the logarithm initially was to the base 2, not e
+
+101111101011110000100000000 = 100000000
+
+ 15
+ 15
+ 16
+ average - 15
+
+ 1011101001000011101101110100000000000 = 100000000000
+
+  16
+  18
+  19
+
+  average- 18
+
+  (/ (+ (log 100000000000) 18 ) (+ (log 100000000) 15)) = 1.2964558189250825 , not supported by results
+
+  (/ (+ (log2 100000000000) 18 ) (+ (log2 100000000) 15)) =  1.311861739472054
+
+The discrepancy may appear from the random process, since the chosen integer in one case may be small, close to 1, in the
+other it may be as high as n-1, which makes the exptmod process slower(slower * and remainder processes)
+
+Also other factor may affect it(ex.23)
+Especially the multiplication of big numbers < n, that are chosen at random.
+It slows down the process considerably.

@@ -1,0 +1,43 @@
+(define (square-tree tree)
+  (tree-map square tree))
+
+(define (tree-map proc tree)
+  (define (tree-map-rec tree)
+    (cond ((pair? tree)
+            (let ((subseq (cdr tree)))
+              (cons (tree-map-rec (car tree))
+                (if (null? subseq)
+                    '()
+                    (tree-map-rec subseq)))))
+          (else (proc tree))))
+(tree-map-rec tree))
+
+(define (tree-map proc tree)
+  (cond ((pair? tree)
+          (let ((subseq (cdr tree)))
+            (cons (tree-map proc (car tree))
+              (if (null? subseq)
+                  '()
+                  (tree-map proc subseq)))))
+        (else (proc tree))))
+
+
+(define (tree-map proc tree)
+  (map (lambda (x)
+         (if (pair? x)
+             (tree-map proc x)
+             (proc x)))
+       tree))
+
+It cannot operate on trees with 1 vertex
+
+(define (tree-map proc tree)
+  (if (pair? tree)
+      (map (lambda (x)
+             (if (pair? x)
+                 (tree-map proc x)
+                 (proc x)))
+           tree)
+      (proc tree)))
+
+redundant

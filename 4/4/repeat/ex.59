@@ -1,0 +1,39 @@
+; requires this
+(meeting accounting (Monday 9am))
+(meeting administration (Monday 10am))
+(meeting computer (Wednesday 3pm))
+(meeting administration (Friday 1pm))
+
+(meeting ?division (Friday ?time))
+
+(rule (meeting-time ?person ?day-and-time)
+  (or (meeting whole-company ?day-and-time)
+      (and (job ?person (?division . ?title))
+           (meeting ?division ?day-and-time))))
+
+; I wonder what happens when there is a query
+
+(meeting-time ?person (Friday 3pm))
+; and there is an assertion
+(meeting whole-company (Friday 3pm))
+
+; then the ?person pattern will never be matched against any value
+; does it lead to an error?
+; It is correct, however, since it is true for any person
+; But with a condition that this person works for a company.
+; Therefore, there may be values(names) for which this query will
+; return false results if ?person is not matched.
+
+; To remedy this:
+
+(rule (meeting-time ?person ?day-and-time)
+  (and (job ?person (?division . ?title))
+       (or (meeting whole-company ?day-and-time)
+           (meeting ?division ?day-and-time))))
+
+; It requires a careful examination to deduce which is more optimal.
+; Probably there are on par and the last version is correct.
+
+; If there are repetitions, then some meeting times coincide, which is the company schedule problem,
+; not the query language
+(meeting-time (Hacker Alyssa P) (Wednesday ?time))

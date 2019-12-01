@@ -1,0 +1,555 @@
+RPN-Scheme:
+
+(define (make-table) ;
+  (let ((table (list '*table*)))
+    (define (lookup key)
+     (let ((record (assoc key (cdr table))))
+       (if record
+           (cdr record)
+           false)))
+
+    (define (assoc key records)
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (car records))
+            (else (assoc key (cdr records)))))
+    (define (insert! key value)
+      (let ((record (assoc key (cdr table))))
+        (if record
+            (set-cdr! record value)
+            (set-cdr! table
+                      (cons (cons key value)
+                            (cdr table)))))
+      'ok)
+    (define (dispatch m)
+      (cond ((eq? m 'lookup)
+             lookup)
+            ((eq? m 'insert!)
+             insert!)
+            ((eq? m 'assoc)
+             assoc)
+            (else (error "Unknown table operation" m))))
+    dispatch))
+
+(define evaluation-rules ;
+  (make-table))
+
+(define put-evaluation-rule ;
+  (evaluation-rules 'insert!))
+
+(define get-evaluation-rule ;
+  (evaluation-rules 'lookup))
+
+(define (compound-expression? exp)   ;
+  (and (not (null? exp)) (list? exp)))
+
+(define (expression-type exp) ;
+  (last exp))
+
+(define (eval exp env)
+  (cond ((self-evaluating? exp)
+         exp)
+        ((variable? exp)
+         (lookup-variable-value exp env))
+        ((compound-expression? exp)
+         (let ((eval-rule (get-evaluation-rule
+                           (expression-type exp))))
+           (cond (eval-rule
+                  (eval-rule exp env))
+                 (else ; application has no type-tag, although it is possible to invent some kind of type-tag that a procedure expression-type would give
+                  (apply (eval (operator exp) env)
+                         (list-of-values
+                          (operands exp)
+                          env))))))
+        (else
+         (error "Unknown expression
+                 type: EVAL" exp))))
+
+(define (apply procedure arguments)
+  (cond ((primitive-procedure? procedure)
+         (apply-primitive-procedure
+          procedure
+          arguments))
+        ((compound-procedure? procedure)
+         (eval-sequence
+           (procedure-body procedure)
+           (extend-environment
+             (procedure-parameters
+              procedure)
+             arguments
+             (procedure-environment
+              procedure))))
+        (else
+         (error "Unknown procedure
+                 type: APPLY"
+                procedure))))
+
+(define (list-of-values exps env) ;
+  (define (make-list exps result)
+    (if (no-operands? exps)
+        result
+        (make-list (rest-operands exps)
+                   (cons (first-operand exps) result))))
+  (define (make-eval-list exps result)
+    (if (null? exps)
+        result
+        (make-eval-list (cdr exps)
+                   (cons (eval (car exps) env) result))))
+  (reverse (make-eval-list (reverse (make-list exps '()) '()))))
+
+(define (self-evaluating? exp) ;
+  (cond ((number? exp) true)
+        ((string? exp) true)
+        (else false)))
+
+(define (variable? exp) (symbol? exp)) ;
+
+(define (extract-elements-from-form exp)
+  (define (extract-rpn-elements exp result)
+    (if (null? (cdr exp))
+        (reverse result)
+        (extract-rpn-elements
+         (cdr exp)
+         (cons (car exp) result))))
+  (extract-rpn-elements exp '()))
+
+(define (make-application proc args) ;
+  (append args (list proc)))
+(define (the-empty-values) '()) ;
+(define (operator exp) (last exp)) ;
+(define (operands exp) (extract-elements-from-form exp)) ;
+(define (no-operands? ops) (null? ops)) ;
+(define (first-operand ops) (car ops)) ;
+(define (rest-operands ops) (cdr ops)) ;
+
+(define (install-evaluation-rules)
+
+  (define (eval-if exp env) ;
+    (if (true? (eval (if-predicate exp) env))
+        (eval (if-consequent exp) env)
+        (eval (if-alternative exp) env)))
+
+  (define (eval-sequence exps env) ;
+    (cond ((last-exp? exps)
+           (eval (first-exp exps) env))
+          (else
+           (eval (first-exp exps) env)
+           (eval-sequence (rest-exps exps)
+                          env))))
+
+  (define (eval-assignment exp env) ;
+    (set-variable-value!
+     (assignment-variable exp)
+     (eval (assignment-value exp) env)
+     env)
+    'ok)
+
+  (define (eval-definition exp env) ;
+    (define-variable!
+      (definition-variable exp)
+      (eval (definition-value exp) env)
+      env)
+    'ok)
+
+  (define (text-of-quotation exp) ;
+    (car exp))
+
+  (define (assignment-variable exp) ;
+    (car exp))
+
+  (define (assignment-value exp) (cadr exp)) ;
+
+  (define (make-definition name body) ;
+    (list name body 'define))
+
+  (define (definition-variable exp) ;
+    (if (symbol? (car exp))
+        (car exp)
+        (last (car exp))))
+
+  (define (definition-value exp) ;
+    (let ((var-or-rpn-list (car exp)))
+      (if (symbol? var-or-rpn-list)
+          (cadr exp)
+          (make-lambda
+           (extract-elements-from-form ; formal parameters
+            var-or-rpn-list)
+           (extract-elements-from-form ; body
+            (cdr exp))))))
+
+  (define (lambda-parameters exp) (car exp)) ;
+
+  (define (lambda-body exp) ;
+    (extract-elements-from-form (cdr exp)))
+
+  (define (make-lambda parameters body) ;
+    (cons parameters
+          (append body (list 'lambda)))) ; appending the body, not the body with parameters is slightly faster
+
+  (define (if-predicate exp) (car exp)) ;
+  (define (if-consequent exp) (cadr exp)) ;
+  (define (if-alternative exp) ;
+    (if (not (null? (cdddr exp)))
+        (caddr exp)
+        'false))
+
+  (define (make-if predicate ;
+                   consequent
+                   alternative)
+    (list predicate
+          consequent
+          alternative
+          'if))
+
+  (define (begin-actions exp) (extract-elements-from-form exp)) ;
+  (define (last-exp? seq) (null? (cdr seq))) ;
+  (define (first-exp seq) (car seq)) ;
+  (define (rest-exps seq) (cdr seq)) ;
+
+
+  (define (add-to-sequence-first elem seq) ;
+    (cons elem seq))
+  (define (append-sequences seq1 seq2) ;
+      (append seq1 seq2))
+  (define (the-empty-sequence) ;
+    '())
+  (define (sequence->exp seq) ;
+    (cond ((null? seq) seq)
+          ((last-exp? seq) (first-exp seq))
+          (else (make-begin seq))))
+
+  (define (make-begin seq) (append seq (list 'begin))) ;
+
+  (define (cond-clauses exp) (extract-elements-from-form exp)) ;
+  (define (cond-else-clause? clause) ;
+    (eq? (cond-predicate clause) 'else))
+  (define (cond-predicate clause) ;
+    (car clause))
+  (define (cond-actions clause) ;
+    (if (and (= (length clause) 3)
+             (eq? (cadr clause) '=>))
+        (list
+         (make-application
+          (caddr clause)
+          (list (car clause))))
+        (cdr clause)))
+  (define (cond->if exp) ;
+    (expand-clauses (cond-clauses exp)))
+  (define (expand-clauses clauses) ;
+    (if (null? clauses)
+        'false     ; no else clause
+        (let ((first (car clauses))
+              (rest (cdr clauses)))
+          (if (cond-else-clause? first)
+              (if (null? rest)
+                  (sequence->exp
+                   (cond-actions first))
+                  (error "ELSE clause isn't
+                          last: COND->IF"
+                         clauses))
+              (make-if (cond-predicate first)
+                       (sequence->exp
+                        (cond-actions first))
+                       (expand-clauses
+                        rest))))))
+
+  (define (make-and exps) ;
+    (append exps (list 'and)))
+  (define (exps-and and-exp) ;
+    (extract-elements-from-form and-exp))
+  (define (first-exp-and exps) (car exps)) ;
+  (define (rest-exps-and exps) (cdr exps)) ;
+  (define (no-expressions-and? exps) (null? exps)) ;
+  (define (last-expression-and? exps) ;
+    (no-expressions-and? (rest-exps-and exps)))
+
+  (define (make-or exps) ;
+    (append exps (list 'or)))
+  (define (exps-or or-exp) ;
+    (extract-elements-from-form or-exp))
+  (define (first-exp-or exps) (car exps)) ;
+  (define (rest-exps-or exps) (cdr exps)) ;
+  (define (no-expressions-or? exps) (null? exps)) ;
+  (define (last-expression-or? exps) ;
+    (no-expressions-or? (rest-exps-or exps)))
+
+  (define (or->if exp) ;
+    (let ((exp (exps-or exp)))
+      (if (no-expressions-or? exp)
+          'false
+          (let ((current-exp (first-exp-or exp)))
+            (if (last-expression-or? exp)
+                current-exp
+                (make-let
+                 (make-bindings-list
+                  (make-binding 'variable current-exp))
+                 (make-body
+                  (make-if 'variable
+                           'variable
+                           (make-or (rest-exps-or exp))))))))))
+
+  (define (and->if exp) ;
+    (let ((exp (exps-and exp)))
+      (if (no-expressions-and? exp)
+          'true
+          (let ((current-exp (first-exp-and exp)))
+            (if (last-expression-and? exp)
+                current-exp
+                (make-if current-exp
+                         (make-and (rest-exps-and exp))
+                         'false))))))
+
+  (define (let->combination exp) ;
+    (let* ((bindings (let-processed-bindings exp))
+           (proc-name (let-proc-name exp))
+           (body-proc
+            (make-lambda (let-arguments bindings)
+                         (let-body exp)))
+           (values (let-vals bindings)))
+      (if proc-name
+          (make-let
+           (the-empty-bindings-list)
+           (add-to-sequence-first
+            (make-definition
+             proc-name
+             body-proc)
+            (add-to-sequence-first
+             (make-application proc-name
+                               values)
+             (the-empty-sequence))))
+          (make-application
+            body-proc
+            values))))
+
+  (define (make-let bindings body) ;
+    (cons bindings
+          (append body (list 'let))))
+  (define (make-named-let name bindings body) ;
+    (cons name
+          (cons bindings
+                (append body (list 'let)))))
+  (define (let-arguments bindings) ;
+    (car bindings))
+  (define (make-binding variable value) ;
+    (list variable value))
+  (define (make-body exp) (list exp)) ;
+  (define (make-bindings-list binding) (list binding)) ;
+  (define (the-empty-bindings-list) ;
+    '())
+  ;(define (let-body exp) ; takes advantage of the higher-order procedures
+  ;  (extract-elements-from-form
+  ;    ((if (list? (car exp))
+  ;         cdr
+  ;         cddr)
+  ;     exp)))
+
+  (define (let-body exp) ;
+    (extract-elements-from-form
+     (if (list? (car exp))
+         (cdr exp)
+         (cddr exp))))
+
+  (define (let-vals bindings) ;
+    (cadr bindings))
+  (define (let-processed-bindings exp) ;
+    (define (iter exp result)
+      (let ((variables (car result))
+            (values (cadr result)))
+        (if (null? exp)
+            (list (reverse variables)
+                  (reverse values))
+            (iter (cdr exp)
+                  (list (cons (caar exp)
+                              variables)
+                        (cons (cadar exp)
+                              values))))))
+    (iter (let ((bindings-or-not-1 (car exp))
+                (bindings-or-not-2 (cadr exp)))
+            (if (list? bindings-or-not-1)
+                bindings-or-not-1
+                bindings-or-not-2))
+          '(() ())))
+
+  (define (let-proc-name exp) ;
+    (let ((name-or-not (car exp)))
+      (if (list? name-or-not)
+          false
+          name-or-not)))
+
+
+  (define (let*->nested-lets exp)
+    (let ((bindings (let*-bindings exp))
+          (body (let*-body exp)))
+      (define (rec bindings)
+        (make-let (make-bindings-list (let*-first-binding bindings))
+                  (let ((rest (let*-rest-bindings bindings)))
+                    (if (let*-no-bindings? rest)
+                        body
+                        (make-body (rec rest))))))
+      (if (let*-no-bindings? bindings)
+          (make-let ; it is not simplified to sequence because of the encapsulation it provides
+           (the-empty-bindings-list)
+           body)
+          (rec bindings))))
+
+  (define (let*-bindings exp) (car exp)) ;
+  (define (let*-no-bindings? bindings) (null? bindings)) ;
+  (define (let*-body exp) (extract-elements-from-form (cdr exp))) ;
+  (define (let*-first-binding bindings) (car bindings)) ;
+  (define (let*-rest-bindings bindings) (cdr bindings)) ;
+
+  (define (do->let exp) ;
+    (let ((bindings-with-steps (do-bindings-with-steps exp)))
+      (make-named-let 'rec
+                      (do-bindings bindings-with-steps)
+                      (make-body
+                       (make-if
+                        (do-test exp)
+                        (sequence->exp (do-result-sequence exp))
+                        (sequence->exp
+                         (append-sequences
+                          (do-body exp)
+                          (add-to-sequence-first
+                           (make-application
+                            'rec
+                            (do-steps bindings-with-steps))
+                           (the-empty-sequence)))))))))
+
+  (define (make-do bindings-with-steps test result-exps body) ;
+    ;(append ; append can be used on more than 2 arguments, but it can be slower
+     ;(list bindings-with-steps
+      ;     (cons
+      ;      test
+      ;      result-exps))
+     ;(append body (list 'do))))
+    (append ; append can be used on more than 2 arguments, but it can be slower
+     (list bindings-with-steps
+           (cons
+            test
+            result-exps))
+     body
+     (list 'do)))
+  (define (the-empty-bindings-with-steps) ;
+    (the-empty-bindings-list))
+  (define (do-bindings-with-steps exp) ;
+    (define (iter exp result)
+      (let ((bindings (car result))
+            (steps (cadr result)))
+        (if (null? exp)
+            (list (reverse bindings)
+                  (reverse steps))
+            (iter (cdr exp)
+                  (let ((step-position (cddar exp))
+                        (variable (caar exp)))
+                    (list (cons
+                           (list variable
+                                 (cadar exp))
+                           bindings)
+                          (cons (if (null? step-position)
+                                    variable
+                                    (car step-position))
+                                steps)))))))
+    (iter (car exp) '(() ())))
+  (define (do-bindings bindings-with-steps) ;
+    (car bindings-with-steps))
+  (define (do-steps bindings-with-steps) ;
+    (cadr bindings-with-steps))
+  (define (do-body exp) ;
+    (extract-elements-from-form (cddr exp)))
+  (define (do-test exp) ;
+    (caadr exp))
+  (define (do-result-sequence exp) ;
+    (let ((result (cdadr exp)))
+      (if (null? result)
+          (list 'false)
+          result)))
+
+  (define (until->do exp) ;
+    (make-do
+     (the-empty-bindings-with-steps)
+     (until-test exp)
+     (the-empty-sequence)
+     (until-body exp)))
+  (define (until-test exp) (car exp)) ;
+  (define (until-body exp) ;
+    (extract-elements-from-form (cdr exp)))
+
+  (define (while->let exp) ;
+    (make-named-let
+     'rec
+     (the-empty-bindings-list)
+     (make-body
+      (make-if
+       (while-test exp)
+       (sequence->exp
+        (append-sequences
+         (while-body exp)
+         (add-to-sequence-first
+          (make-application
+           'rec
+           (the-empty-values))
+          (the-empty-sequence))))
+       'false))))
+  (define (while-test exp) (car exp))  ;
+  (define (while-body exp) ;
+    (extract-elements-from-form (cdr exp)))
+
+  ;interface
+  (put-evaluation-rule
+   'quote
+   (lambda (exp env) (text-of-quotation exp)))
+  (put-evaluation-rule
+   'set!
+   eval-assignment)
+  (put-evaluation-rule
+   'define
+   eval-definition)
+  (put-evaluation-rule
+   'if
+   eval-if)
+  (put-evaluation-rule
+   'lambda
+   (lambda (exp env)
+     (make-procedure
+      (lambda-parameters exp)
+      (lambda-body exp)
+      env)))
+  (put-evaluation-rule
+   'begin
+   (lambda (exp env)
+     (eval-sequence
+      (begin-actions exp)
+      env)))
+  (put-evaluation-rule
+   'cond
+   (lambda (exp env)
+     (eval (cond->if exp) env)))
+  (put-evaluation-rule
+    'and
+    (lambda (exp env)
+      (eval (and->if exp) env)))
+  (put-evaluation-rule
+    'or
+    (lambda (exp env)
+      (eval (or->if exp) env)))
+  (put-evaluation-rule
+    'let
+    (lambda (exp env)
+      (eval (let->combination exp) env)))
+  (put-evaluation-rule
+    'let*
+    (lambda (exp env)
+      (eval (let*->nested-lets exp) env)))
+  (put-evaluation-rule
+      'do
+      (lambda (exp env)
+        (eval (do->let exp) env)))
+  (put-evaluation-rule
+      'until
+      (lambda (exp env)
+        (eval (until->do exp) env)))
+  (put-evaluation-rule
+      'while
+      (lambda (exp env)
+        (eval (while->let exp) env)))
+  'done)

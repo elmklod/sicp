@@ -1,0 +1,85 @@
+(parse '(The professor lectures to the student in the class with the cat))
+
+(sentence
+ (simple-noun-phrase (article the) (noun professor))
+ (verb-phrase ; ()
+  (verb-phrase ; []
+   (verb-phrase (verb lectures) ; {}
+    (prep-phrase (prep to)
+     (simple-noun-phrase (article the) (noun student))))
+   (prep-phrase (prep in)
+    (simple-noun-phrase (article the) (noun class))))
+  (prep-phrase (prep with)
+   (simple-noun-phrase (article the) (noun cat)))))
+
+the professor ([{lectures to the student} in the class] with the cat)
+prof has a cat nearby.
+he is in the class, lecturing the student
+
+;;; Amb-Eval value:
+(sentence (simple-noun-phrase (article the) (noun professor))
+          (verb-phrase ; ()
+            (verb-phrase ; {}
+            (verb lectures)
+            (prep-phrase (prep to)
+             (simple-noun-phrase (article the)
+                                 (noun student))))
+            (prep-phrase (prep in) ; []
+                         (noun-phrase
+                          (simple-noun-phrase (article the) (noun class))
+                          (prep-phrase (prep with)
+                           (simple-noun-phrase (article the) (noun cat)))))))
+the professor ({lectures to the student} [in the class with the cat])
+prof is lecturing to the student.
+He is doing it in the class that has a cat.
+
+;;; Amb-Eval value:
+(sentence
+ (simple-noun-phrase (article the) (noun professor))
+ (verb-phrase ; ()
+  (verb-phrase (verb lectures) ;{}
+   (prep-phrase (prep to) ;[]
+    (noun-phrase
+     (simple-noun-phrase (article the) (noun student))
+     (prep-phrase (prep in)
+      (simple-noun-phrase (article the) (noun class))))))
+  (prep-phrase (prep with)
+   (simple-noun-phrase (article the) (noun cat)))))
+the professor ({lectures [to the student in the class]} with the cat)
+prof. lectures to the student.(not necessarily p2p)
+The student is in the class.
+The professor has the cat nearby.
+
+;;; Amb-Eval value:
+(sentence
+ (simple-noun-phrase (article the) (noun professor))
+ (verb-phrase (verb lectures) ;()
+  (prep-phrase (prep to)
+   (noun-phrase ; {}
+    (noun-phrase ; []
+     (simple-noun-phrase (article the) (noun student))
+     (prep-phrase (prep in)
+      (simple-noun-phrase (article the) (noun class))))
+    (prep-phrase (prep with)
+     (simple-noun-phrase (article the) (noun cat)))))))
+the professor (lectures to {[the student in the class] with the cat})
+prof lectures to the student.
+This student is in the class.
+This student has the cat nearby.
+
+;;; Amb-Eval value:
+(sentence
+ (simple-noun-phrase (article the) (noun professor))
+ (verb-phrase (verb lectures) ; ()
+  (prep-phrase (prep to)
+   (noun-phrase ; {}
+    (simple-noun-phrase (article the) (noun student))
+    (prep-phrase (prep in)
+     (noun-phrase ; []
+      (simple-noun-phrase (article the) (noun class))
+      (prep-phrase (prep with)
+       (simple-noun-phrase (article the) (noun cat)))))))))
+the professor (lectures to {the student in [the class with the cat]})
+prof lectures to the student.
+This student is in the class.
+This class has a cat.

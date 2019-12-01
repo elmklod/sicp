@@ -1,0 +1,36 @@
+(define (make-application proc args)
+  (cons proc args))
+
+
+;New syntax can be transformed during the clause extraction to the old one
+; or during the actual action extraction.
+; The latter is implemented here. It allows for extra delay,
+; which can be exploited if expand-clauses is modified to delay the tranformation
+; except for the first clause.
+  (define (cond-actions clause)
+    (if (and (= (length clause) 3)
+             (eq? (cadr clause) '=>))
+        (list
+         (make-application
+          (caddr clause)
+          (list (car clause))))
+        (cdr clause)))
+  (define (expand-clauses clauses)
+    (if (null? clauses)
+        'false     ; no else clause
+        (let ((first (car clauses))
+              (rest (cdr clauses)))
+          (if (cond-else-clause? first)
+              (if (null? rest)
+                  (sequence->exp
+                   (cond-actions first))
+                  (error "ELSE clause isn't
+                          last: COND->IF"
+                         clauses))
+              (make-if (cond-predicate first)
+                       (sequence->exp
+                        (cond-actions first))
+                       (expand-clauses
+                        rest))))))
+
+Again, it recomputes test twice insteead of just once. Using Let can remedy this

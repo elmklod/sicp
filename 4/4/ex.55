@@ -1,0 +1,5 @@
+(supervisor ?x (Bitdiddle Ben))
+
+(job ?person (accounting . ?job))
+
+(address ?employee (Slummerville . ?street))

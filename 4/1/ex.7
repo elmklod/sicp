@@ -1,0 +1,61 @@
+(let* ((var0 val0) (var1 val1) ... (varn valn))
+  body)
+
+is equivalent to
+
+(let ((var0 val0))
+  (let ((var1 val1))
+    ...
+     (let ((varn valn))
+       body)))
+
+Here there is no need to make a lazy version, it will always evaluate under normal circumstances.
+(when there is no interrupts)
+(define (let*->nested-lets exp)
+  (let ((bindings (let*-bindings exp))
+        (body (let*-body exp)))
+    (define (rec bindings)
+      (if (let*-no-bindings? bindings)
+          body
+          (make-let (make-bindings-list (let*-first-binding bindings))
+                    (let ((rest (let*-rest-bindings bindings)))
+                      ((if (let*-no-bindings? rest)
+                           (lambda (x) x)
+                           make-body)
+                       (rec rest))))))
+    (if (let*-no-bindings? bindings)
+        (make-let ; it is not simplified to sequence because of the encapsulation it provides
+         (the-empty-bindings-list)
+         body)
+        (rec bindings))))
+
+(define (let*-bindings exp)
+  (cadr exp))
+
+(define (let*-no-bindings? bindings)
+  (null? bindings))
+
+(define (let*-body exp)
+  (cddr exp))
+
+(define (let*-first-binding bindings)
+  (car bindings))
+
+(define (let*-rest-bindings bindings)
+  (cdr bindings))
+
+(define (make-body exp)
+  (list exp))
+
+(define (make-bindings-list binding)
+  (list binding))
+
+(define (make-let bindings body)
+  (cons 'let
+        (cons bindings
+              body)))
+
+(put-evaluation-rule
+  'let*
+  (lambda (exp env)
+    (eval (let*->nested-lets exp) env)))

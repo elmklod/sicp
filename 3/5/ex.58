@@ -1,0 +1,6 @@
+the stream represents a fraction as an infinite(both terminating and not)
+radix-ary fraction.
+Elements of the stream are the digits of this fraction from left to right
+when given num > den, the first term is a number > den with the last digit in radix-ary system
+being the first term of the fraction and the rest being the integer part.
+The rest of the stream is the next terms.

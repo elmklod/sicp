@@ -1,0 +1,69 @@
+(define (addend s) (cadr s))
+
+(define (augend s)
+    (let ((red-aug (reduce-seq + 0 (cddr s))))
+      (cond ((= (length red-aug) 1) (car red-aug))
+            ((= (car red-aug) 0)
+             ((lambda (x) ((if (= (length x) 1)
+                              car
+                              (lambda (y) (cons '+ y)))
+                            x)) (cdr red-aug)))
+            (else (cons '+ red-aug)))))
+
+
+
+(define (make-sum a1 a2 . rest)
+  (let ((sum (make-exp + '+ 0 a1 a2 rest)))
+    (cond ((and (list? sum)
+                (= (cadr sum) 0))
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '+ y)))
+                          x)) (cddr sum)))
+          (else sum))))
+
+(define (reduce-seq op init seq)
+ (append (list (fold-right op
+                           init
+                           (filter (lambda (x) (number? x))
+                                   seq)))
+         (filter (lambda (x) (not (number? x)))
+                 seq)))
+
+
+(define (make-exp op sym init el1 el2 rest)
+ ((lambda (x) ((if (= (length x) 1)
+                   car
+                   (lambda (y) (cons sym y)))
+                x))
+       (reduce-seq op init (cons el1
+                                 (cons el2
+                                       rest)))))
+
+(define (make-product m1 m2 . rest)
+  (let ((product (make-exp * '* 1 m1 m2 rest)))
+    (cond  ((and (list? product)
+                (= (cadr product) 0))
+            0)
+           ((and (list? product)
+                (= (cadr product) 1))
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '* y)))
+                          x)) (cddr product)))
+          (else product))))
+
+
+(define (multiplier p) (cadr p))
+
+(define (multiplicand p)
+  (let ((red-pr (reduce-seq * 1 (cddr p))))
+    (cond ((= (car red-pr) 0)
+           0)
+          ((= (length red-pr) 1) (car red-pr))
+          ((= (car red-pr) 1)
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '* y)))
+                          x)) (cdr red-pr)))
+          (else (cons '* red-pr)))))

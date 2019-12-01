@@ -1,0 +1,80 @@
+(define (make-account balance password)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance
+                     (- balance amount))
+               balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((wrong-pswd-counter 0))
+    (define (dispatch key m)
+      (if (eq? key password)
+          (cond ((eq? m 'withdraw) withdraw)
+                ((eq? m 'deposit) deposit)
+                (else (error "Unknown request:
+                       MAKE-ACCOUNT" m)))
+          (begin (set! wrong-pswd-counter
+                       (+ 1 wrong-pswd-counter))
+                 (if (> wrong-pswd-counter 7)
+                     (begin (call-the-cops)
+                            (lambda (x) "Incorrect password. Too many unsuccessuful authentication attempts"))
+                     (lambda (x) "Incorrect password")))))
+    dispatch))
+
+or
+
+(define (make-account balance password)
+  (define (withdraw amount)
+    (if (>= balance amount)
+        (begin (set! balance
+                     (- balance amount))
+               balance)
+        "Insufficient funds"))
+  (define (deposit amount)
+    (set! balance (+ balance amount))
+    balance)
+  (let ((wrong-pswd-counter 0))
+    (lambda (key m)
+      (if (eq? key password)
+          (cond ((eq? m 'withdraw) withdraw)
+                ((eq? m 'deposit) deposit)
+                (else (error "Unknown request:
+                       MAKE-ACCOUNT" m)))
+          (begin (set! wrong-pswd-counter
+                       (+ 1 wrong-pswd-counter))
+                 (if (> wrong-pswd-counter 7)
+                     (begin (call-the-cops)
+                            (lambda (x) "Incorrect password. Too many unsuccessuful authentication attempts"))
+                     (lambda (x) "Incorrect password")))))))
+
+or
+
+(define (make-account balance password)
+  (let ((wrong-pswd-counter 0))
+    (define (withdraw amount)
+      (if (>= balance amount)
+          (begin (set! balance
+                       (- balance amount))
+                 balance)
+          "Insufficient funds"))
+    (define (deposit amount)
+      (set! balance (+ balance amount))
+      balance)
+
+      (define (dispatch key m)
+        (if (eq? key password)
+            (cond ((eq? m 'withdraw) withdraw)
+                  ((eq? m 'deposit) deposit)
+                  (else (error "Unknown request:
+                         MAKE-ACCOUNT" m)))
+            (begin (set! wrong-pswd-counter
+                         (+ 1 wrong-pswd-counter))
+                   (if (> wrong-pswd-counter 7)
+                       (begin (call-the-cops)
+                              (lambda (x) "Incorrect password. Too many unsuccessuful authentication attempts"))
+                       (lambda (x) "Incorrect password")))))
+      dispatch))
+
+This breaks encapsulation.

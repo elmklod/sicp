@@ -1,0 +1,79 @@
+(rule (lives-near ?person-1 ?person-2)
+      (and (address ?person-1
+                    (?town . ?rest-1))
+           (address ?person-2
+                    (?town . ?rest-2))
+           (not (same ?person-1 ?person-2))))
+
+; Suppose there is an instantiation that satisfies the query
+(lives-near val1 val2)
+; Then suppose there exists an instantiation
+
+(lives-near val2 val1)
+
+; Since it is is known that this compund query is satified:
+(and (address val1
+              (?town . ?rest-1))
+     (address val2
+              (?town . ?rest-2))
+     (not (same val1 val2)))
+
+; Values satisfy subqueries as well:
+(address val1
+         (?town . ?rest-1))
+(address val2
+         (?town . ?rest-2))
+(not (same val1 val2))
+
+; Inspect the second instantiation body:
+(and (address val2
+         (?town . ?rest-2))
+     (address val1
+              (?town . ?rest-1))
+     (not (same val2 val1)))
+
+; It also satisfies the query since its subqueries are the same as the original but in different order
+; (except for (same val2 val1), but (same val2 val1) <--> (same val1 val2))
+; Therefore, this instantiation also satisfies the query.
+
+; for every value of val1, val2.
+;-------
+
+; To avoid repetitions there are at least 2 ways:
+; 1. get the stream of results and check that no reversed result is there.
+; or somehow control the evaluation process and when there is a viable instantiation,
+; put a pair of values in some data structure and add a query that new-instantiation value pair shoul not be there.
+; lisp-value form should be used here
+; 2. check that person1 and person2 pattern variables always differ in their value properties
+; such that if bindings:
+; ?person1 := val1
+; ?person2 := val2
+; satisfy the query, then
+; ?person1 := val2
+; ?person2 := val1
+; surely not
+; one such way is to establish some form of ordering values by some of their properties,
+; e.g. lexicographically or alphabetically
+
+; An example
+; suppose there is a procedure that when applied to the names of company workers
+; evaluates to #true if first name is >(by some ordering)
+; and to #false otherwise
+; let its signature be (greater? name1 name2)
+
+; Then the desired query can be formulated as follows
+(and (lives-near ?person-1 ?person-2)
+     (lisp-value greater? ?person-1 ?person-2))
+
+; Notice that with this predicate, which evaluates to #false if the names are equal in some oredring,
+; it is possible to define a new rule to search for ordered sets of values directly:
+; (rule (lives-near ?person-1 ?person-2)
+;       (and (address ?person-1
+;                     (?town . ?rest-1))
+;            (address ?person-2
+;                     (?town . ?rest-2))
+;            (lisp-value greater? ?person-1 ?person-2)))
+
+; The choice of predicate (> or <) is arbitrary
+; It may even be non-strict(since there is still (not (same ...)) subquery), but the specialized rule cannot be constructed with it
+; the way shown above

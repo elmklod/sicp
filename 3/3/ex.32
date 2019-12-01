@@ -1,0 +1,77 @@
+The LIFO data structure would reverse the order of events in the segment.
+Even if they happen simultaneously, it may introduce the behavior of modeled  circuits
+which is not observed in the world that is modeled.
+Or hide some behavior.
+
+E.g.
+
+if inputs to the and-gate change from 0, 1 to 1, 0 in the order written
+then the FIFO data structure allows for the and-gate output wire to be temporarily 1
+ and then 0 again.
+
+The LIFO data structure never allows for that temporarily change
+ of the and-gate output wire, which can be observed in the modeled world
+
+Conversely, when the change occurs in the order 1, 0 to 0, 1
+It is the use of FIFO data structure that introduces behavior not seen in the world modeled
+by temporarily setting the signal of the output wire to 1.
+
+In addition, if the change of inputs is separated by some other action which involves
+the output of this and-gate, then when a LIFO structure is used, a bug will be introduced:
+the output wire expected to be 1 at a certain moment will be 0 instead.
+
+Another problem arises: new-value variable for and-gate, or-gate and
+inverter(not of interest, as the problem does not arise with single wire gates)
+is computed BEFORE the the action is actually evaluated.
+Using the previous example: if the first wire changes from 0 to 1
+then new-value associated with that change is 1
+when the second input wire changes from 1 to 0
+ then new-value associated with the change is 0
+Using FIFO structures the and-gate output wire will be initially set to 0
+and then 1 which is certainly not correct : (and true(1) false(0)) = false(0)
+Therefore, with the FIFO data struct, the new-value will not reflect the change
+ that happened to the output wire signal
+because the change happens only during the evaluation of the actions
+
+using LIFO structures avoids this problem by evaluating actions in the order of their addition.
+
+However, this problem can be easily circumvented. In fact, the actions must not
+be ordered at all in the same sequence, the only requirement is that they
+should have access to the current signal of the wires and compute new-value when needed only.
+They already have the access.
+Therefore, the primitive gates must be modified:
+
+(define (and-gate a1 a2 output)
+  (define (and-action-procedure)
+    (after-delay
+     and-gate-delay
+     (lambda ()
+        (let ((new-value
+               (logical-and (get-signal a1)
+                            (get-signal a2))))
+          (set-signal! output new-value)))))
+  (add-action! a1 and-action-procedure)
+  (add-action! a2 and-action-procedure)
+  'ok)
+
+or-gate should be modified as well.
+
+(define (inverter input output)
+  (define (invert-input)
+    (after-delay
+     inverter-delay
+     (lambda ()
+        (let ((new-value
+               (logical-not (get-signal input))))
+          (set-signal! output new-value)))))
+  (add-action! input invert-input)
+  'ok)
+
+There is no need to modify inverter as the problem does not occur with only 1-input wire
+However to conform to the style, it can be modified as well.
+
+It will work with either FIFO or LIFO data structures.
+
+It may entail less opportunity for oprimization during the compilation and the interpretation(evaluation)
+And the initial problem is still not resolved for LIFO and unordered sequences
+This may be classified as a lazy evaluation to some degree.

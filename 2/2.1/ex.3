@@ -1,0 +1,148 @@
+(define (area-rectangle rec)
+ (* (width-rectangle rec)
+    (height-rectangle rec)))
+
+(define (perimeter-rectangle rec)
+ (* 2 (+ (width-rectangle rec) (height-rectangle rec))))
+
+;A rectangle can be represented by just 3 points(and, therefore, create an abstraction barrier for the 4-th point procedure), but for clarity its representation is made from 4 points on a plane.
+;(0->1->2->3->0 cycle)
+;There are many possibilities for representation:
+;(cons a (cons b c))
+
+;(cons (make-segment a b)
+;      (make-segment a c))
+
+;(cons (make-segment a b)
+;      (make-segment c d))
+
+;and many other, including a diagonal-point representation using midpoint-segment procedure.
+
+;adjacent width and height segments
+(define (make-rectangle p0 p1 p2 p3)
+ (cons (make-segment p0 p1)
+       (make-segment p0 p3)))
+
+(define (point0-rectangle rec)
+ (start-segment (car rec)))
+
+;or cdr , it does not matter
+
+(define (point1-rectangle rec)
+ (end-segment (car rec)))
+
+(define (point2-rectangle rec)
+ (make-point (+ (x-point (point1-rectangle rec))
+                (- (x-point (point3-rectangle rec))
+                   (x-point (point0-rectangle rec))))
+             (+ (y-point (point1-rectangle rec))
+                (- (y-point (point3-rectangle rec))
+                   (y-point (point0-rectangle rec))))))
+
+(define (point3-rectangle rec)
+ (end-segment (cdr rec)))
+
+
+;----------------------
+
+;(define (width-rectangle rec)
+; (segment-length (car rec)))
+
+;(define (height-rectangle rec)
+; (segment-length (cdr rec)))
+
+;-----------------------
+
+;To create even more elaborate abstraction barriers,
+
+;width and height procedures will NOT be defined in terms of car and cdr procedures:
+
+;rectangle data is only 4 points, nothing more.
+
+(define (width-rectangle rec)
+ (point-distance (point0-rectangle rec) (point1-rectangle rec)))
+
+(define (height-rectangle rec)
+ (point-distance (point0-rectangle rec) (point3-rectangle rec)))
+
+
+(define (make-rectangle p0 p1 p2 p3)
+ (cons (make-segment p0 p1)
+       (make-segment p2 p3)))
+
+(define (point0-rectangle rec)
+  (start-segment (car rec)))
+
+(define (point1-rectangle rec)
+ (end-segment (car rec)))
+
+(define (point2-rectangle rec)
+  (start-segment (cdr rec)))
+
+(define (point3-rectangle rec)
+ (end-segment (cdr rec)))
+
+;While both representations suffice, the second is better, as it does not break the barrier between points and their representation.
+
+;Therefore, similar representation, that does not break the point barrier
+
+(define (make-rectangle p0 p1 p2 p3)
+ (cons (make-segment p0 p2)
+       (make-segment p1 p3)))
+
+(define (point0-rectangle rec)
+  (start-segment (car rec)))
+
+(define (point1-rectangle rec)
+ (start-segment (cdr rec)))
+
+(define (point2-rectangle rec)
+  (end-segment (car rec)))
+
+(define (point3-rectangle rec)
+ (end-segment (cdr rec)))
+
+;together with ex.2:
+
+(define (midpoint-segment seg)
+ (let ((seg-end (end-segment seg))
+       (seg-start (start-segment seg)))
+  (make-point (average (x-point seg-end) (x-point seg-start))
+              (average (y-point seg-end) (y-point seg-start)))))
+
+(define (average a b)
+ (/ (+ a b) 2))
+
+(define (make-segment start end)
+ (cons start end))
+
+(define (start-segment segment)
+ (car segment))
+
+(define (end-segment segment)
+ (cdr segment))
+
+(define (make-point x-coord y-coord)
+ (cons x-coord y-coord))
+
+(define (x-point point)
+ (car point))
+
+(define (y-point point)
+ (cdr point))
+
+(define (print-point p)
+  (newline)
+  (display "(")
+  (display (x-point p))
+  (display ",")
+  (display (y-point p))
+  (display ")"))
+
+(define (point-distance p0 p1)
+  (sqrt (+ (square (- (x-point p0)
+                      (x-point p1)))
+           (square (- (y-point p0)
+                      (y-point p1))))))
+
+;Notice that segment is not necessary, but convenient

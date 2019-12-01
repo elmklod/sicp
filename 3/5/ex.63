@@ -1,0 +1,13 @@
+Louis' procedure would recompute (sqrt-stream x) several time
+ the depth at which streams are forced would vary as n-th element of the k-th
+stream requires anly (n-1)-th element of the (k+1)-th stream), because the calls this procedure
+would produce different streams and the memoization will not take effect.
+Therefore, it will take additional time and space.
+
+Yes, they would differ in that Louis' will recreate streams starting from the first element
+whereas the original will start recomputing from the first element, never recreating it again.
+It may be said that the original still preserves the first element as memoized while
+Louis' does not.
+Also extra procedure invocation(call) will require more space and time as it will create many environments
+all pointing to the global one with the same binding x to the same value.
+Therefore, Louis' is still less efficient even without any memoization used (call-by-name)

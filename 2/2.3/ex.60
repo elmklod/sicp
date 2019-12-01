@@ -1,0 +1,54 @@
+(define (element-of-set? x set)
+  (cond ((null? set) false)
+        ((equal? x (car set)) true)
+        (else (element-of-set? x (cdr set)))))
+
+
+(define (intersection-set set1 set2)
+  (cond ((or (null? set1) (null? set2))
+         '())
+        ((element-of-set? (car set1) set2)
+         (cons (car set1)
+               (intersection-set (cdr set1)
+                                 set2)))
+        (else (intersection-set (cdr set1)
+                                set2))))
+
+(define (intersection-set set1 set2)
+  (filter (lambda (elem) (element-of-set? elem set1))
+          set2))
+
+The difference is in the number of elements in the resulting set
+
+
+(define (adjoin-set x set)
+  (cons x set))
+
+(define (union-set set1 set2)
+  (append set1 set2))
+
+Adjoin-set R(n) = Θ(1)
+union-set now depends only on the size of one of the sets(usually set 1)
+as append has R(n) = Θ(n), so does union-set
+
+element-of-set  and intersection-set have their order of growth increased for sets with n distinct elements.
+(increase depends on the amount of duplicates)
+
+for k duplicates element-of-set can take n+k steps to check whether the element is in a set or not.
+R(n, k)= Θ(n+k)
+
+
+for m duplicates in set1 and k duplicates in set2, intersection-set may take (n+m)(n+k) steps
+
+R(n, k, m)= Θ(n^2 + n(k+m) + mk)
+
+It is not Θ(n^2), as the number of steps now depends on the number of duplicates
+
+This representation is useful when:
+
+0. Unions and adjoining of elements are done often.
+
+1. the need for duplicates arises, such as the set of coefficients, that may be the same for some polynomial
+
+2. checking whether the element is in the set is rarily done,
+   the same for intersections.

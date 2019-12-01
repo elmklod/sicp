@@ -1,0 +1,18 @@
+(define (mul-streams s1 s2)
+  (if (stream-null? s1)
+      the-empty-stream
+      (cons-stream (* (stream-car s1)
+                      (stream-car s2))
+                   (mul-streams (stream-cdr s1)
+                                (stream-cdr s2)))))
+
+(define (mul-streams s1 s2)
+  (stream-map * s1 s2))
+
+(define factorials
+  (cons-stream 1 (mul-streams factorials
+                              (stream-cdr integers))))
+
+(define real-factorials
+  (cons-stream 1 (mul-streams real-factorials
+                              integers)))

@@ -1,0 +1,11 @@
+subtracting from some greatest value k some least value j yields the greatest value among possible results
+
+subtracting from some least value i some greatest value u yields the least value among possible results.
+
+Therefore, the sub-interval should be implemented as follows:
+
+x - y
+
+(define (sub-interval x y)
+ (make-interval (- (lower-bound x) (upper-bound y))
+                (- (upper-bound x) (lower-bound y))))

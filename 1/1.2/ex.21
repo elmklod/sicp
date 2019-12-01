@@ -1,0 +1,18 @@
+(define (prime? n)
+  (define (smallest-divisor n)
+   (test-divisor n 2))
+
+  (define (test-divisor n divisor)
+   (cond ((> (square divisor) n) n)
+         ((divides? divisor n) divisor)
+         (else (test-divisor n (+ divisor 1)))))
+
+  (define (divides? divisor n)
+    (= (remainder n divisor) 0))
+
+
+  (and (> n 1) (= (smallest-divisor n) n)))
+
+(smallest-divisor 199) evaluates to 199, 199 is prime.
+(smallest-divisor 1999) evaluates to 1999, 1999 is prime.
+(smallest-divisor 19999) evaluates to 7, 19999 is not prime.

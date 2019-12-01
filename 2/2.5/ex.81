@@ -1,0 +1,88 @@
+1.The process won't terminate,
+
+Apply-generic would coerce arguments indefinitely to their own types
+
+Since the process is iterative, it will never terminate.
+No error will ever be signaled
+
+
+2.It is not necessary. Without Louis's coercion procedures apply-generic will signal an error
+if there were no operation defined for the type initially.
+It may take some resources by searching the coercion table.
+In small systems this is not problem. In larger ones this may slow down the system perfomance
+considerably.(especially when one argument is coerced to the type of the other and apply-generic is called on them again,
+it can double the search time)
+Although if there are such coercion procedures(just like Louis's) defined, then it
+is necessary in order to terminate the process.
+
+One variant:
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags))
+          (no-proc-error
+           (lambda ()
+            (error
+             "No method for these types"
+             (list op type-tags)))))
+      (if proc
+          (apply proc (map contents args))
+          (if (and (= (length args) 2)
+                   (not (equal? (car type-tags)
+                                (cadr type-tags))))
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (let ((t1->t2
+                       (get-coercion type1
+                                     type2))
+                      (t2->t1
+                       (get-coercion type2
+                                     type1)))
+                  (cond (t1->t2
+                         (apply-generic
+                          op (t1->t2 a1) a2))
+                        (t2->t1
+                         (apply-generic
+                          op a1 (t2->t1 a2)))
+                        (else (no-proc-error)))))
+              (no-proc-error))))))
+
+
+(define (apply-generic op . args)
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (if (= (length args) 2)
+              (let ((type1 (car type-tags))
+                    (type2 (cadr type-tags))
+                    (a1 (car args))
+                    (a2 (cadr args)))
+                (if (not (equal? type1 type2))
+                    (let ((t1->t2
+                           (get-coercion type1
+                                         type2))
+                          (t2->t1
+                           (get-coercion type2
+                                         type1)))
+                      (cond (t1->t2
+                             (apply-generic
+                              op (t1->t2 a1) a2))
+                            (t2->t1
+                             (apply-generic
+                              op a1 (t2->t1 a2)))
+                            (else
+                             (error
+                              "No method for
+                               these types"
+                              (list
+                               op
+                               type-tags)))))
+                    (error
+                     "No method for these types"
+                     (list op type-tags))))
+              (error
+               "No method for these types"
+               (list op type-tags)))))))

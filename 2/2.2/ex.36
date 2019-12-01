@@ -1,0 +1,26 @@
+(define (accumulate-n op init seqs)
+  (if (null? seqs)
+      '()
+      (map (lambda (x) (accumulate op
+                                   init
+                                   x))
+                 (transpose seqs))))
+
+(define (transpose seqs)
+ (define (combine seqs-indx subseq-indx)
+  (if (= seqs-indx (length seqs))
+      '()
+      (cons (list-ref (list-ref seqs seqs-indx) subseq-indx)
+            (combine (+ seqs-indx 1) subseq-indx))))
+ (define (transpose-from start)
+  (if (= start (length (car seqs)))
+      '()
+      (cons (combine 0 start)
+            (transpose-from (+ 1 start)))))
+ (transpose-from 0))
+
+(define (accumulate-n op init seqs)
+ (if (null? (car seqs))
+     '()
+     (cons (accumulate op init (map car seqs))
+           (accumulate-n op init (map cdr seqs)))))

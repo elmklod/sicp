@@ -1,0 +1,21 @@
+(define (run-forever)
+  (run-forever))
+
+(define (try p)
+  (if (halts? p p)
+      (run-forever)
+      'halted))
+
+Evaluate (try try)
+suppose (halts? p p) ==
+(halts? try try) returns #t == (try try) halts
+Then initial (try try) never halts.
+A contradiction
+
+Suppose (halts? p p) ==
+(halts? try try) returns #f == (try try) never halts.
+Then initial (try try) halts by returning 'halted
+A contradiction
+
+Therefore , because all other programs exists,
+halts? does not/cannot exist.

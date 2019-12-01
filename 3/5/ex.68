@@ -1,0 +1,5 @@
+No, it does not.
+procedure pairs recursively calls itself and never terminates.
+
+Original procedure avoided this problem by delaying the call to itself and by providing
+the first element of the stream without the recursive call.

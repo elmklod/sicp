@@ -1,0 +1,58 @@
+(define (product-rec term a next b)
+  (if (> a b)
+      1
+      (* (term a)
+         (product-rec term (next a) next b))))
+
+(define (product term a next b)
+  (define (iter a result)
+    (if (> a b)
+        result
+        (iter (next a) (* result (term a)))))
+  (iter a 1))
+
+recursive processes:
+
+(define (pi last-number)
+  (define (square-if-not-last n)
+    (if (= n last-number)
+        n
+        (square n)))
+  (define (add-2 x) (+ x 2))
+  (* 2.0
+     (/ (product-rec square-if-not-last 2 add-2 last-number)
+        (product-rec square 3 add-2 last-number))))
+
+(define (pi last-number)
+  (define (square-if-not-2-or-last n)
+    (if (or (= n last-number)
+            (= n 2))
+        n
+        (square n)))
+  (define (add-2 x) (+ x 2))
+  (* 4.0
+     (/ (product-rec square-if-not-2-or-last 2 add-2 last-number)
+        (product-rec square 3 add-2 last-number))))
+
+Iterative processes:
+
+(define (pi last-number)
+  (define (square-if-not-last n)
+    (if (= n last-number)
+        n
+        (square n)))
+  (define (add-2 x) (+ x 2))
+  (* 2.0
+     (/ (product square-if-not-last 2 add-2 last-number)
+        (product square 3 add-2 last-number))))
+
+(define (pi last-number)
+  (define (square-if-not-2-or-last n)
+    (if (or (= n last-number)
+            (= n 2))
+        n
+        (square n)))
+  (define (add-2 x) (+ x 2))
+  (* 4.0
+     (/ (product square-if-not-2-or-last 2 add-2 last-number)
+        (product square 3 add-2 last-number))))

@@ -1,0 +1,102 @@
+Suppose there k elements in some row of the triangle.
+
+Start ordering from the left
+
+each number, except 1 on the borders, is in two pairs:
+Once moving to the next number in the row, one pair is counted twice, for this and the previous number.
+Therefore, it each number in the middle, not counting the first after 1, adds only 1 new pair.
+k - 3 new pairs + 2 pairs from the first number after 1. k - 1 pairs, each gives rise to its own element of the next row.
+Adding 1 to the sides of this new row, there are k + 1 elements now.
+
+The row, where at least 1 pair can be found and the above statement applies, is 1 1,
+And its row number is 2 as well(if starting to count from 1, 1 otherwise)
+
+row 1(0) has 1 element
+
+Therefore, for each row k there are k elements(k + 1 if the counting of rows starts from 0)
+If the counting of rows and columns is started from the same number, then the row k has columns up to and including k.
+(for counting from 1 it is clear.
+For the counting from 0 - k + 1 elements can be counted with numbers from 0 to k - k + 1 numbers)
+
+From now here it is assumed that counting starts from 1, for the sake of simplicity
+And the counting of columns starts from 1.
+-------------------------
+
+Each element, except 1 on the sides, in the row m came from summing pas(m - 1,k) and pas(m - 1, k + 1). 0 < k < row number = m
+Each element, if it's not the last rightmost 1, forms a pair with a further number. from 1 to the row number.
+Starting from the leftmost 1, it's possible to cover all the pairs, stopping at the second last number(adjacent to the rightmost 1)
+
+Therefore, there are m - 1 pairs ordered relative to each other,
+A pair j has elements j and j + 1 of the row m.(each number forms a unique pair with the next)
+
+the first pair has the first result(not counting 1) in the m + 1 row and so forth.
+
+the n-th pair -> the n-th result in row m + 1
+
+results can be ordered from 1 to m - 1.
+Adding 1 to the sides and reordering(1 to the left is now the first, therefore , every result has its number, representing ordering,
+increased by 1, and the rightmost 1 has number m + 1)
+
+the n-th pair in m-th row -> element n + 1  of row m + 1
+
+    n
+(n, n + 1) in m -> elem. n + 1 in m + 1
+
+Therefore, each element, except 1 on the borders of the triangle,
+is the sum of  elements from the previous row:
+one elements comes from the same column(number) as the original number;
+one comes from the previous column(number) relative to the orig. number.
+
+Therefore, for row p, column y, y < p:
+
+
+---------------------------------------------------
+
+Suppose there is a function pas(row, column), that, given a row and a column numbers(in the same counting system, in this case from 1) of the element of Pascal' triangle,
+
+outputs the value of the element at this position:
+
+From the above conclusions, it follows that:
+
+                   { pas(row - 1, column - 1)  + pas(row - 1, column) for column |  1 < column < row [0]
+pas(row, column) = { 1 for column = 1;    leftmost 1. [1]
+                   { 1 for row = column    rightmost 1. [2]
+
+special cases of pas(1, 1), pas(2, 1), pas(2, 2) [these rows have no elements that resulted  from the previous row]:
+pas(1, 1) - either [1] or [2], the result is 1, which is what it should be.
+pas(2, 1) = 1, [1]
+pas(2, 2) = 1, [2]
+
+All special cases are covered.
+----------------------------------------------------
+
+(notice that is possible to extend this function for the 1 on the borders by specifying
+pas(row, column) = 0, if column < 1 or column > row; pas(1, 1) = 1 but it will slow down the computation, sometimes extremely if
+the initial position is the 1 on the border or the element that is the result of
+adding the 1 from the border to the second first/last element in the precious row)
+
+-------------------------------------------------------
+
+(define (pas row column)
+  (cond ((= column 1) 1)
+        ((= row column) 1)
+        ((< column row) (+ (pas (- row 1) (- column 1))
+                           (pas (- row 1) column)))))
+
+binary Tree recursive process(es, below)
+
+Adapting this to a particular counting system is straightforward.
+
+A fully tree-recursive process,
+
+(define (pas row column)
+  (cond ((<= column 0) 0)
+        ((< row column) 0)
+        ((and (= row 1) (= column 1)) 1)
+        ((<= column row)  (+ (pas (- row 1) (- column 1))
+                             (pas (- row 1) column)))))
+
+slower. (E.g. computation of (pas 30 7) takes 4 times more than the process, started by the first procedure.)
+
+But it is resilient to the combinations of row and column numbers, that do not represent any
+element of the Pascal's triangle.

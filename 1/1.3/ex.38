@@ -1,0 +1,27 @@
+notice that  dk will not return 1 only for k that are congruent to 2 mod 3.
+Instead the value returned is the 2*((k div 3) + 1).
+However, since all these  k have form 3*(k div 3) + 2,
+then k + 1 = 3*((k div 3) + 1)
+
+2*(k + 1)/3 = 2*((k div 3) + 1).
+
+It is just one way to design d procedure.
+
+The other would be
+(* 2 (+ (quotient k 3) 1)), which is actually in this case (* 2 (quotient (+ 1 k) 3))
+(* 2 (+ (/ (- k 2) 3) 1))
+Which is actually
+(* 2 (/ (+ k 1) 3)).
+
+Any can be used, quotient was not introduced yet.
+In fact, It was just implemented.
+
+(define (irrational-frac k)
+  (cont-frac (lambda (x) 1.0)
+             (lambda (k) (if (= (remainder k 3) 2)
+                             (* 2.0 (/ (+ k 1)
+                                       3))
+                             1.0))
+             k))
+
+After k = 21 there is no way to make the computation more precise, as the procedure always evaluates to .7182818284590453

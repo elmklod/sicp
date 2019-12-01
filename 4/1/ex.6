@@ -1,0 +1,37 @@
+(define (let->combination exp)
+  (let ((bindings (let-processed-bindings exp)))
+    (make-application
+     (make-lambda (let-arguments bindings)
+                  (let-body exp))
+     (let-values bindings))))
+
+(define (let-arguments bindings)
+  (car bindings))
+
+(define (make-binding variable value)
+  (list variable value))
+
+(define (let-body exp)
+  (cddr exp))
+
+(define (let-values bindings)
+  (cadr bindings))
+
+(define (let-processed-bindings exp)
+  (define (iter exp result)
+    (let ((variables (car result))
+          (values (cadr result)))
+    (if (null? exp)
+        (list (reverse variables)
+              (reverse values))
+        (iter (cdr exp)
+              (list (cons (caar exp)
+                          variables)
+                    (cons (cadar exp)
+                          values))))))
+  (iter (cadr exp) '(() ())))
+
+(put-evaluation-rule
+  'let
+  (lambda (exp env)
+    (eval (let->combination exp) env)))

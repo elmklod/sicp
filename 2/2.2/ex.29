@@ -1,0 +1,79 @@
+(define (make-mobile left right)
+ (list left right))
+
+(define (make-branch length structure)
+ (list length structure))
+
+(define (left-branch mobile)
+ (list-ref mobile 0))
+
+(define (right-branch mobile)
+ (list-ref mobile 1))
+
+(define (branch-length branch)
+ (list-ref branch 0))
+
+(define (branch-structure branch)
+ (list-ref branch 1))
+
+(define (total-weight mobile)
+ (+ (branch-weight (left-branch mobile))
+    (branch-weight (right-branch mobile))))
+
+(define (branch-weight branch)
+  ((lambda (br-s)
+   (if (mobile? br-s)
+       (total-weight br-s)
+       br-s)) (branch-structure branch)))
+
+(define (mobile? x)
+ (list? x))
+
+(define (list? x)
+ (or (null? x) (and (pair? x) (list? (cdr x)))))
+
+; It is not clear whether torque definition should be outside balanced? definition or not for optimization issues
+
+(define (balanced? mobile)
+  (let ((lb (left-branch mobile))
+        (rb (right-branch mobile)))
+    (and (= (torque lb)
+            (torque rb))
+         (balanced-structure? lb)
+         (balanced-structure? rb))))
+
+(define (torque branch)
+  (* (branch-weight branch)
+     (branch-length branch)))
+
+(define (balanced-structure? branch)
+ (let ((br-s (branch-structure branch)))
+   (if (mobile? br-s)
+       (balanced? br-s)
+       true)))
+
+
+Changed versions:
+
+(define (make-mobile left right)
+  (cons left right))
+
+(define (make-branch length structure)
+  (cons length structure))
+
+(define (left-branch mobile)
+ (car mobile))
+
+(define (right-branch mobile)
+ (cdr mobile))
+
+(define (branch-length branch)
+ (car branch))
+
+(define (branch-structure branch)
+ (cdr branch))
+
+(define (mobile? x)
+ (pair? x))
+
+That is all.

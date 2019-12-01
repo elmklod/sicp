@@ -1,0 +1,42 @@
+(define (gcd-terms a b)
+    (let ((a (if (eq? (type-tag a) 'dense)
+                  (raise a)
+                  a))
+          (b (if (eq? (type-tag b) 'dense)
+                        (raise b)
+                        b)))
+  (if (empty-termlist? b)
+      (attach-tag 'sparse (map (lambda (term)
+                                 (make-term (order term)
+                                            (div (coeff term) (common-factor a))))
+                                (contents a)))
+      (gcd-terms b (pseudoremainder-terms a b)))))
+
+(define (pseudoremainder-terms L1 L2)
+  (let ((L1 (if (eq? (type-tag L1) 'dense)
+                (raise L1)
+                L1))
+        (L2 (if (eq? (type-tag L2) 'dense)
+                      (raise L2)
+                      L2)))
+  (if (empty-termlist? L1)
+      (the-empty-termlist)
+      (let ((t1 (first-term L1))
+            (t2 (first-term L2)))
+        (cadr (div-terms
+              (mul-term-by-all-terms
+               (make-term 0 (expt (coeff t2) (+ (- (order t1)
+                                                   (order t2))
+                                                1)))
+               L1)
+              L2))))))
+
+
+(define (common-factor a)
+  (fold-right (lambda (term divisor)
+                  (greatest-common-divisor (coeff term) divisor))
+                0
+                (contents a)))
+
+
+It should be noted that coefficients that are not numbers are not allowed.

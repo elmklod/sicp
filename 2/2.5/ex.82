@@ -1,0 +1,139 @@
+Iterative processes have an advantage over recursive ones in
+that they can be easily terminated by using conditional expressions only
+
+
+(define (apply-generic op . args)
+
+(define (apply-coercion procedures args)
+  (map (lambda (proc arg)
+         (proc arg))
+       procedures
+       args))
+
+(define (find-coercion types)
+   (define (coerce arg-type args-types-after)
+      (define (iter procedures types)
+        (cond ((null? types) (reverse procedures))
+              ((equal? (car types) arg-type)
+               (iter (cons #f        ; it signals that it is the same type
+                           procedures)
+                     (cdr types)))
+              (else (let ((coercion-to-type (get-coercion
+                                             (car types)
+                                             arg-type)))
+                       (if coercion-to-type
+                           (iter (cons coercion-to-type
+                                       procedures)
+                                 (cdr types))
+                           false)))))
+
+       (let ((coercions (iter '() types)))
+          (cond ((and coercions
+                      (not (null? (filter (lambda (coercion-proc)
+                                            coercion-proc)
+                                          coercions))))
+                 (map (lambda (coercion-proc)
+                        (if coercion-proc
+                            coercion-proc
+                            (lambda (x) x))) ; removes #f from the list
+                      coercions))
+                ((null? args-types-after)
+                  false)
+                (else (coerce (car args-types-after)
+                              (cdr args-types-after))))))
+   (if (null? types)
+       false
+       (coerce (car types) (cdr types))))
+
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((coercions (find-coercion type-tags)))
+              (if coercions
+                  (apply apply-generic (cons op (apply-coercion
+                                                 coercions
+                                                 args)))
+                  (error
+                   "No method for these types"
+                    (list op type-tags))))))))
+
+
+The case for two arguments was proved in the book
+
+The case for one argument is:
+
+suppose some generic procedure f is applied to the arg1 of type t1
+
+(f arg1)
+
+Suppose there is no table entry for dispatching on this type some specific procedure f(or whatever it is named internally)
+
+Suppose there is a table entry for dispatching on some other type t2 some specific procedure f
+and that arg1 can be coerced to the type t2
+
+Therefore, it is possible to apply the generic procedure f by coercing arg1 of type 1 to the arg1 of type t2
+
+However, the procedure defined in the book and above will not do the coercion and will not apply f to the arg1,
+instead it will signal an error.
+
+-------
+
+Suppose there are at least 3 arguments of some types t1, t2, t3 and other  to which some generic procedure f is applied.
+
+Suppose there is no table entry for the specific procedure f for types '(t1 t2 t3 ...)
+
+Suppose there is a table entry for the specific procedure f for types '(t3 t2 t3 ...)
+
+and that the first argument of type t1 of f
+can be coerced to the argument of type t3
+
+However, the apply-generic procedure defined above will not do this type of coercion,
+because it only coerces ALL arguments to the same one type
+-----
+What was said for one argument can be said for applications of generic operations to many arguments as well
+
+
+
+(define (apply-generic op . args)
+  (define (apply-coercion procedures args)
+    (map (lambda (proc arg)
+           (proc arg))
+         procedures
+         args))
+
+  (define (find-coercion types)
+     (define (coerce arg-type args-types-after)
+       (let ((coercions (map (lambda (type)
+                                (get-coercion
+                                  type
+                                  arg-type))
+                             types)))
+          (cond ((not (null? (filter (lambda (coercion-proc)
+                                       coercion-proc)
+                                     coercions)))
+                 (map (lambda (coercion-proc)
+                        (if coercion-proc
+                            coercion-proc
+                            (lambda (x) x))) ; removes #f from the list
+                      coercions))
+                ((null? args-types-after)
+                  false)
+                (else (coerce (car args-types-after)
+                              (cdr args-types-after))))))
+     (if (null? types)
+         false
+         (coerce (car types) (cdr types))))
+
+  (let ((type-tags (map type-tag args)))
+    (let ((proc (get op type-tags)))
+      (if proc
+          (apply proc (map contents args))
+          (let ((coercions (find-coercion type-tags)))
+              (if coercions
+                  (apply apply-generic (cons op (apply-coercion
+                                                 coercions
+                                                 args)))
+                  (error
+                   "No method for these types"
+                    (list op type-tags))))))))

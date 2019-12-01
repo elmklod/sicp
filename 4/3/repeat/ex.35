@@ -1,0 +1,17 @@
+(define (an-integer-between a b)
+  (define (an-int-btw a b operator check)
+    (require (check a b))
+    (amb a (an-int-btw (operator a 1) b operator check)))
+  (let ((condition (> a b)))
+    (if condition
+        (an-int-btw a b - >=)
+        (an-int-btw a b + <=))))
+
+(define (an-integer-between a b)
+  (define (an-int-btw high low operator check)
+    (require (>= high low))
+    (amb high
+         (an-int-btw (-1 high) low)))
+  (if (> a b)
+      (an-int-btw a b)
+      (an-int-btw b a)))

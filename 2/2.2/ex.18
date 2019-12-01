@@ -1,0 +1,16 @@
+(define (reverse l)
+ (define (iter l rev-l)
+  (if (null? l)
+      rev-l
+      (iter (cdr l) (cons (car l) rev-l))))
+ (iter l '()))
+
+(define (reverse l)
+ (define (iter l)
+  (lambda (x)
+      (if (null? l)
+          x
+          ((iter (cdr l)) (cons (car l) x)))))
+ ((iter l) '()))
+
+curried version

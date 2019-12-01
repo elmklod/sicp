@@ -1,0 +1,105 @@
+This ex. requires ex. 33
+
+(define (cons (lazy-memo a) (lazy-memo b))
+  (define (dispatch m)
+    (cond ((eq? m 'car) a)
+          ((eq? m 'cdr) b)
+          (else (error "CONS: unknown operation" m))))
+  (make-lazy-pair dispatch))
+
+(define (car p) ((extract-lazy-pair p) 'car))
+
+(define (cdr p) ((extract-lazy-pair p) 'cdr))
+
+;definitions in the repl
+
+
+(define (make-lazy-pair pair)
+  (list 'lazy-pair pair))
+
+(define (extract-lazy-pair l-pair)
+  (cadr l-pair))
+
+(define primitive-procedures
+  (list (list 'car car)
+        (list 'cdr cdr)
+        (list 'cons cons)
+        (list 'null? null?)
+        (list 'display display)
+        (list 'equal? equal?)
+        (list 'eq? eq?)
+        (list '= =)
+        (list '+ +)
+        (list '- -)
+        (list 'eval eval)
+        (list 'apply apply)
+        (list '* *)
+        (list '/ /)
+        (list 'rand random)
+        (list 'number? number?)
+        (list 'make-lazy-pair make-lazy-pair)
+        (list 'extract-lazy-pair extract-lazy-pair)
+        (list 'error error))) ;more primitives
+
+; primitives
+
+(define (user-print object)
+  (cond ((compound-procedure? object)
+         (display
+          (list 'compound-procedure
+                (procedure-parameters object)
+                (procedure-body object)
+                '<procedure-env>)))
+        ((lazy-pair? object)
+         (display-lazy object))
+        (else (display object))))
+
+(define (lazy-pair? obj)
+ (and (pair? obj)
+      (eq? 'lazy-pair (car obj))))
+
+(define (display-lazy obj)
+  (display
+   (list
+    (show-if-evaluated
+     (lookup-variable-value
+      'a
+      (procedure-environment
+       (extract-lazy-pair obj))))
+    '.
+    '...)))
+
+(define (show-if-evaluated val)
+  (if (evaluated-thunk? val)
+      (thunk-value val)
+      '...))
+
+---------
+This version fails with the implicit definitions such as (define ones (cons 1 ones))
+becauese the amount of thunks in the list is actually a finite one and will be printed
+indefinitely.
+(define (display-lazy obj)
+  (define (show-if-evaluated val)
+    (if (evaluated-thunk? val)
+        (thunk-value val)
+        '...))
+  (display "(")
+  (user-print
+   (show-if-evaluated
+    (lookup-variable-value
+     'a
+     (procedure-environment
+      (extract-lazy-pair obj)))))
+  (display " ")
+  (let ((cdr-part
+         (show-if-evaluated
+          (lookup-variable-value
+           'b
+           (procedure-environment
+            (extract-lazy-pair obj))))))
+    (if (not (lazy-pair? cdr-part))
+        (begin (display '.) (display " ")))
+    (user-print cdr-part))
+  (display ")"))
+Not as good as the original printer, yet can be modified to mimick the original perfectly,
+except for the implicit inifinite lists

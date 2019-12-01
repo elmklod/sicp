@@ -1,0 +1,189 @@
+A mutable data structure is used insead of a variable because as of now it is not possible to
+allow procedures, whose environment does not contain binding of that variable,
+to access that variable as an object that has identity, not just a value this object stores.
+Values change, object remains the same.
+However, it is possible to create such objects. E.g. pairs.
+
+(define (make-mutex)
+  (let ((cell (list false)))
+    (define (the-mutex m)
+      (cond ((eq? m 'acquire)
+              (test-and-set! cell))
+            ((eq? m 'release)
+              (test-and-clear! cell))))
+    the-mutex))
+
+Notice that the modified version does not work as inteded when used as concurrency control mech-m.
+It requires an additional selector:
+
+(define (acquire-mutex mut)
+  (if (mut 'acquire)
+      (acquire-mutex mut)))
+
+However, it does not require an additional sel. for releasing.
+
+To provide some consistency in notation, interfaces will be the same in style:
+
+(define (release-mutex mut)
+  (mut 'release))
+
+test-and-clear! will be similar to clear!, except that it will block any concurrently running processes.
+
+
+
+(define (test-and-clear! cell)
+  (without-interrupts
+   (lambda ()
+    (if (car cell)
+        (begin (set-car! cell false)
+               false)
+        true))))
+
+(define (test-and-set! cell)
+  (without-interrupts
+   (lambda ()
+     (if (car cell)
+         true
+         (begin (set-car! cell true)
+                false)))))
+
+(define (last-pair L)
+  (if (and (list? L) (pair? L))
+      (if (null? (cdr L))
+          L
+          (last-pair (cdr L)))
+      (error "LAST-PAIR given argument of incorrect type")))
+
+(define (make-cycle L)
+  (set-cdr! (last-pair L)
+            L)
+  L)
+
+(define (make-semaphor n)
+  (define (make-semaphor-iter n result)
+    (if (= 0 n)
+        (begin
+          (set-cdr! (car result)
+                    (last-pair result))
+          (make-cycle
+           result))
+        (let ((new-res (list (list (make-mutex)))))
+          (set-cdr! (car result) new-res)
+          (set-cdr! new-res result)
+          (make-semaphor-iter
+           (- n 1)
+           new-res))))
+  (let ((sem-next-position-saved
+         (list (make-semaphor-iter (- n 1)
+                                   (list (list (make-mutex)))))))
+  (define (the-semaphore m)
+      (cond ((eq? m 'acquire)
+             (semaphore-action m sem-next-position-saved))
+            ((eq? m 'release)
+             (semaphore-action m sem-next-position-saved))))
+    the-semaphore))
+
+(define (semaphore-action op sem-saved-position)
+  (define (loop-sem op move sem)
+    (let ((mutex-cell (caar sem)))
+      (if (mutex-cell op)
+          (loop-sem op move (move sem))
+          sem)))
+  (let ((current-position
+           (without-interrupts (lambda () (car sem-saved-position)))))
+    (let ((new-position
+           (cond ((eq? op 'acquire)
+                  (cdr (loop-sem
+                        'acquire
+                        cdr
+                        current-position)))
+                 ((eq? op 'release)
+                  (loop-sem
+                   'release
+                   cdar
+                   current-position)))))
+      (without-interrupts ; to avoid garbage in case of concurrent assignment
+       (lambda ()
+         (set!-car sem-saved-position
+                   new-position))))))
+
+
+-------------------------------
+A simpler version, less efficient, takes less space
+
+(define (make-semaphor n)
+  (define (make-semaphor-iter n result)
+    (if (= 0 n)
+        (make-cycle
+           result)
+        (make-semaphor-iter
+           (- n 1)
+           (cons (make-mutex)
+                 result))))
+  (let ((sem (make-semaphor-iter n '())))
+    (define (loop-sem op sem)
+      (if ((car sem) op)
+          (loop-sem op (cdr sem))))
+    (define (the-semaphore m)
+      (cond ((eq? m 'acquire)
+             (loop-sem 'acquire sem)) ; m is not used because semaphores and mutexes may differ in their messages later
+            ((eq? m 'release)
+             (loop-sem 'release sem))))
+    the-semaphore))
+
+--------------------------------
+This version does not use mutexes
+
+(define (make-semaphore n)
+ (let ((sem (cons n n)))
+    (define (the-semaphore m)
+     (cond ((eq? m 'acquire)
+            (if (semaphore-test-and-set! sem)
+                (the-semaphore 'acquire)))
+           ((eq? m 'release)
+            (if (semaphore-test-and-clear! sem)
+                (the-semaphore 'release)))))
+    the-semaphore))
+
+(define (semaphore-test-and-set! sem)
+  (without-interrupts
+    (lambda ()
+      (let ((free-cells (car sem)))
+        (if (= 0 free-cells)
+            true
+            (begin (set-car! sem (- free-cells 1))
+                   false))))))
+
+(define (semaphore-test-and-clear! sem)
+  (without-interrupts
+    (lambda ()
+      (let ((free-cells (car sem))
+            (limit (cdr sem)))
+        (if (= free-cells limit)
+            true
+            (begin (set-car! sem (+ free-cells 1))
+                   false))))))
+
+-------------------------------------
+
+(define (make-semaphore n)
+  (let ((free-cells n)
+        (mutex (make-mutex)))
+    (define (the-semaphore m)
+      (cond ((eq? m 'acquire)
+             (mutex 'acquire)
+             (cond ((= free-cells 0)
+                    (mutex 'release)
+                    (the-semaphore m))
+                   (else (set! free-cells
+                               (- free-cells 1))
+                         (mutex 'release))))
+            ((eq? m 'release)
+                   (mutex 'acquire)
+                   (cond ((= free-cells n)
+                          (mutex 'release)
+                          (the-semaphore m))
+                         (else (set! free-cells
+                                     (+ free-cells 1))
+                               (mutex 'release))))))
+    the-semaphore))

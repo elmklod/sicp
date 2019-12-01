@@ -1,0 +1,89 @@
+It is all based on the fact that
+
+Tpq :
+
+a <- aq + bq + ap
+b <- aq + bp
+
+(Tpq)^n = ((Tpq)^2)^(n/2)
+
+And that (Tpq)^2 = T[q][p + q]
+
+(Tpq)^2:
+
+         q'         q'      p'
+
+a <- a(q + p) + b(q + p) + aq
+b <- a(q + p) + bq
+
+(define (fib n)
+  (define (even? n)
+    (= (remainder n 2) 2))
+  (define (fib-iter a b p q n)
+   (cond ((= n 0) b)
+         ((even? n) (fib-iter a
+                              b
+                              q
+                              (+ p q)
+                              (/ n 2)))
+
+         (else (fib-iter (+ (* a q)
+                            (* b q)
+                            (* a p))
+                         (+ (* a q)
+                            (* b p))
+                         p
+                         q
+                         (- n 1)))))
+  (fib-iter 1 0 0 1 n))
+
+
+  (define (fib-b n)
+    (define (even? n)
+      (= (remainder n 2) 2))
+    (define (fib-iter a b p q counter)
+     (cond ((= counter n) b)
+           ((even? n) (fib-iter a
+                                b
+                                q
+                                (+ p q)
+                                (/ (+ n counter) 2)))
+
+           (else (fib-iter (+ (* a q) (* b q) (* a p))
+                           (+ (* a q) (* b p))
+                           p
+                           q
+                           (+ counter 1)))))
+    (fib-iter 1 0 0 1 0))
+
+(define (fib n)
+  (define (even? n)
+    (= (remainder n 2) 2))
+  (define (fib-iter a b p q n)
+   (cond ((= n 0) a)
+         ((even? n) (fib-iter a
+                              b
+                              q
+                              (+ p q)
+                              (/ n 2)))
+
+         (else (fib-iter (+ (* a q) (* b q) (* a p))
+                         (+ (* a q) (* b p))
+                         p
+                         q
+                         (- n 1)))))
+  (if (= n 0)
+      0
+      (fib-iter 1 0 0 1 (- n 1))))
+
+
+With the transformation hinted in the book, it is possible to define a recursive procedure that evolves a recursive process
+with   R[step](n) = R[space](n) = Θ(log(n))
+
+n = 0  - (Tpq)^n = b
+
+even n > 0 - (Tpq)^n = ((Tpq)^n/2)^2
+
+odd n -(Tpq)^n = (Tpq)(Tpq)^(n-1)
+
+But as of now it is not possible due to the restriction that evaluate in the end to 1 value and this value is the value of a primitive expression(data)

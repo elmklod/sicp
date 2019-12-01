@@ -1,0 +1,12 @@
+(define (adjoin-set x set)
+ (if (null? set)
+     (list x)
+     (let ((fst-elem (car set)))
+       (cond ((< x fst-elem)
+              (cons x
+                    set))
+             ((> x fst-elem)
+              (cons fst-elem
+                    (adjoin-set x
+                                (cdr set))))
+             (else set)))))

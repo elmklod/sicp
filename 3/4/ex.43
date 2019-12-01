@@ -1,0 +1,59 @@
+shadowWhen exchange procedure is serialized, bank accounts simply swap balances in some order.
+serialized exchange cannot access any balances of the accounts that are participating in
+another exchange that started earlier and still in the process. Therefore,
+there is no way that computations will be based on the outdated value of some account balance.
+
+However, when using the original exchange procedure in which only deposit and withdraw operations are serialized,
+a problem arises: the value(s) of some account(s) balance may get outdated during the computation.
+(i.e. the intermediate value difference may be based on the value(s) that is(are)
+overwritten before the corresponding deposit/withdraw procedures are evaluated.)
+This will introduce incorrect behavior such as not swapping balances but just
+transferring some(sometimes the whole balance value) sum of money from one to another.
+Even with this problem, the sum of every account balance value remains constant:
+the access during deposit and withdraw operations is serialized,
+therefore, it is not possible for two processes to access the value of balance there
+simultaneously. It also not possible for two processes to interleave assignments to the balance
+variable.
+Therefore, it is not possible to introduce computations based on the outdated value of balance
+and to shadow one assignment by the other on the timeline for deposit/withdraw procedures.
+
+This means that even with the incorrect difference value, it will always be added/subtracted from
+the corresponding balances correctly.
+
+There is a possibility that a withdraw procedure may fail due to the insufficient funds,
+which is a consequence of outdated difference value and the concurrent deposit/withdraw procedure
+from another process created by exchange
+that changed the balance after balance(s) was(were) accessed but before any of
+the corresponding withdraw/deposit procedures started evaluation.
+
+If deposit procedure is evaluated first and then withdraw fails, only one account will change its balance
+which will change the sum.
+
+Therefore, concurrent evaluation of these instances should be avoided.
+Or at least withdraw must finish its evaluation first before the assignment started from the deposit
+procedure process takes place.
+
+The similar goes for a sequential order: withdraw must be evaluated first.
+
+If one assumes that this problem is somehow resolved(either by implementation or by
+a lucky combination of balances values, where difference can never be > than any of the balance)
+then indeed the sum is constant:
+One balance loses some amount s, the other gets the same amount s.
+Overall, no extra money was added or removed from the system
+
+In the case of 10, 20, 30 $, the sum is always 60$.
+
+It is possible to modify exchange procedure to exchange pointers to values without using any withdraw/deposit procedures
+However, that is too susceptible to the problem stated above.
+The sum would be different as well in some cases. For example, the final system state might be 10 20 10
+which is just like the unserialized use of withdraw and deposit procedures.
+In fact, there is no serialized procedures.
+
+No serialization would in addition to the incorrect results given above,
+introduce shadowing of the states, i.e. among the two states derived in parallel,
+one will negate any effect of the other even when this is not desired.
+
+For example, it is possible to have the end state of the system as:
+20 30 20
+the sum is not constant now(70 instead of 60) and it is certainly not the result desired
+(exchange so that one value is 10, another 20 and the other is 30)

@@ -1,0 +1,55 @@
+Suppose one needs to swap values of some variables
+there can be more than 2.
+
+One way is to swap values in the environment in which these variables were defined
+
+----borderline
+There is a link between variable name(its meaning) and its value:
+name(meaning) <---> value
+
+swapping of 2 variables:
+name1 <---> val1
+name2 <---> val2
+        |
+        v
+name1 <---> val2
+name2 <---> val1
+swapped values, not meanings
+
+It is the same as
+
+name2 <---> val1
+name1 <---> val2
+
+swapped meaning, not values
+----
+
+Another way: instead of swapping values swap variables
+Suppose there is need to swap 2 vars: var1 and var2
+instead of swapping their values swap their every occurrence in the program code.
+The program is now equivalent to the unchanged one with values swapped
+
+
+-------------------
+It can be shown that a sequential swapping of 2 vars(names/values) can emulate sequential swapping of multiple vars
+which makes these approaches equivalent
+
+----------
+The latter approach can be extended to substitute the assignment statement:
+define a new variable with a unique name and a new value
+substitute every occurrence of the previous variable name
+with this new name.
+Now the program is equivalent to the initial one with the assignment statement used.
+
+Is it more convenient? I don't know. maybe not when the programmer is more productive
+by memorizing variable names. It is not comfortable to rename in the head them after each set-name! statement
+
+
+------
+It makes one wonder what is a variable.
+perhaps it is the combination of name(meaning) and a value.
+
+But what is value if it is not meaning?
+Maybe value is a property that is not in use during evaluation/interpretation
+while meaning is used(in the evaluator).
+However, the name and value are both data.

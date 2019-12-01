@@ -1,0 +1,79 @@
+First, it is not necessary to import constructors.
+But it removes unnecessary procedures from the environment in which users operate most 
+
+It works because now when number is identified as complex,
+The generic selectors will strip the 'complex tag and call themselves
+again now on the same number with its second type tag now exposed,
+in this case either 'polar or 'rectangular, and these generic selectors will dispatch an appropriate procedure
+on the given type. Since for these types an appropriate selector procedure has been defined in 2.4,
+it works.
+
+It didn't work before because a number with the first type tag 'complex
+never had an appropriate procedure dispatch(entry in the table) for selectors(their names) such as real-part, imag-part
+magnitude and angle
+Therefore, generic selectors didn't work
+
+It took advantage of the generic selector procedures in a complex number package
+by using them as generic selectors for a general arithmetic package
+
+They have two roles:
+Identify a complex number, strip the first tag and do the latter:
+Identify a type of the complex number, strip the second tag and dispatch an appropriate procedure
+
+
+(define z (make-complex-from-real-imag 3 4))
+
+Applicative-order:
+[procedure names are left in their place instead of the object they evaluate to]
+
+(magnitude z)
+
+(magnitude '(complex rectangular 3 4))
+
+(apply-generic 'magnitude '(complex rectangular 3 4))
+
+(let ((type-tags (map type-tag '((complex rectangular 3 4)))))
+    (let ((proc (get 'magnitude type-tags)))
+      (if proc
+          (apply proc (map contents '((complex rectangular 3 4))))
+          (error
+            "No method for these types:
+             APPLY-GENERIC"
+            (list 'magnitude type-tags)))))
+
+results in proc being the same procedure magnitude that was applied earlier
+
+(magnitude '(rectangular 3 4))
+
+(apply-generic 'magnitude '(rectangular 3 4))
+
+(let ((type-tags (map type-tag '((rectangular 3 4)))))
+    (let ((proc (get 'magnitude type-tags)))
+      (if proc
+          (apply proc (map contents '((rectangular 3 4))))
+          (error
+            "No method for these types:
+             APPLY-GENERIC"
+            (list 'magnitude type-tags)))))
+
+results in proc being a Ben's procedure to extract magnitude from a rectangular form
+
+real-part and imag-part, magnitude are not the generic selectors. They are from Ben's package
+
+(magnitude '(3 4))
+
+(sqrt (+ (square (real-part '(3 4)))
+         (square (imag-part '(3 4)))))
+
+(sqrt (+ (square 3)
+         (square 4)))
+
+5
+
+Initially the dispatched procedure was the generic selector magnitude, i.e. magnitude dispatched itself
+on a striped(from its first tag) rectangular complex number
+
+Then it dispatched Ben's magnitude procedure on a striped(from its first and second tags)
+rectangular complex number
+
+Apply-generic was called twice

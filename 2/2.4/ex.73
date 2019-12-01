@@ -1,0 +1,212 @@
+(define (deriv exp var)
+   (cond ((number? exp) 0)
+         ((variable? exp)
+           (if (same-variable? exp var)
+               1
+               0))
+         (else ((get 'deriv (operator exp))
+                exp ; this way there is no modification required for type-specific procedures
+                var))))
+
+(define (operator exp) (car exp))
+(define (operands exp) (cdr exp))
+
+Expressions were given a type and a table containing appropriate derivative procedures for each type of an expression is dispatched
+on the expression's operands by using the operand as a type tag
+Numbers and variables aren't tagged and their type procedures aren't included in the table, they are handeled explicitly by the generic procedure deriv
+
+
+Assimilating the number? and variable? predicates is possible but is cumbersome:
+
+0. It is not possible at this stage to have a selector extracting a type tag from the variable(represented simply as a symbol) and the number.
+
+It can be defined, but its implementation would use the predicates.
+
+1. The selectors operator and operands either have to be defined for variables and numbers, which would either require generic procedures handling it
+or another entry to the table, this requires the use of predicates or the selectors from 0,
+Or to have a separate cond clause to handle it, which would use the predicates or selectors from 0.
+
+Which makes it extremely inconvenient.
+It is easier to preserve the original clauses
+
+
+(define (make-exponentiation base exp)
+  (cond ((=number? exp 0) 1)
+        ((=number? exp 1) base)
+        (else (list '** base exp))))
+
+(define (exponentiation? exp)
+ (and (list? exp) (eq? (car exp) '**)))
+
+(define (base exp)
+ (cadr exp))
+
+(define (exponent exp)
+ (caddr exp))
+
+(define (=number? exp num)
+  (and (number? exp) (= exp num)))
+
+(define (same-variable? v1 v2)
+  (and (variable? v1)
+       (variable? v2)
+       (eq? v1 v2)))
+
+(define (variable? x) (symbol? x))
+
+(define (addend s) (cadr s))
+
+(define (augend s)
+    (let ((red-aug (reduce-seq + 0 (cddr s))))
+      (cond ((= (length red-aug) 1) (car red-aug))
+            ((= (car red-aug) 0)
+             ((lambda (x) ((if (= (length x) 1)
+                              car
+                              (lambda (y) (cons '+ y)))
+                            x)) (cdr red-aug)))
+            (else (cons '+ red-aug)))))
+
+
+
+(define (make-sum a1 a2 . rest)
+  (let ((sum (make-exp + '+ 0 a1 a2 rest)))
+    (cond ((and (list? sum)
+                (= (cadr sum) 0))
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '+ y)))
+                          x)) (cddr sum)))
+          (else sum))))
+
+(define (reduce-seq op init seq)
+ (append (list (fold-right op
+                           init
+                           (filter (lambda (x) (number? x))
+                                   seq)))
+         (filter (lambda (x) (not (number? x)))
+                 seq)))
+
+
+(define (make-exp op sym init el1 el2 rest)
+ ((lambda (x) ((if (= (length x) 1)
+                   car
+                   (lambda (y) (cons sym y)))
+                x))
+       (reduce-seq op init (cons el1
+                                 (cons el2
+                                       rest)))))
+
+(define (make-product m1 m2 . rest)
+  (let ((product (make-exp * '* 1 m1 m2 rest)))
+    (cond  ((and (list? product)
+                (= (cadr product) 0))
+            0)
+           ((and (list? product)
+                (= (cadr product) 1))
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '* y)))
+                          x)) (cddr product)))
+          (else product))))
+
+
+(define (multiplier p) (cadr p))
+
+(define (multiplicand p)
+  (let ((red-pr (reduce-seq * 1 (cddr p))))
+    (cond ((= (car red-pr) 0)
+           0)
+          ((= (length red-pr) 1) (car red-pr))
+          ((= (car red-pr) 1)
+           ((lambda (x) ((if (= (length x) 1)
+                            car
+                            (lambda (y) (cons '* y)))
+                          x)) (cdr red-pr)))
+          (else (cons '* red-pr)))))
+
+naming is used to allow the use of the generic deriv procedure
+
+(define (install-deriv-product)
+  (define (deriv-product exp var)
+   (make-sum
+    (make-product
+     (multiplier exp)
+     (deriv (multiplicand exp) var))
+    (make-product
+     (deriv (multiplier exp) var)
+     (multiplicand exp))))
+  (put 'deriv '* deriv-product)
+  'done)
+
+
+(define (install-deriv-sum)
+ (define (deriv-sum exp var)
+  (make-sum (deriv (addend exp) var)
+            (deriv (augend exp) var)))
+ (put 'deriv '+ deriv-sum)
+ 'done)
+
+(define (install-deriv-exponentiation)
+  (define (deriv-exponentiation exp var)
+   (make-product
+    (make-product
+     (exponent exp)
+     (make-exponentiation
+      (base exp)
+      (- (exponent exp)
+         1)))
+    (deriv (base exp) var)))
+ (put 'deriv '** deriv-exponentiation)
+ 'done)
+
+Notice that these type-specific procedure packages do not include their own implementation of expression representation as this would make them to include their own implementation
+of the corresponding expressions AND procedures.
+Therefore, an agreement on a fixed set of expression implementations/types is required.
+----
+
+
+
+(define (deriv exp var)
+   (cond ((number? exp) 0)
+         ((variable? exp)
+           (if (same-variable? exp var)
+               1
+               0))
+         (else ((get (operator exp) 'deriv)
+                (operands exp)
+                var))))
+
+; required changes: modify the get and put combinations/applications only
+
+(define (install-deriv-product)
+  (define (deriv-product exp var)
+   (make-sum
+    (make-product
+     (multiplier exp)
+     (deriv (multiplicand exp) var))
+    (make-product
+     (deriv (multiplier exp) var)
+     (multiplicand exp))))
+  (put '* 'deriv  deriv-product)
+  'done)
+
+
+(define (install-deriv-sum)
+ (define (deriv-sum exp var)
+  (make-sum (deriv (addend exp) var)
+            (deriv (augend exp) var)))
+ (put '+ 'deriv deriv-sum)
+ 'done)
+
+(define (install-deriv-exponentiation)
+  (define (deriv-exponentiation exp var)
+   (make-product
+    (make-product
+     (exponent exp)
+     (make-exponentiation
+      (base exp)
+      (- (exponent exp)
+         1)))
+    (deriv (base exp) var)))
+ (put '** 'deriv deriv-exponentiation)
+ 'done)

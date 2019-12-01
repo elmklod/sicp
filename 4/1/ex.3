@@ -1,0 +1,302 @@
+; table:
+This one is a generalized one
+(define (make-table)
+  (let ((table
+         (list
+          (cons '*table* '(end)))))
+    (define (lookup keys) ; or without the dotted tail
+      (define mark (table-entry-mark table))
+      (define (final-entry? rec)
+        (and (pair? (car rec))
+             (eq? (caar rec) mark)))
+      (define (value-entry rec)
+        (cdar rec))
+      (define (iter subtable)
+        (let ((key (car keys)))
+          (set! keys (cdr keys))
+          (let ((record (assoc key (cdr subtable))))
+            (if record
+                ((if (null? keys)
+                     (lambda (x)
+                       (let ((entry (cdr x)))
+                         (if (final-entry? entry)
+                             (value-entry entry)
+                             entry)))
+                     iter)
+                 record)
+                false))))
+      (if (null? keys)
+          (error "LOOKUP called with no keys")
+          (iter table)))
+
+    (define (assoc key records) ; provided to ensure that it behaves as expected
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (car records))
+            (else (assoc key (cdr records)))))
+
+    (define (insert! keys value)
+      (let ((mark (table-entry-mark table)))
+        (define (make-final-entry value)
+          (list (cons mark value)))
+        (define (iter subtable)
+          (let ((key (car keys)))
+            (set! keys (cdr keys))
+            (let ((record (assoc key (cdr subtable))))
+              (cond  ((and record (null? keys))
+                      (set-cdr! record (make-final-entry value)))
+                     (record
+                      (iter record))
+                     (else
+                      (let ((intermediate-record
+                             (cons key '())))
+                          (set-cdr! subtable
+                                    (cons  intermediate-record
+                                           (cdr subtable)))
+                          (if (null? keys)
+                              (set-cdr! intermediate-record
+                                        (make-final-entry value))
+                              (iter intermediate-record))))))))
+        (iter table)
+        'ok))
+        (define (dispatch m)
+          (cond ((eq? m 'lookup)
+                 lookup)
+                ((eq? m 'insert!)
+                 insert!)
+                ((eq? m 'assoc)
+                 assoc)
+                (else (error "Unknown table operation" m))))
+        dispatch))
+
+This one is one-dimensional
+(define (make-table)
+  (let ((table (list '*table*)))
+    (define (lookup key)
+     (let ((record (assoc key (cdr table))))
+       (if record
+           (cdr record)
+           false)))
+
+    (define (assoc key records)
+      (cond ((null? records) false)
+            ((equal? key (caar records))
+             (car records))
+            (else (assoc key (cdr records)))))
+    (define (insert! key value)
+      (let ((record (assoc key (cdr table))))
+        (if record
+            (set-cdr! record value)
+            (set-cdr! table
+                      (cons (cons key value)
+                            (cdr table)))))
+      'ok)
+    (define (dispatch m)
+      (cond ((eq? m 'lookup)
+             lookup)
+            ((eq? m 'insert!)
+             insert!)
+            ((eq? m 'assoc)
+             assoc)
+            (else (error "Unknown table operation" m))))
+    dispatch))
+
+(define evaluation-rules
+  (make-table))
+
+(define put-evaluation-rule
+  (evaluation-rules 'insert!))
+
+(define get-evaluation-rule
+  (evaluation-rules 'lookup))
+
+(define (application-or-special-form? exp)
+  (and (not (null? exp)) (list? exp)))
+
+(define (expression-type exp)
+  (car exp))
+
+(define (eval exp env)
+  (cond ((self-evaluating? exp)
+         exp)
+        ((variable? exp)
+         (lookup-variable-value exp env))
+        ((application-or-special-form? exp)
+         (let ((eval-rule (get-evaluation-rule
+                           (expression-type exp))))
+           (cond (eval-rule
+                  (eval-rule exp env))
+                 (else ; application has no type-tag, although it is possible to invent some kind of type-tag that a procedure expression-type would give
+                  (apply (eval (operator exp) env)
+                         (list-of-values
+                          (operands exp)
+                          env))))))
+        (else
+         (error "Unknown expression
+                 type: EVAL" exp))))
+
+It is possible to completely assimilate all the rules in the table,
+but this makes the evaluator completely dependent on the table.
+If it is not provided, it cannot evaluate even the primitive expressions.
+Therefore, the implementation above is preferred.
+
+(define (eval exp env)
+  (let ((eval-rule (get-evaluation-rule
+                           (expression-type exp))))
+           (cond (eval-rule
+                  (eval-rule exp env)))))
+
+
+(define (expression-type exp)
+  (cond ((self-evaluating? exp)
+         'self)
+        ((variable? exp)
+               'variable)
+        ((application-or-special-form? exp)
+         (car exp))
+        (else
+         (error "Unknown expression
+                 type: EVAL" exp))))
+
+-----------------------
+
+(define (install-evaluation-rules)
+
+  (define (eval-if exp env)
+    (if (true? (eval (if-predicate exp) env))
+        (eval (if-consequent exp) env)
+        (eval (if-alternative exp) env)))
+
+  (define (eval-sequence exps env)
+    (cond ((last-exp? exps)
+           (eval (first-exp exps) env))
+          (else
+           (eval (first-exp exps) env)
+           (eval-sequence (rest-exps exps)
+                          env))))
+
+  (define (eval-assignment exp env)
+    (set-variable-value!
+     (assignment-variable exp)
+     (eval (assignment-value exp) env)
+     env)
+    'ok)
+
+  (define (eval-definition exp env)
+    (define-variable!
+      (definition-variable exp)
+      (eval (definition-value exp) env)
+      env)
+    'ok)
+
+  (define (text-of-quotation exp)
+    (cadr exp))
+
+  (define (assignment-variable exp)
+    (cadr exp))
+
+  (define (assignment-value exp) (caddr exp))
+
+  (define (definition-variable exp)
+    (if (symbol? (cadr exp))
+        (cadr exp)
+        (caadr exp)))
+
+  (define (definition-value exp)
+    (if (symbol? (cadr exp))
+        (caddr exp)
+        (make-lambda
+         (cdadr exp)   ; formal parameters
+         (cddr exp)))) ; body
+
+  (define (lambda-parameters exp) (cadr exp))
+
+  (define (lambda-body exp) (cddr exp))
+
+  (define (make-lambda parameters body)
+    (cons 'lambda (cons parameters body)))
+
+  (define (if-predicate exp) (cadr exp))
+  (define (if-consequent exp) (caddr exp))
+  (define (if-alternative exp)
+    (if (not (null? (cdddr exp)))
+        (cadddr exp)
+        'false))
+
+  (define (make-if predicate
+                   consequent
+                   alternative)
+    (list 'if
+          predicate
+          consequent
+          alternative))
+
+  (define (begin-actions exp) (cdr exp))
+  (define (last-exp? seq) (null? (cdr seq)))
+  (define (first-exp seq) (car seq))
+  (define (rest-exps seq) (cdr seq))
+
+
+
+  (define (sequence->exp seq)
+    (cond ((null? seq) seq)
+          ((last-exp? seq) (first-exp seq))
+          (else (make-begin seq))))
+
+  (define (make-begin seq) (cons 'begin seq))
+
+  (define (cond-clauses exp) (cdr exp))
+  (define (cond-else-clause? clause)
+    (eq? (cond-predicate clause) 'else))
+  (define (cond-predicate clause)
+    (car clause))
+  (define (cond-actions clause)
+    (cdr clause))
+  (define (cond->if exp)
+    (expand-clauses (cond-clauses exp)))
+  (define (expand-clauses clauses)
+    (if (null? clauses)
+        'false     ; no else clause
+        (let ((first (car clauses))
+              (rest (cdr clauses)))
+          (if (cond-else-clause? first)
+              (if (null? rest)
+                  (sequence->exp
+                   (cond-actions first))
+                  (error "ELSE clause isn't
+                          last: COND->IF"
+                         clauses))
+              (make-if (cond-predicate first)
+                       (sequence->exp
+                        (cond-actions first))
+                       (expand-clauses
+                        rest))))))
+  (put-evaluation-rule
+   'quote
+   (lambda (exp env) (text-of-quotation exp)))
+  (put-evaluation-rule
+   'set!
+   eval-assignment)
+  (put-evaluation-rule
+   'define
+   eval-definition)
+  (put-evaluation-rule
+   'if
+   eval-if)
+  (put-evaluation-rule
+   'lambda
+   (lambda (exp env)
+     (make-procedure
+      (lambda-parameters exp)
+      (lambda-body exp)
+      env)))
+  (put-evaluation-rule
+   'begin
+   (lambda (exp env)
+     (eval-sequence
+      (begin-actions exp)
+      env)))
+  (put-evaluation-rule
+   'cond
+   (lambda (exp env)
+     (eval (cond->if exp) env))))

@@ -1,0 +1,34 @@
+selectors:
+(define (ramb? exp) (tagged-list? exp 'ramb))
+(define (ramb-choices exp) (cdr exp))
+
+to ambeval:
+((ramb? exp) (analyze-ramb exp))
+
+
+
+(define (analyze-ramb exp)
+  (let ((cprocs
+         (map analyze (ramb-choices exp))))
+    (lambda (env succeed fail)
+      (define (try-next choices)
+        (if (null? choices)
+            (fail)
+            (let ((random-element (random (length choices))))
+              ((list-ref choices random-element)
+               env
+               succeed
+               (lambda ()
+                 (try-next (cut-nth-elem choices random-element)))))))
+      (try-next cprocs))))
+
+(define (cut-nth-elem list n)
+  (define (iter before after n)
+    (if (= n 0)
+        (append (reverse before)
+                (cdr after))
+        (iter (cons (car after)
+                    before)
+              (cdr after)
+              (- n 1))))
+  (iter '() list n))

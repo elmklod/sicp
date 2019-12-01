@@ -1,0 +1,219 @@
+Notice that it is possible to implement the selector empty-deque? using just one check for an empty list.
+This would require appropriate modifications for delete! mutators depending on whether the rear/front pointer is
+checked. Such as checking whether the deque has just one element before deletion( using eq? on the front and the rear pointers)
+and when it is so, setting next/previous pointer to '() even if the mutator originally never accessed next/previous pointer.
+This has to be done only for one mutator.
+
+Because of the loss of uniformity, this approach is not used here.
+
+This implementation takes almost twice as much space the analogous for queues.
+
+Just like queues, deques are represented as a pair of pointers
+to the list structure. One points to the beginning of the list structure, the other to its end.
+
+The list structure(called itemlist, although the name triple is more appropriate) is created as follows:
+The empty list structure is an empty list '()
+
+Whenever a new item is added to it, a single-element list, whose element
+is itself a single-element list containing the item is constructed
+
+It is asssumed that the end the list is the rear end of the deque, while its beginning is
+the front.
+
+If the item is to be inserted to the front end, the next-ptr of itemlist is set
+to (front-ptr-deque deque) while (previous-ptr-deque item-list) remains '()
+previous-ptr of (front-ptr-deque deque) is set to itemlist
+and front pointer is set to this itemlist
+
+If the item is to be inserted to the rear end, previous-ptr of itemlist
+is set to (rear-ptr-deque deque)
+while (next-ptr-deque itemlist) remains '()
+the next-ptr of (rear-ptr-deque deque) is set to itemlist
+and rear pointer is set pointing to this itemlist
+
+deleting the item in case of the front end is
+setting the front pointer to next-ptr of
+(front-ptr-deque deque)
+and setting the previous-ptr of this remaining itemlist to '()
+
+deleting the item in case of the rear end is
+setting the rear pointer to previous-ptr of
+(rear-ptr-deque deque)
+and setting next-ptr of this remaining itemlist to '()
+
+if the last item is removed from the deque, then
+one of the pointer(front/rear, depending on the delete! mutator used)
+is set to '() and no mutation of the next/previous pointer is taking place
+
+the deque is considered empty if at least one of the pointers points to '()
+(this way there is no special cases)
+
+Constructors:
+
+(make-deque) returns an empty deque
+
+(it is possible to implement generic selectors and mutators mutators
+ for both queues and deques. Here it is not accomplished)
+
+Selectors:
+(item-deque itemlist) returns the item from the given list-structure/1-element deque
+
+(next-ptr-deque itemlist) returns a list structure such that
+(item-deque (next-ptr itemlist)) is the item following (item-deque itemlist)
+in the deque if there is a following one. Otherwise it signals that there are no more elements.
+
+(previous-ptr-deque itemlist) returns a list structure such that
+(item-deque (previous-ptr itemlist)) is the item preceding (item-deque itemlist)
+in the deque if there is a preceding one. Otherwise it signals that there are no more elements.
+
+(front-ptr-deque deque) returns the list structure whose item-deque is the element at the front side of the deque
+
+(rear-ptr-deque deque) returns the list structure whose item-deque is the element at the rear side of the deque
+
+(front-deque deque) returns the the element at the front side of the deque
+
+(rear-deque deque) returns the the element at the rear side of the deque
+
+It is an error trying to evalaute applications of these selectors to deques for
+which (empty-deque? deque) evalautes to true.
+
+(empty-deque? deque) returns true if the deque is empty and false otherwise.
+
+Mutators:
+
+(set-next-ptr-deque! itemlist new-itemlist) sets next-ptr of itemlist pointing
+to new-itemlist
+
+(set-previos-ptr-deque! itemlist new-itemlist) sets previous-ptr of itemlist pointing
+to new-itemlist
+
+(set-front-ptr-deque! deque itemlist) sets the front pointer of the deque to the given list structure
+
+(set-rear-ptr-deque! deque itemslist) sets the rear pointer of the deque to the given list structure
+
+(front-insert-deque! deque item) inserts the item at the front of the deque
+
+(rear-insert-deque! deque item) inserts the item at the rear of the deque
+
+if the deque is empty, either mutator also inserts the item at the the other end of the deque
+
+(front-delete-deque! deque) removes the item at the front of the deque
+
+(rear-delete-deque! deque) removes the item at the rear of the deque
+
+If the deque has only one element, either mutator also removes the item at the other end of the deque
+
+It is an error trying to evaluate the application of these mutators to the deque,
+for which (empty-deque? deque) evaluates to true.
+
+(define (make-deque)
+  (cons '() '()))
+
+(define (item-deque itemlist)
+  (caar itemlist))
+
+(define (next-ptr-deque itemlist)
+  (cdr itemlist))
+
+(define (previous-ptr-deque itemlist)
+  (cdar itemlist))
+
+(define (front-ptr-deque deque)
+  (car deque))
+
+(define (rear-ptr-deque deque)
+  (cdr deque))
+
+(define (front-deque deque)
+  (if (empty-deque? deque)
+      (error "FRONT called with an
+              empty deque" deque)
+      (item-deque (front-ptr-deque deque))))
+
+(define (rear-deque deque)
+  (if (empty-deque? deque)
+      (error "REAR called with an
+              empty deque" deque)
+      (item-deque (rear-ptr-deque deque))))
+
+(define (empty-deque? deque)
+  (or (null? (front-ptr-deque deque))
+      (null? (rear-ptr-deque deque))))
+
+(define (set-next-ptr-deque! itemlist new-itemlist)
+  (set-cdr! itemlist new-itemlist))
+
+(define (set-previous-ptr-deque! itemlist new-itemlist)
+  (set-cdr! (car itemlist) new-itemlist))
+
+(define (set-front-ptr-deque! deque itemlist)
+  (set-car! deque itemlist))
+
+(define (set-rear-ptr-deque! deque itemlist)
+  (set-cdr! deque itemlist))
+
+(define (front-insert-deque! deque item)
+  (let ((new-itemlist (list (list item))))
+    (cond ((empty-deque? deque)
+           (set-front-ptr-deque! deque new-itemlist)
+           (set-rear-ptr-deque! deque new-itemlist))
+          (else
+            (let ((front-itemlist (front-ptr-deque deque)))
+              (set-next-ptr-deque!
+               new-itemlist
+               front-itemlist)
+              (set-previos-ptr-deque!
+               front-itemlist
+               new-itemlist)           ; the last expression should be preceded by the 2 above in any order
+              (set-front-ptr-deque! deque new-itemlist)))))
+  deque)
+
+(define (rear-insert-deque! deque item)
+  (let ((new-itemlist (list (list item))))
+    (cond ((empty-deque? deque)
+           (set-front-ptr-deque! deque new-itemlist)
+           (set-rear-ptr-deque! deque new-itemlist))
+          (else
+            (let ((rear-itemlist (front-ptr-deque deque)))
+              (set-previous-ptr-deque!
+               new-itemlist
+               rear-itemlist)
+              (set-next-ptr-deque!
+               rear-itemlist
+               new-itemlist)           ; the last expression should be preceded by the 2 above in any order
+              (set-rear-ptr-deque! deque new-itemlist)))))
+  deque)
+
+(define (front-delete-deque! deque)
+  (cond ((empty-deque? deque)
+         (error "DELETE! called with
+                 an empty deque" deque))
+        (else
+         (let ((next-itemlist
+                (next-ptr-deque
+                 (front-ptr-deque deque))))
+            (set-front-ptr-deque!
+             deque
+             next-itemlist)
+            (if (not (null? next-itemlist))
+                (set-previous-ptr-deque!
+                 next-itemlist
+                 '()))) ; Mutation expressions can appear in any order
+         deque)))
+
+(define (rear-delete-deque! deque)
+  (cond ((empty-deque? deque)
+         (error "DELETE! called with
+                 an empty deque" deque))
+        (else
+         (let ((previous-itemlist
+                (previous-ptr-deque
+                 (rear-ptr-deque deque))))
+            (set-rear-ptr-deque!
+             deque
+             previous-itemlist)
+            (if (not (null? previous-itemlist))
+                (set-next-ptr-deque!
+                 previous-itemlist
+                 '()))) ; Mutation expressions can appear in any order
+         deque)))

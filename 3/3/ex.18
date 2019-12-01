@@ -1,0 +1,20 @@
+(define (cycle? L)
+  (let ((remembered '()))
+    (define (cyclic? L)
+      (cond ((null? L) false)
+            ((memq L remembered) true)
+            (else (set! remembered (cons L remembered))
+                  (cyclic? (cdr L)))))
+    (cyclic? L)))
+
+Because the process is sequential, it can be easily implemented
+with the procedure without the explicit use of assignment
+
+(define (cycle? L)
+  (define (cyclic? L traversed)
+    (cond ((null? L) false)
+          ((memq L traversed) true)
+          (else (cyclic?
+                 (cdr L)
+                 (cons L traversed)))))
+  (cyclic? L '()))

@@ -1,0 +1,52 @@
+if b is even > 0, then a*b = a * (2 * b/2) = 2 * (a * b/2) = double((a * halve(b)))
+
+if b is odd, then a*b =  a * (b - 1 + 1) = a + a * (b - 1)
+
+if b = 0, then a*b = 0
+
+[addition, if a = 0, then a*b = 0 as well, clause may be (or (= b 0) (= a 0))]
+
+(define (fast* a b)
+ (define (even? n)
+  (= (remainder n 2) 2))
+
+ (define (double x)
+  (* x 2))
+
+ (define (halve x)
+  (/ x 2))
+
+ (cond ((= b 0) 0)
+       ((even? b) (double (fast* a (halve b))))
+       (else (+ a (fast* a (- b 1))))))
+
+
+
+
+Just like the recursive fast-expt, R[step](b) = floor(log2(b)) + [amount of digit 1 in the binary form of b]
+
+Therefore, R[step](b) = Θ(log(b)),
+
+R[space](b) = R[step](b) = Θ(log(b)), as the process requires as much memory as the amount of steps
+
+that are deferred, and this amount equals to the whole amount amount of steps in this case(- 1, if counting a*0).
+
+It may be viewed as a problem of counting the steps to reduce b to 0.
+
+Since the process reduces b the same way as the fast-expt process, this amount is equal for both, and they share same orders of growth
+
+for both space and the number of steps/time [fast-expt here is the recursive process here, not the iterative one].
+
+(define (fast* a b)
+ (define (even? n)
+  (= (remainder n 2) 2))
+
+ (define (double x)
+  (+ x x))
+
+ (define (halve x)
+  (/ x 2))
+
+ (cond ((= b 0) 0)
+       ((even? b) (double (fast* a (halve b))))
+       (else (+ a (fast* a (- b 1))))))
