@@ -1,0 +1,6 @@
+Define a rule of the form
+(rule ?x *something*)
+
+If this is a valid rule, the evaluator will enter an infinite loop with any query
+
+It also causes errors because the indexing scheme set by authors fails trying to extract car from a symbol.

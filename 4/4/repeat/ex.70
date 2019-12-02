@@ -1,0 +1,33 @@
+(define (add-assertion! assertion)
+  (store-assertion-in-index assertion)
+  (set! THE-ASSERTIONS
+        (cons-stream assertion
+                     THE-ASSERTIONS))
+  'ok)
+
+; The evaluation of THE-ASSERTIONS is delayed and thus the environment is stored
+; In this environment the only binding for THE-ASSERTIONS is in the global environment.
+; Because this global environment is still the same object, after the assignment(mutation of env)
+; (assignment modifies the global env as there are no other bindings for this var)
+; If the stream that is the val of THE-ASSERTIONS has its cdr evaluated then
+; the value evaluated then the result be the initial stream as the global environment(as part of the whole(glob + procs) env) stored has changed
+; The result is that the stream will always be infinite containing just 1(same!) most recent element.
+; if the modified procedure is applied even once.
+; the same goes for the modified add-rule!
+
+(define (add-rule! rule)
+  (store-rule-in-index rule)
+  (set! THE-RULES
+        (cons-stream rule
+                     THE-RULES))
+  'ok)
+
+; store-rule/assertion are free from this problem as they evaluate the request to get the current value
+; maintaining the correct history of environment thanks to them(their innermost proc env parts binding the value to current-rule/assertion-stream var) being discreet and not connected
+
+; It is hard to use a language that stores unmutable copies of environments as it forces the programmer to take into account the history of env
+; and the moment of time (the modified env stage, counting assignments) at which the computation was delayed
+; The solution is to use the original procedures or don't use assignment
+
+; Since the list of assertions/rules in now infinite, the search of the whole db will be indefinitely long never terminating
+; But the indexed db will work
