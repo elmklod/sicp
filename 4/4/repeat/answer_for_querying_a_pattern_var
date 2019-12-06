@@ -1,0 +1,7 @@
+Authors explicitly prohibit it by defining that it is none of the types the interpreter works with
+
+(define (type exp)
+  (if (pair? exp) ;Only pairs are suitable for evaluation
+      (car exp)
+      (error "Unknown expression TYPE"
+             exp)))

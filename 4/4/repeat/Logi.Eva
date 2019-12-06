@@ -463,3 +463,112 @@
 
 (define (singleton-stream x)
   (cons-stream x the-empty-stream))
+
+(define (type exp)
+  (if (pair? exp)
+      (car exp)
+      (error "Unknown expression TYPE"
+             exp)))
+
+(define (contents exp)
+  (if (pair? exp)
+      (cdr exp)
+      (error "Unknown expression CONTENTS"
+             exp)))
+
+(define (assertion-to-be-added? exp)
+  (eq? (type exp) 'assert!))
+
+(define (add-assertion-body exp)
+  (car (contents exp)))
+
+(define (empty-conjunction? exps) (null? exps))
+(define (first-conjunct exps) (car exps))
+(define (rest-conjuncts exps) (cdr exps))
+(define (empty-disjunction? exps) (null? exps))
+(define (first-disjunct exps) (car exps))
+(define (rest-disjuncts exps) (cdr exps))
+(define (negated-query exps) (car exps))
+(define (predicate exps) (car exps))
+(define (args exps) (cdr exps))
+
+(define (rule? statement)
+  (tagged-list? statement 'rule)) ; why not type + equal combination?
+
+(define (conclusion rule) (cadr rule)) ; why not contents ?
+
+(define (rule-body rule)
+  (if (null? (cddr rule))
+      '(always-true) ; the caddr is a list to be evaluated, (always-true) should also be a list to be evaluated
+      (caddr rule)))
+
+(define (query-syntax-process exp)
+  (map-over-symbols expand-question-mark exp))
+
+(define (map-over-symbols proc exp) ; It is not a familiar map per se. It is more thorough, It is a thoroughmap.
+  (cond ((pair? exp)
+         (cons (map-over-symbols ; the concept of a map discussed before has nothing analogous
+                proc (car exp))
+               (map-over-symbols
+                proc (cdr exp))))
+        ((symbol? exp) (proc exp))
+        (else exp)))
+
+(define (expand-question-mark symbol)
+  (let ((chars (symbol->string symbol)))
+    (if (string=? (substring chars 0 1) "?")
+        (list '? (string->symbol
+                  (substring
+                   chars
+                   1
+                   (string-length chars))))
+        symbol)))
+
+(define (var? exp) (tagged-list? exp '?)) ; again why not type selector + equal? predicate?
+(define (constant-symbol? exp) (symbol? exp))
+
+(define rule-counter 0)
+
+(define (new-rule-application-id)
+  (set! rule-counter (+ 1 rule-counter))
+  rule-counter)
+
+(define (make-new-variable ; the internal representation is a reverse of the representation authors offered as an example(in terms of id and name position)
+         var rule-application-id)
+  (cons '? (cons rule-application-id
+                 (cdr var))))
+
+(define (contract-question-mark variable)
+  (string->symbol
+   (string-append "?"
+     (if (number? (cadr variable))
+         (string-append
+          (symbol->string (caddr variable))
+          "-"
+          (number->string (cadr variable)))
+         (symbol->string (cadr variable))))))
+
+; One may wonder why there is a conditinal but if some variable(user-printed) is instantiated with some local var, it is confusing to have (? 4 y instead of) just ?y-4
+; That is why.
+; Seriously? why swap places of id and var symbol?
+
+(define (assoc key records)
+  (cond ((null? records) false)
+        ((equal? key (caar records))
+         (car records))
+        (else (assoc key (cdr records)))))
+
+(define (make-binding variable value)
+  (cons variable value))
+
+(define (binding-variable binding)
+  (car binding))
+
+(define (binding-value binding)
+  (cdr binding))
+
+(define (binding-in-frame variable frame)
+  (assoc variable frame))
+
+(define (extend variable value frame)
+  (cons (make-binding variable value) frame))

@@ -1,0 +1,9 @@
+It is possible to ask for a query (rule *something*)
+and this will be a query, not a definition of a rule.
+
+I wonder why authors preferred to add rules via assert! instead
+of making (rule <...>) a special form
+
+Maybe the word 'rule' is used often in dbes in simple assertions
+They have gone for simplicity of the code, but not the simplicity of the resulting structure
+It is possible that I am too adjusted to the convenient Scheme syntax and semantics.

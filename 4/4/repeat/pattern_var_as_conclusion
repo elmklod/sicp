@@ -4,3 +4,5 @@ Define a rule of the form
 If this is a valid rule, the evaluator will enter an infinite loop with any query
 
 It also causes errors because the indexing scheme set by authors fails trying to extract car from a symbol.
+
+; Requires checking, probably there is some limitation in selectors/predicates that prohibits such a form of a rule
