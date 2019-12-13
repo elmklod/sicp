@@ -548,7 +548,7 @@
           (number->string (cadr variable)))
          (symbol->string (cadr variable))))))
 
-; One may wonder why there is a conditinal but if some variable(user-printed) is instantiated with some local var, it is confusing to have (? 4 y instead of) just ?y-4
+; One may wonder why there is a conditinal but if some variable(user-printed) is instantiated with some local var, it is confusing to have (? 4 y) instead of just ?y-4
 ; That is why.
 ; Seriously? why swap places of id and var symbol?
 

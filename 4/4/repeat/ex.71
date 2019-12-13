@@ -1,0 +1,37 @@
+(define (simple-query
+         query-pattern frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (stream-append
+      (find-assertions query-pattern frame)
+      (apply-rules query-pattern frame)))
+   frame-stream))
+
+(define (disjoin disjuncts frame-stream)
+  (if (empty-disjunction? disjuncts)
+      the-empty-stream
+      (interleave
+       (qeval (first-disjunct disjuncts)
+              frame-stream)
+       (disjoin (rest-disjuncts disjuncts)
+                frame-stream))))
+
+; in a query (not *simple-q*)
+; it is not necessary to start rule application
+; if there is at least one successful match among assertions
+; which is more efficient and sometimes effective as applying these rules
+; may result in the infinite loop which is postponed in case of delaying rules applications
+
+; with these versions of procedure, some queries will never return a stream at all
+; as the internal procedures will constantly apply rules, match assertions and apply rules again idefinitely
+; It is especially true in case of recursive rules such as
+(rule (married ?x ?y)
+      (married ?y ?x))
+
+; The same argument holds for (not (or clause1 ...))
+; There is no need to evaluate other clauses if the first one is a valid query with at least 1 extended frame being its output
+
+; Thanks to the delayed evaluation the infinite loops may be avoided when filters are used as above because
+; what matters is that there is at least one element and the evaluation of others can be delayed
+
+; The efficiency concern is important but I think there is more to it

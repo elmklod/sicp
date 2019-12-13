@@ -1,0 +1,38 @@
+; The answer is the same as for ex.71:
+; For efficiency reasons
+; Otherwise each or- clause would have to be evaluated completely / or every query would have to be evaluated against the given frame
+; with all assertions matched and all rules applied(unified before that) (recursively until there is no delayed part of the stream or the evaluator loops)
+
+; ---- stream-flatmap specific
+; the first object mapped produces a stream far longer than any output stream of other objects or takes more resources to produce a stream of less or similar length
+; then to get to the objects within those next streams, the whole stream for the first object has to be created
+; which takes may decrease the the average rate at which objects within the streams appear or the diversity of these objects
+
+; e.g. When simple query is processed in the middle of some and-query
+; the extended frames for the frames that are buried further in the streams
+; won't be created and, therefore, known about by the user or system
+; until all extension possibilities for the previous(outer) frames are exhausted
+
+; ---- or-specific
+; with all possible frames
+; before any frame from next clauses can appear
+; making it impractical as there may be less computationally expensive answers that are not
+; shown earlier than all possible answers of the previous clause
+
+
+
+; an argument for interleaved disjoin:
+; suppose there is a rule
+(rule (long ?x) *something that takes a lot of time to evaluate*)
+; and suppose that there are many values that will satisfy the query (long ?x)
+; (found by evaluating rule body that matches it against assertions and unifies it with rule conclusions)
+
+; and suppose there is query being evaluated
+(or (long ?x) *some query that is not a rule and does not contain a rule in case of compound query, it evalautes far faster than the long application*)
+
+; if the disjoin procedure does not interleave or- clauses
+; then the frames extended by evaluating the second clause won't get into the output stream of frames
+; until all possible frames for the first clause are created
+; which slows down the amount of frames that are created over time on average
+; with interleaving it would make the rate at which new frames appear more averaged for small amount of time
+; better than the worst possible case and worse than the best case
