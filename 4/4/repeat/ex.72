@@ -1,5 +1,7 @@
 ; The answer is the same as for ex.71:
 ; For efficiency reasons
+; It postpones looping at the same time often outputting more answers than it would output without interleaving
+
 ; Otherwise each or- clause would have to be evaluated completely / or every query would have to be evaluated against the given frame
 ; with all assertions matched and all rules applied(unified before that) (recursively until there is no delayed part of the stream or the evaluator loops)
 

@@ -1,0 +1,56 @@
+(define (negate operands frame-stream)
+  (stream-flatmap ; used to allow for the arbitrary size of the resulting stream with no additional procedures defined; flatmap works and a good way to show another use for this kind of higher-order procedures(abstractions)
+   (lambda (frame)
+     (if (stream-null?
+          (qeval (negated-query operands)
+                 (singleton-stream frame))) ; they use stream and not bare frames to be able to unite them in 1 stream without being forced to create extra procedure to plug-out empty frames
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))
+
+(define (lisp-value call frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (if (execute
+          (instantiate
+           call
+           frame
+           (lambda (v f)
+             (error
+              "Unknown pat var: LISP-VALUE"
+              v))))
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))
+
+(define (find-assertions pattern frame)
+  (stream-flatmap
+    (lambda (datum)
+      (check-an-assertion datum pattern frame))
+    (fetch-assertions pattern frame)))
+
+(define (check-an-assertion
+         assertion query-pat query-frame)
+  (let ((match-result
+         (pattern-match
+          query-pat assertion query-frame)))
+    (if (eq? match-result 'failed)
+        the-empty-stream
+        (singleton-stream match-result))))
+; 1:
+(define (simple-stream-flatmap proc s)
+  (simple-flatten (stream-map proc s)))
+
+(define (simple-flatten stream)
+  (stream-map stream-car
+              (stream-filter
+               (lambda (x)
+                (not (stream-null? x)))
+               stream)))
+
+; 2:
+; The behaviour depended on how interleaving procedure worked
+; Since the algorithm used in the interleaving procedure
+; and the current simple-flatten procedure output the same (ordered) stream
+; given a stream of singleton streams, the behaviour of the interpreter does not change
+; with the exception that with these procedures the interpreter is faster

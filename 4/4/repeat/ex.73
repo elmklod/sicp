@@ -1,0 +1,17 @@
+(define (flatten-stream stream)
+  (if (stream-null? stream)
+      the-empty-stream
+      (interleave (stream-car stream)
+                  (flatten-stream
+                   (stream-cdr stream)))))
+
+; Since this Scheme interpreter uses the applicative-order evaluation,
+; it will evaluate procedure arguments before applying the procedure
+; in this cases it will recursively call itself on the rest of the stream, forcing the evaluation of it
+; up until there are no elements left.
+; It means that it won't output anything until it fully processes the whole input stream
+; which may take a lot of resources.
+; In case of loops it won't output anything at all, whereas the delayed version could have returned at least some.
+
+; The delayed version has the advantage that outputting the currently processed element of the stream happens earlier.
+; which is desirable

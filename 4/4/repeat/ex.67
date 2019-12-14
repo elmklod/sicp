@@ -1,7 +1,7 @@
 ; For every pattern to be evaluated, 2 things must be done:
 ; If the pattern is being evaluated, the frame relative to which it is being evaluated must be compared with the current frame
-; by instatiating the pattern with the value from the frame
-; Every unassigned pattern variable must be substituted for a unique object
+; by instatiating the pattern with the value from the frame (recursively until there are no intermediate variables)
+; Every unassigned pattern variable must be substituted for a unique specific object
 ; if two instantiations are equal (using equal? predicate)
 ; then the system is entering a loop and should stop.
 ; When the pattern and frame combination is new, it is stored in some data structure to do the step 1 with new instances of this pattern
@@ -22,7 +22,7 @@
 
 ; There may be more than one combination of one pattern with a frame,
 ; each time frame bindings for relevant(in the current pattern) pattern must be different
-;(in at least one value, including unassigned(I believe they are unassigned rather than ubound/undefined) variables)
+;(in at least one value, including unassigned variables)
 ; without it there is no way to detect loops of this structure:
 ; (rule (wheel ?d)
 ;    (wheel ?m))

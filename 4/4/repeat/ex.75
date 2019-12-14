@@ -1,0 +1,4 @@
+; Second part
+(put-special-form
+ 'unique
+ uniquely-asserted)
