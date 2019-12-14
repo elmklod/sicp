@@ -1,6 +1,6 @@
 ; For every pattern to be evaluated, 2 things must be done:
 ; If the pattern is being evaluated, the frame relative to which it is being evaluated must be compared with the current frame
-; by instatiating the pattern with the value from the frame (recursively until there are no intermediate variables)
+; by instantiating the pattern with the value from the frame (recursively until there are no intermediate variables)
 ; Every unassigned pattern variable must be substituted for a unique specific object
 ; if two instantiations are equal (using equal? predicate)
 ; then the system is entering a loop and should stop.
