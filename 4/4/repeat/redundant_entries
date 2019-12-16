@@ -1,0 +1,10 @@
+One can add same assertions and rules more than once
+Unique form from ex.75 treats them as unsuitable.
+It may be desirable to perform search on streams before adding new rules or assertions
+How to perform it if the stream evaluation is delayed
+Delaying search is not an option, it has to perform its search on the whole stream
+(or in case of the indexable rule/assertion on just the indexed part, adding to the required streams if the the search fails)
+How is storing rules and assertion in streams beneficial?
+They are already evaluated as the read procedure transformed characters to data structures
+Streams here take more memory, more time to force already evaluated data
+Switching at least to lists is recommended.

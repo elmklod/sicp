@@ -2,3 +2,47 @@
 (put-special-form
  'unique
  uniquely-asserted)
+
+; First part:
+
+(define (uniquely-asserted query frame-stream) ; Absolutely unique query that is valid only for one frame
+  (let ((extended-frame-stream (qeval query frame-stream)))
+    (if (= (stream-length extended-frame-stream)
+           1)
+        extended-frame-stream
+        the-empty-stream)))
+
+(define (uniquely-asserted query frame-stream) ; what the authors specified
+  (stream-flatmap
+   (lambda (frame)
+    (let ((frame-extensions-stream
+           (qeval
+            query
+            (singleton-stream frame))))
+      (if (= (stream-length
+              frame-extensions-stream)
+             1)
+          frame-extensions-stream
+          the-empty-stream))) ; It depends on the stream-flatmap to eliminate the-empty-stream, the proper way to it is to use stream-filter. It should be implemented to be used
+   frame-stream))
+
+(define (uniquely-asserted query frame-stream) ; what the authors specified
+  (stream-flatmap ; or stream-fold, which has to be defined first
+   (lambda (x) x)
+   (stream-filter
+     (lambda (frame-extensions-stream)
+      (= (stream-length frame-extensions-stream)
+         1))
+     (stream-map
+       (lambda (frame)
+        (qeval query (singleton-frame frame)))
+       frame-stream))))
+
+
+(and (job ?s ?y) ; any query that is guaranteed to produce the set of assignments assignments to ?s with every person on the company is suitable
+     (unique (supervisor ?employee ?s)))
+
+; another way:
+
+(and (supervisor ?x ?s) ; ?x and ?s must be different patterns, otherwise the query is always true if the db does not have redundant assertion in which case the semantically valid assignments may be discarded as well as invalid but returned(without redundacy)
+     (unique (supervisor ?employee ?s)))
