@@ -12,7 +12,7 @@
         extended-frame-stream
         the-empty-stream)))
 
-(define (uniquely-asserted query frame-stream) ; what the authors specified
+(define (uniquely-asserted query frame-stream) ; what the authors specified ;First optimal procedure
   (stream-flatmap
    (lambda (frame)
     (let ((frame-extensions-stream
@@ -26,8 +26,48 @@
           the-empty-stream))) ; It depends on the stream-flatmap to eliminate the-empty-stream, the proper way to it is to use stream-filter. It should be implemented to be used
    frame-stream))
 
-(define (uniquely-asserted query frame-stream) ; what the authors specified
-  (stream-flatmap ; or stream-fold, which has to be defined first
+;Streams that are flattened in this procedure are either the-empty-stream or a singleton stream. simple-stream-flatmap from ex.74 can be used here
+(define (uniquely-asserted query frame-stream) ;Second optimal procedure
+  (simple-stream-flatmap
+   (lambda (frame)
+    (let ((frame-extensions-stream
+           (qeval
+            query
+            (singleton-stream frame))))
+      (if (= (stream-length
+              frame-extensions-stream)
+             1)
+          frame-extensions-stream
+          the-empty-stream)))
+   frame-stream))
+; Splitting procedure code to decrease the size of lambda procedures
+
+(define (uniquely-asserted query frame-stream) ; smaller and concise but fails to capture the abstraction of flattening a stream; ;Third optimal procedure
+ (stream-map stream-car
+             (stream-filter (lambda (frame-extensions-stream)
+                             (= (stream-length
+                                     frame-extensions-stream)
+                                    1))
+                         (stream-map (lambda (frame)
+                                      (qeval
+                                       query
+                                       (singleton-stream frame)))
+                                     frame-stream))))
+
+(define (uniquely-asserted query frame-stream) ;Fourth optimal procedure
+ (simple-flatten ; Abstraction captured. ex.74. Does unneeded checks with stream-null? predicate
+   (stream-filter (lambda (frame-extensions-stream)
+                   (= (stream-length
+                           frame-extensions-stream)
+                          1))
+               (stream-map (lambda (frame)
+                            (qeval
+                             query
+                             (singleton-stream frame)))
+                         frame-stream))))
+
+(define (uniquely-asserted query frame-stream) ; what the authors specified ; Prototype for optimal procedures 3 and 4
+  (stream-flatmap ; or simple-stream-flatmap, or stream-fold, which has to be defined first or stream-map with the proc being stream-car
    (lambda (x) x)
    (stream-filter
      (lambda (frame-extensions-stream)
@@ -38,6 +78,9 @@
         (qeval query (singleton-frame frame)))
        frame-stream))))
 
+; Optimal procedures 2 and 4 are both more optimal than any other
+; The first uses a general more resource-heavy stream-flatmap.
+; The third implicitly uses the abstraction of flattening a stream, which does not convey its meaning without additional thinking about it
 
 (and (job ?s ?y) ; any query that is guaranteed to produce the set of assignments assignments to ?s with every person on the company is suitable
      (unique (supervisor ?employee ?s)))
