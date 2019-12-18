@@ -5,6 +5,14 @@
        (iter (op (car rest) result) (cdr rest))))
  (iter init (reverse seqs)))
 
+(define (fold-right op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+          (fold-right op
+                      initial
+                      (cdr sequence)))))
+
 (define (fold-right op init seqs)
  (define (iter result rest)
    (if (null? rest)
@@ -18,7 +26,9 @@ Choose one and for the reverse order use lambda functions/terms that swap argume
 
 The second is more "left"
 
-
+; This fold is known as fold in the  Release 10.1.10 || Microcode 15.3 || Runtime 15.7 || SF 4.41 || LIAR/x86-64 4.118
+; Of MIT/GNU Scheme.
+; Avoid if possible, it is misleading to use it since it does not correspond to any fold-left or fold-right introduced in the book
 (define (fold-left op init seqs)
  (define (iter result rest)
    (if (null? rest)

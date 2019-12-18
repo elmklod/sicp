@@ -12,6 +12,15 @@
        (iter (op (car rest) result) (cdr rest))))
  (iter init (reverse-low-level seqs)))
 
+(define (fold-right op initial sequence)
+  (if (null? sequence)
+      initial
+      (op (car sequence)
+          (fold-right op
+                      initial
+                      (cdr sequence)))))
+
+
 (define (fold-left op init seqs)
  (define (iter result rest)
    (if (null? rest)
@@ -21,10 +30,16 @@
 
 (define (reverse seqs)
  (fold-right (lambda (x result) (append result (list x)))
-             nil
+             '()
              seqs))
 
 (define (reverse seqs)
  (fold-left (lambda (result x) (append (list x) result))
-            nil
+            '()
+            seqs))
+
+;Improved version
+(define (reverse seqs)
+ (fold-left (lambda (result x) (cons x result))
+            '()
             seqs))

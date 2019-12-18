@@ -1,0 +1,101 @@
+(define (conjoin conjuncts frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (compact-list
+      (map ; conjuncts is a list while streams may have other internal representation. It is possible to make the result stream too but the result is a stream which requires full proccess of mapping to return have at least one element
+       (lambda (conjunct) ; If the interpreter I use is not analyzing, enclosing this procedure in the let body is better performance-wise as it will not be continuously evaluated as it would otherwise. The same applies to every procedure used in nested(via lambdas) mappings
+        (qeval conjunct (singleton-stream frame)))
+       conjuncts)))
+   frame-stream))
+
+(define (compact-list L)
+  (if (null? L)
+      the-empty-stream
+      (fold-left ; folding removes further dealing with the list and streams at the same time
+       (lambda (result-stream S) ; Can be named and put in a variable for clarity
+         (stream-flatmap
+          (lambda (frame)
+            (stream-filter
+             (lambda (extended-frame)
+              (not (eq? extended-frame 'failed))) ; unify-frames has to return this on failure
+             (stream-map
+              (lambda (new-frame)
+               (unify-frames frame new-frame))
+              S))) ;
+          result-stream)) ; S and result-stream can be swapped here
+       (car L)
+       (cdr L))))
+
+
+(define (compact-list L)
+  (let ((unify-streams ; The the omission of "in" as in ML leads to cumbersome identation
+         (lambda (result-stream S)
+           (stream-flatmap
+            (lambda (frame)
+              (stream-filter
+               (lambda (extended-frame)
+                (not (eq? extended-frame 'failed))) ; unify-frames has to return this on failure
+               (stream-map
+                (lambda (new-frame)
+                 (unify-frames frame new-frame))
+                S))) ;
+            result-stream)))) ; S and result-stream can be swapped here))
+    (if (null? L)
+        the-empty-stream
+        (fold-left unify-streams (car L) (cdr L)))))
+
+; This is more appealing to my taste of style
+(define (compact-list L)
+ (define unify-streams
+  (lambda (result-stream S)
+    (stream-flatmap
+     (lambda (frame)
+       (stream-filter
+        (lambda (extended-frame)
+         (not (eq? extended-frame 'failed))) ; unify-frames has to return this on failure
+        (stream-map
+         (lambda (new-frame)
+          (unify-frames frame new-frame))
+         S))) ;
+    result-stream))) ; S and result-stream can be swapped here))
+ (if (null? L)
+     the-empty-stream
+     (fold-left unify-streams (car L) (cdr L))))
+
+
+; It should not be used in extend-if-possible instead of unify-match. Only in unify frames
+(define (simple-unify-match var val frame)
+  (cond ((eq? frame 'failed) 'failed) ; Necessary for folding
+        (else
+         (extend-if-possible var val frame))
+
+;version to use fold, could be simpler if a reduced version of unify-match was implemented with the pair?, (var? p2) and (equal? p1 p2) clauses gone
+(define (unify-frames F1 F2)
+   (fold-left
+    (lambda (result-frame binding)
+      (unify-match
+       (binding-variable binding)
+       (binding-value binding)
+       result-frame))
+    F1
+    (frame-bindings F2))) ; F2 is usually smaller and mapping is expensive for the bigger lists. However, F1 and F2 may be swapped and no semantics change will occur
+
+; Optimized version
+(define (unify-frames F1 F2)
+   (fold-left
+    (lambda (result-frame binding)
+      (simple-unify-match
+       (binding-variable binding)
+       (binding-value binding)
+       result-frame))
+    F1
+    (frame-bindings F2)))
+
+(define (frame-bindings frame) frame) ; A frame is a list
+
+(define (fold-left op init seqs)
+ (define (iter result rest)
+   (if (null? rest)
+       result
+       (iter (op result (car rest)) (cdr rest))))
+ (iter init seqs))
