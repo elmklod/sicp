@@ -54,7 +54,11 @@ k <= [(i^2 + j^2) div 2] + 1
                                     2))))
         (let ((sum-of-sq (+ (square j) isq)))
           (let ((k (an-integer-between j
-                                      (+1 (quotient sum-of-sq 2)))))
+                                      (+ 1 (quotient sum-of-sq 2)))))
             (require (= sum-of-sq
                         (square k)))
             (list i j k)))))))
+
+
+; an-integer-between procedure application may have their boundaries swapped for fast answering
+; If it is known that more answers lie in the beginning/end of the interval

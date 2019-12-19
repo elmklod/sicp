@@ -1,4 +1,5 @@
 ; It is wrong, the correct version is in the repeat subdir
+; It is not the right exercise
 
 Suppose that (sqrt (+ (square i)
                       (square j)))

@@ -1,0 +1,16 @@
+(define (average x y)
+  (/ (+ x y) 2))
+
+(define (sqrt x)
+  (define (good-enough? guess)
+    (< (abs (- (square guess) x)) 0.001))
+  (define (guess-improved-from guess)
+    (amb
+     guess
+     (guess-improved-from
+      (average guess (/ x guess)))))
+  (let ((root (guess-improved-from 1.0)))
+    (require (good-enough? root))
+    root))
+
+; General n-root procedure is constructed similarly

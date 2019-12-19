@@ -76,3 +76,29 @@
   '(conjunction and or but so))
 
 ;It is useless without punctuation and (or) pronouns, conjunctions
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(sentence (noun-phrase (article a) (adjective-noun-phrase (adjective beautiful) (adjective funny) (noun cat))) (verb-phrase (adverb-verb-phrase (adverb lazily) (verb eats)) (prep-phrase (prep with) (noun-phrase (article the) (adjective-noun-phrase (adjective nice) (noun professor))))))
+
+;;; Amb-Eval input:
+try-again
+
+;;; There are no
+                 more values of
+(parse (quote (a beautiful funny cat lazily eats with the nice professor)))
+
+;;; Amb-Eval input:
+(parse (quote (a beautiful funny cat lazily eats with the nice professor and a student hastily studies in the class))))
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(compound-sentence
+  (sentence (noun-phrase (article a) (adjective-noun-phrase (adjective beautiful) (adjective funny) (noun cat))) (verb-phrase (adverb-verb-phrase (adverb lazily) (verb eats)) (prep-phrase (prep with) (noun-phrase (article the) (adjective-noun-phrase (adjective nice) (noun professor)))))) (conjunction and) (sentence (noun-phrase (article a) (noun student)) (verb-phrase (adverb-verb-phrase (adverb hastily) (verb studies)) (prep-phrase (prep in) (noun-phrase (article the) (noun class))))))
+
+;;; Amb-Eval input:
+try-again
+
+;;; There are no
+                 more values of
+(parse (quote (a beautiful funny cat lazily eats with the nice professor and a student hastily studies in the class)))

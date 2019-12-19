@@ -82,8 +82,12 @@
 
 
 --------------------------
-add to primitives:
+;add to primitives:
 (list 'xor (lambda (a b) (and (or a b) (not (and a b)))))
+
+; or define it
+(define (xor a b)
+  (and (or a b) (not (and a b))))
 
 (define (liars)
   (let ((betty (amb 1 2 3 4 5))
@@ -102,6 +106,10 @@ add to primitives:
   (list 'joan joan)
   (list 'kitty kitty)
   (list 'mary mary))))
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+((betty 3) (ethel 5) (joan 2) (kitty 1) (mary 4))
 
 (define (distinct? items)
     (cond ((null? items) true)

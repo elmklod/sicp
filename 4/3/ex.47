@@ -7,10 +7,25 @@
 
 It works only if verb-phrase-parsing succeeds in the first place.
 
-If it does not, the procedure will get struck after 1 failed attempt to parse a verb.
+If it does not, the procedure will get stuck after 1 failed attempt to parse a verb.
 This may occur if the verb is unknown or the sentence has bad grammar and is malformed or when
 try-again is evaluated and the sentence structure cannot be parsed in any other way
-with additional prepositional phrases.
+with additional verb-phrases.
+(parse '(the cat shits)); fails as 'shits' is an unknown form of a verb
+
+(parse '(the cat professor)) ; fails as it is grammatically malformed
+
+;;; Amb-Eval input:
+(parse '(the cat eats))
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+(sentence (simple-noun-phrase (article the) (noun cat)) (verb eats))
+
+;;; Amb-Eval input:
+try-again ; fails as there is no more way known to the parser to parse it
+
+
 
 If the order is interchanged, the procedure will never terminate in the first place even if the grammar is correct.
 Infinite recursive call inside procedure parse-verb-phrase to itself.
@@ -21,5 +36,7 @@ Infinite recursive call inside procedure parse-verb-phrase to itself.
         (parse-verb-phrase)
         (parse-prepositional-phrase))
        (parse-word verbs)))
+
+; (parse '(the cat eats)) ; fails
 
 You did it again, Louis.

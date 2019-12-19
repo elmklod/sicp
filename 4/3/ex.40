@@ -50,3 +50,14 @@ Of course less because the solution is reached almost after half the variants, b
                   (list 'fletcher fletcher)
                   (list 'miller miller)
                   (list 'smith smith))))))))
+
+;;; Starting a new problem
+;;; Amb-Eval value:
+((baker 3) (cooper 2) (fletcher 4) (miller 5) (smith 1))
+
+;;; Amb-Eval input:
+try-again
+
+;;; There are no
+                 more values of
+(multiple-dwelling)

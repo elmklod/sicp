@@ -35,3 +35,7 @@
   'let
   (lambda (exp env)
     (eval (let->combination exp) env)))
+
+;or in case of cond-based control structure
+(define (let? exp)
+ (tagged-list? exp 'let))

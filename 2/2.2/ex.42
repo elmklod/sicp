@@ -111,6 +111,14 @@
                                                previous)))))
 -------------------
 (define (no-check? sol)
+  (define (checking? q1 q2)
+   (let ((cq1 (column-queen q1))
+         (cq2 (column-queen q2))
+         (rq1 (row-queen q1))
+         (rq2 (row-queen q2)))
+    (or (= rq1 rq2)
+        (= (abs (- cq1 cq2))
+           (abs (- rq1 rq2))))))
  (accumulate (lambda (x y) (and  (not (checking? (car sol)
                                                  x))
                                  y))
@@ -164,6 +172,7 @@
   (list empty-board))
 
 +++++++++++++++++++++++++++++++++++
+(define nil '())
 
 (define (queens board-size)
   (define (queen-cols k)
@@ -198,7 +207,14 @@
  (define (find-queen positions)
   (first-queen-positions (filter queen-at-col?
                                  positions)))
-
+ (define (checking? q1 q2)
+  (let ((cq1 (column-queen q1))
+        (cq2 (column-queen q2))
+        (rq1 (row-queen q1))
+        (rq2 (row-queen q2)))
+   (or (= rq1 rq2)
+       (= (abs (- cq1 cq2))
+          (abs (- rq1 rq2))))))
  (define (remove-queen positions)
   (filter (lambda (queen) (not (queen-at-col? queen)))
           positions))

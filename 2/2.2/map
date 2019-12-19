@@ -17,7 +17,7 @@
   (if (null? items)
       result
       (iter (cdr items) (cons (proc (car items)) result))))
- (reverse (iter items '())))
+ (reverse (iter items '()))) ; takes additional space on the stack
 
 
 (define (reverse-map proc items)

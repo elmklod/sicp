@@ -1,5 +1,7 @@
-; First evaluate normal eva, then this. It missies some code
+; First evaluate normal eva, then this. It misses some code
 ; it needs which normal eva has and I don't want to duplicate
+; Redefining this evaluator with new cases requires redefining
+; of all procedures where that word was used without shadowing
 
 (define (eval exp env) ((analyze exp) env))
 
@@ -112,6 +114,9 @@
                       EXECUTE-APPLICATION"
                      proc))))
 
+(define (let-values bindings) ; It shadows the keyword in the original scheme
+  (cadr bindings))
+
 (define (let->combination exp)
   (let ((bindings (let-processed-bindings exp)))
     (make-application
@@ -131,9 +136,6 @@
 (define (let-body exp)
   (cddr exp))
 
-(define (let-values bindings)
-  (cadr bindings))
-
 (define (let-processed-bindings exp)
   (define (iter exp result)
     (let ((variables (car result))
@@ -147,3 +149,6 @@
                     (cons (cadar exp)
                           values))))))
   (iter (cadr exp) '(() ())))
+
+(define (let? exp)
+ (tagged-list? exp 'let))

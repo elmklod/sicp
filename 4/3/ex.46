@@ -1,7 +1,3 @@
-This problem reflects the overall difficulties in dealing with assignments:
-The program is imperative in nature and its result heavily depends on the order in which expressions are evaluated.
-Because operands can be expressions, the problem resurfaces.
-
 Suppose amb evaluator evaluates operands from right to left.
 
 (parse '(the cat sleeps))

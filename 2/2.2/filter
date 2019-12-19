@@ -3,3 +3,21 @@
                           (list x)
                           nil))
           seqs))
+
+(define (filter predicate seqs)
+  (if (null? seqs)
+      '()
+      (let ((seqs-car (car seqs)))
+        (if (predicate seqs-car)
+            (cons seqs-car
+                  (filter predicate
+                          (cdr seqs)))
+            (filter predicate
+                    (cdr seqs))))))
+
+(define (filter predicate seqs)
+  (cond ((null? seqs) '())
+        ((predicate (car seqs))
+         (cons seqs-car
+               (filter predicate
+                       (cdr seqs))))))

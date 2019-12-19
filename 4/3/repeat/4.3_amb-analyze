@@ -51,3 +51,5 @@
        succeed
        (lambda ()
          (try-next (cdr choices) env succeed fail)))))
+
+; If the interpreter used is analyzing, there is no need for this optimization

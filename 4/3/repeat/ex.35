@@ -8,10 +8,10 @@
         (an-int-btw a b + <=))))
 
 (define (an-integer-between a b)
-  (define (an-int-btw high low operator check)
+  (define (an-int-btw high low)
     (require (>= high low))
     (amb high
-         (an-int-btw (-1 high) low)))
+         (an-int-btw (- high 1) low)))
   (if (> a b)
       (an-int-btw a b)
       (an-int-btw b a)))

@@ -12,10 +12,14 @@
          (analyze-variable exp))
         ((assignment? exp)
          (analyze-assignment exp))
+        ((permanent-assignment? exp)
+         (analyze-permanent-assignment exp))
         ((definition? exp)
          (analyze-definition exp))
         ((if? exp)
          (analyze-if exp))
+        ((if-fail? exp)
+         (analyze-if-fail exp))
         ((lambda? exp)
          (analyze-lambda exp))
         ((begin? exp)
@@ -25,7 +29,16 @@
          (analyze (cond->if exp)))
         ((let? exp)
          (analyze (let->combination exp)))
-        ((amb? exp) (analyze-amb exp))
+        ((let*? exp)
+         (analyze (let*->nested-lets exp)))
+        ((amb? exp)
+         (analyze-amb exp))
+        ((ramb? exp)
+         (analyze-ramb exp))
+        ((and? exp)
+         (analyze (and->if exp)))
+        ((or? exp)
+         (analyze (or->if exp)))
         ((application? exp)
          (analyze-application exp))
         (else
@@ -231,3 +244,152 @@
      (display
       ";;; There is no current problem")
      (driver-loop))))
+
+(define (and->if exp)
+  (let ((exp (exps-and exp)))
+    (if (no-expressions-and? exp)
+        'true
+        (let ((current-exp (first-exp-and exp)))
+          (if (last-expression-and? exp)
+              current-exp
+              (make-if current-exp
+                       (make-and (rest-exps-and exp))
+                       'false))))))
+
+; optimized lazy variant
+(define (or->if exp)
+  (let ((exp (exps-or exp)))
+    (if (no-expressions-or? exp)
+        'false
+        (let ((current-exp (first-exp-or exp)))
+          (if (last-expression-or? exp)
+              current-exp
+              (make-let
+               (make-bindings-list
+                (make-binding 'variable current-exp))
+               (make-body
+                (make-if 'variable
+                         'variable
+                         (make-or (rest-exps-or exp))))))))))
+
+
+(define (make-and exps)
+  (cons 'and exps))
+(define (exps-and and-exp)
+  (cdr and-exp))
+(define (first-exp-and exps) (car exps))
+(define (rest-exps-and exps) (cdr exps))
+(define (no-expressions-and? exps) (null? exps))
+(define (last-expression-and? exps)
+  (no-expressions-and? (rest-exps-and exps)))
+
+(define (make-or exps)
+  (cons 'or exps))
+(define (exps-or or-exp)
+  (cdr or-exp))
+(define (first-exp-or exps) (car exps))
+(define (rest-exps-or exps) (cdr exps))
+(define (no-expressions-or? exps) (null? exps))
+(define (last-expression-or? exps)
+  (no-expressions-or? (rest-exps-or exps)))
+
+(define (or? exp)
+ (tagged-list? exp 'or))
+
+(define (and? exp)
+ (tagged-list? exp 'and))
+
+(define (make-body exp) (list exp))
+(define (make-bindings-list binding) (list binding))
+  (define (make-let bindings body)
+    (cons 'let
+          (cons bindings
+                body)))
+
+(define (let*->nested-lets exp)
+  (let ((bindings (let*-bindings exp))
+        (body (let*-body exp)))
+    (define (rec bindings)
+      (make-let (make-bindings-list (let*-first-binding bindings))
+                (let ((rest (let*-rest-bindings bindings)))
+                  (if (let*-no-bindings? rest)
+                      body
+                      (make-body (rec rest))))))
+    (if (let*-no-bindings? bindings)
+        (make-let ; it is not simplified to sequence because of the encapsulation it provides
+         (the-empty-bindings-list)
+         body)
+        (rec bindings))))
+
+(define (let*-bindings exp) (cadr exp))
+(define (let*-no-bindings? bindings) (null? bindings))
+(define (let*-body exp) (cddr exp))
+(define (let*-first-binding bindings) (car bindings))
+(define (let*-rest-bindings bindings) (cdr bindings))
+(define (let*? exp)
+  (tagged-list? exp 'let*))
+
+(define (ramb? exp) (tagged-list? exp 'ramb))
+(define (ramb-choices exp) (cdr exp))
+
+(define (analyze-ramb exp)
+  (define (cut-nth-elem list n)
+    (define (iter before after n)
+      (if (= n 0)
+          (append (reverse before)
+                  (cdr after))
+          (iter (cons (car after)
+                      before)
+                (cdr after)
+                (- n 1))))
+    (iter '() list n))
+  (let ((cprocs
+         (map analyze (ramb-choices exp))))
+    (lambda (env succeed fail)
+      (define (try-next choices)
+        (if (null? choices)
+            (fail)
+            (let ((random-element (random (length choices))))
+              ((list-ref choices random-element)
+               env
+               succeed
+               (lambda ()
+                 (try-next (cut-nth-elem choices random-element)))))))
+      (try-next cprocs))))
+
+(define (analyze-permanent-assignment exp)
+  (let ((var (permanent-assignment-variable exp))
+        (vproc (analyze
+                (permanent-assignment-value exp))))
+    (lambda (env succeed fail)
+      (vproc env
+             (lambda (val fail2)
+               (set-variable-value!
+                var
+                val
+                env)
+               (succeed
+                'ok
+                fail2))
+             fail))))
+
+(define (permanent-assignment? exp)
+  (tagged-list? exp 'permanent-set!))
+(define (permanent-assignment-variable exp) (cadr exp))
+(define (permanent-assignment-value exp) (caddr exp))
+
+(define (if-fail-succeed exp) (cadr exp))
+(define (if-fail-fail exp) (caddr exp))
+(define (if-fail? exp)
+  (tagged-list? exp 'if-fail))
+
+(define (analyze-if-fail exp)
+  (let ((sproc (analyze (if-fail-succeed exp)))
+        (fproc (analyze (if-fail-fail exp))))
+    (lambda (env succeed fail)
+      (sproc env
+             succeed
+             (lambda ()
+               (fproc env
+                      succeed
+                      fail))))))

@@ -1,5 +1,5 @@
 
-; forgor that amb may have more than 2 expressions and that numbers are expressions
+; forgot that amb may have more than 2 expressions and that numbers are expressions
 (define (answer)
   (define (flet-floor L)
     (car L))
