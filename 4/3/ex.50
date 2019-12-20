@@ -32,6 +32,18 @@ to ambeval:
                  (try-next (cut-nth-elem choices random-element)))))))
       (try-next cprocs))))
 
+; The probability of choosing expression x from all possible statements n
+; is not generally (times x appears as an option)/n
+; The ramb form chooses according to the amount of expressions
+; it initially has even if some of them are recursive
+; (ramb 1 (ramb 2 1)) or any other expression that embodies multiple options
+; The probability of choosing 1
+; is 1/2 + 1/2 * 1/2 = 1/2 + 1/4 = 3/4 = 0.75 instead of 2/3 = 0.(6)
+; The probability of choosing 2 is 1/4 instead of 1/3.
+; This must be taken into account
+; if trying to simulate any distribution
+; Also the internal random function must be considered as it is not truly random
+; This biases choosing
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define (parse-word word-list)
@@ -48,9 +60,10 @@ to ambeval:
     (ramb
      noun-phrase
      (maybe-extend
-      (list 'noun+prep-phrase
-            noun-phrase
-            (parse-prepositional-phrase)))))
+      (group-or-combine
+       noun-phrase
+       (parse-prepositional-phrase)
+       'noun+prep-phrase))))
   (list 'noun-phrase
         (parse-word articles)
         (maybe-extend (parse-adjective-noun-phrase))))
@@ -60,18 +73,18 @@ to ambeval:
     (list 'adjective-noun-phrase
           adjective
           (ramb (parse-word nouns)
-               (surely-extend (parse-word adjectives)))))
+                (surely-extend (parse-word adjectives)))))
   (ramb (parse-word nouns)
        (surely-extend (parse-word adjectives))))
 
-; one can unite ajective so that adjective-noun-phrase is used only before the first adjective.
+; one can unite adjective so that adjective-noun-phrase is used only before the first adjective.
 ; this may be achieved by using cons
 ; the same relates to adverbs
 (define (parse-adjective-noun-phrase)
   (define (recurse adjective)
     (cons adjective
           (ramb (recurse (parse-word adjectives))
-               (list (parse-word nouns)))))
+                (list (parse-word nouns)))))
   (ramb (parse-word nouns)
        (cons 'adjective-noun-phrase
              (recurse (parse-word adjectives)))))
@@ -87,17 +100,16 @@ to ambeval:
 ;        (parse-word articles)
 ;        (parse-word nouns)))
 
-;somehow I do not want to have a grammar where more than 1 adverb is possible before a single verb.
-; There is a bug that several layers of 'verb-phrase may be attached to the phrase
-; I know no workaround
+; I do not want to have a grammar where more than 1 adverb is possible before a single verb.
 (define (parse-verb-phrase)
   (define (maybe-extend verb-phrase)
     (ramb
      verb-phrase
      (maybe-extend
-      (list 'verb-phrase
-            verb-phrase
-            (parse-prepositional-phrase)))))
+      (group-or-combine
+       verb-phrase
+       (parse-prepositional-phrase)
+       'verb-phrase))))
   (maybe-extend (parse-adverb-verb-phrase)))
 
 (define (parse-adverb-verb-phrase)
@@ -106,7 +118,9 @@ to ambeval:
              (parse-word adverbs)
              (parse-word verbs))))
 ;----------------
-;Experimental
+; Grouping here is unnecessary, compound sentence always consists of a simple sentence and any sentence.
+; which can either  be simple or compound
+; Direct layreing of the same syntactic types never occurs
 (define (parse-sentence)
   (define (maybe-compound sentence)
     (ramb sentence
@@ -120,4 +134,21 @@ to ambeval:
                (parse-verb-phrase))))
 
 (define conjunctions
-  '(conjunction and or but so))
+  '(conjunction and or but so since because as while))
+
+(define (parsed-as phrase)
+  (car phrase))
+
+(define (group x y)
+  (append x y)) ; or just append if group is defined as a variable
+
+(define (group-or-combine phrase ; I believe 'non-curried' version is clearer
+                          addition
+                          comb-type)
+  ((if (equal?
+        (parsed-as phrase)
+        comb-type)
+       group
+       (lambda (x y) (list comb-type x y)))
+   phrase
+   addition))
