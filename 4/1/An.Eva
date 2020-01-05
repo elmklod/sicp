@@ -1,7 +1,9 @@
 ; First evaluate normal eva, then this. It misses some code
 ; it needs which normal eva has and I don't want to duplicate
 ; Redefining this evaluator with new cases requires redefining
-; of all procedures where that word was used without shadowing
+; of all procedures where that _word_ was used without shadowing
+; In the purely functional program there is no need for it
+; as there is no way to redefine _anything_
 
 (define (eval exp env) ((analyze exp) env))
 

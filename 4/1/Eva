@@ -63,7 +63,10 @@
         result
         (make-eval-list (cdr exps)
                    (cons (eval (car exps) env) result))))
-  (reverse (make-eval-list (reverse (make-list exps '()) '()))))
+  (reverse
+   (make-eval-list
+    (reverse (make-list exps '()))
+    '()))))
 
 (define (eval-if exp env)
   (if (true? (eval (if-predicate exp) env))

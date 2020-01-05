@@ -1,0 +1,52 @@
+(define (driver-loop)
+  (prompt-for-input input-prompt)
+  (let ((input (read)))
+    (let ((time-before-exec (runtime)))
+      (let ((output
+             (eval input
+                   the-global-environment)))
+        (announce-output output-prompt)
+        (user-print output)
+        (print-time (- (runtime)
+                       time-before-exec))))) ; avoids relying on the evaluation order of let bindings
+  (driver-loop))
+
+; They slightly differ. Different implementation require different time to note the clock showings
+
+(define (driver-loop)
+  (prompt-for-input input-prompt)
+  (let ((input (read)))
+    (let ((time-before-exec (runtime)))
+      (let ((output
+             (eval input
+                   the-global-environment)))
+        (let ((time-after-exec (runtime)))
+          (announce-output output-prompt)
+          (user-print output)
+          (print-time (- time-after-exec
+                         time-before-exec))))))
+  (driver-loop))
+
+(define (print-time t)
+  (display "\n")
+  (display t))
+
+(define (factorial n)
+  (if (= n 1)
+      1
+      (* (factorial (- n 1)) n)))
+
+; Time difference for (factorial 453):
+; An.Eva - mean time(5) = 0.05
+; RE:EVA - mean time(6) = .12666666666666668
+; The ratio is 2.533333333333333
+; Eva - mean time(10) =.078
+; The ratio is 1.5599999999999998
+; The ratios will approximately be constant for this procedure
+; no matter how big or small the argument is
+; An.Eva has to do its execution procedure evaluation every time it is evaluated
+; It scales with n linearly
+; The same is true for evaluating definition body in any other evaluator.
+
+; It is (K1 * n) / (K2 * n) = K1/K2 = C for the ratio. K2 is for An.Eva, K1 is for any other
+; K2 < K1

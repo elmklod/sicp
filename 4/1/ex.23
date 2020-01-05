@@ -1,5 +1,5 @@
 one-element sequence will incur overhead for Alyssa's version as it
-evaluates and extra lambda-expression and execute-sequence
+evaluates an extra lambda-expression and execute-sequence
 each time the sequence is evaluated.
 
 2+ -element version is not that clear.
@@ -8,3 +8,5 @@ analyzed elements of the sequence + 1 lambda expression
 
 Overall, Alyssa's seems to be more expensive when the sequence is called more than once
 The more it is evaluated, the more expensive Alyssa's version is
+
+The problem is that lambda expression may require as much resources as Alyssa's loop
