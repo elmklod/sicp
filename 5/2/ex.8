@@ -1,0 +1,69 @@
+(define amb-machine
+ (make-machine
+  '(a)
+  (list)
+  '(start
+     (goto (label here))
+    here
+     (assign a (const 3))
+     (goto (label there))
+    here
+     (assign a (const 4))
+     (goto (label there))
+    there)))
+
+;To ensure that the value is not a random noise
+(set-register-contents! amb-machine
+                        'a
+                        0)
+
+(start amb-machine)
+
+(get-register-contents amb-machine
+                        'a)
+
+;Value: done
+
+;Value: done
+
+;Value: 3
+
+
+It depends on the way the lable table and assoc procedure are defined.
+
+The label table directly reflects the appearance of labels in the original sequence
+assoc searches from the beginning of the table
+
+That means labels that appeared first are the first to be found.
+
+The first appearance of label here will be used by the first goto instruction.
+It makes the contents of register a be (const 3).
+
+(define (extract-labels text receive)
+  (if (null? text)
+      (receive '() '())
+      (extract-labels
+       (cdr text)
+       (lambda (insts labels)
+         (let ((next-inst (car text)))
+           (if (symbol? next-inst)
+               (receive insts
+                        (check-and-add-label
+                         next-inst
+                         insts
+                         labels))
+               (receive (cons (make-instruction
+                               next-inst)
+                               insts)
+                        labels)))))))
+
+(define (check-and-add-label label insts labels)
+  (if (assoc label labels)
+      (error "ASSEMBLE: multiple occurrences of the same label
+                        in the controller sequence:"
+             label)
+      (cons
+       (make-label-entry
+        label
+        insts)
+       labels)))

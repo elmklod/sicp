@@ -45,7 +45,7 @@ which makes it possible to use the following procedure, which has no or counterp
             (eval (last-expression-and exp) env)))))
 
 Efficiency cannot be determined without taking into account a particular data structure
-and expression is implemented in.
+an expression is implemented in.
 
 With it being the same as original Scheme ver., it is inefficient compared to:
 
@@ -105,7 +105,7 @@ It is possible to create a lazy variant:
 
 
 Imperative version(assignment can and should be used, not always. Yet there should be no
-need to differenciate between functional style and imperative style when their effective result is the same,
+need to differentiate between functional style and imperative style when their effective result is the same,
 that is why programmer should be allowed to use any style while implementation
 should be able to handle both styles such that the internal process is the same for both,
 which is hard. At least functional style should be able to harvest all the benefits of assignment,

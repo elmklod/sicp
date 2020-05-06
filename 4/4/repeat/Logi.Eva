@@ -164,7 +164,7 @@
   (stream-flatmap
     (lambda (datum)
       (check-an-assertion datum pattern frame))
-    (fetch-assertions pattern frame)))
+    (fetch-assertions pattern)))
 
 (define (check-an-assertion
          assertion query-pat query-frame)
@@ -201,7 +201,7 @@
   (stream-flatmap
    (lambda (rule)
      (apply-a-rule rule pattern frame))
-   (fetch-rules pattern frame)))
+   (fetch-rules pattern)))
 
 (define (apply-a-rule rule
                       query-pattern
@@ -347,7 +347,7 @@
 
 (define THE-ASSERTIONS the-empty-stream)
 
-(define (fetch-assertions pattern frame)
+(define (fetch-assertions pattern)
   (if (use-index? pattern)
       (get-indexed-assertions pattern)
       (get-all-assertions)))
@@ -364,7 +364,7 @@
 
 (define THE-RULES the-empty-stream)
 
-(define (fetch-rules pattern frame)
+(define (fetch-rules pattern)
   (if (use-index? pattern)
       (get-indexed-rules pattern)
       (get-all-rules)))
@@ -548,8 +548,6 @@
           (number->string (cadr variable)))
          (symbol->string (cadr variable))))))
 
-; One may wonder why there is a conditinal but if some variable(user-printed) is instantiated with some local var, it is confusing to have (? 4 y) instead of just ?y-4
-; That is why.
 ; Seriously? why swap places of id and var symbol?
 
 (define (assoc key records)

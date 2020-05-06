@@ -62,8 +62,6 @@ It makes no difference.(outermost quoted expressions, of course)
 
   (define (make-definition name body)
     (list 'define name body))
-  (define (make-initialization var)
-    (make-definition var '*unassigned*))
   (define (definition-variable exp)
     (if (symbol? (cadr exp))
         (cadr exp)

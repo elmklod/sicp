@@ -1,8 +1,11 @@
+; NOT a problem
+; useful for combinatorics. 
+
 ; a problem concerning
 ; the patterns in compound queries:
 ; in or-query the same pattern in two different
 ; queries is reset when the next query is chosen
-; unless it was set before the compund query was evaluated
+; unless it was set before the compound query was evaluated
 ; therefore, introducing 1 new pattern in 2 different queries instead of 2 new
 ; is equivalent to introducing 2,
 ; with the exception of other queries having this pattern outside the original comp. query

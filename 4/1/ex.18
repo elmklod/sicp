@@ -12,4 +12,4 @@ The initial version allowed for this to happen. But in the unspecified order.
 As it is given in the book, it would evaluate definitions in the order in which they appear in the procedure body.
 As it turns out, my implementation from the ex. 4.16 will fail as well, because it reverses the order of definitions.
 
-It is also possible to implement this version without the additional frame as in the exercise 4.17
+It is also possible to implement this version without one of 2 the additional frames as in the exercise 4.17

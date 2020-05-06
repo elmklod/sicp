@@ -4,8 +4,8 @@ for internal definitions, because they are treated as parameters of this applied
 
 Unless program exploits environments is some way, this extra frame cannot be found by any means:
 1. It is the innermost frame of the environment, so its bindings always shadow similar bindings
-in the enclosing environment.
-2. Its enclosing environment is that of a original procedure parameters(which come in their own second-innermost frame)
+in the enclosing(!) environment.
+2. Its enclosing environment is that of an original procedure parameters(which come in their own second-innermost frame)
 and of the environment that the procedure stored.
 
 Therefore, if the program does not inspect environment implementation,

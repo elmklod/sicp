@@ -99,8 +99,6 @@ The modification is straightforward:
 
   (define (make-definition name body)
     (list 'define name body))
-  (define (make-initialization var)
-    (make-definition var '*unassigned*))
   (define (definition-variable exp)
     (if (symbol? (cadr exp))
         (cadr exp)
@@ -624,8 +622,6 @@ the implementation above invoked it twice as much.
 
   (define (make-definition name body)
     (list 'define name body))
-  (define (make-initialization var)
-    (make-definition var '*unassigned*))
   (define (definition-variable exp)
     (if (symbol? (cadr exp))
         (cadr exp)
@@ -1214,8 +1210,6 @@ Its definitions are delayed and can be affected by assignments.
 
   (define (make-definition name body)
     (list 'define name body))
-  (define (make-initialization var)
-    (make-definition var '*unassigned*))
   (define (definition-variable exp)
     (if (symbol? (cadr exp))
         (cadr exp)

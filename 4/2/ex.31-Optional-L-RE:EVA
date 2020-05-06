@@ -224,62 +224,57 @@
 
   (define (make-definition name body)
     (list 'define name body))
-  (define (make-initialization var)
-    (make-definition var '*unassigned*))
   (define (definition-variable exp)
     (if (symbol? (cadr exp))
         (cadr exp)
         (caadr exp)))
 
   (define (scan-out-defines body-original)
-    (define (make-unassigned-bindings reversed-vars)
-      (define (iter vars result)
-        (if (null? vars)
-            result
-            (iter (cdr vars)
-                  (cons (make-binding (car vars)
-                              '(quote *unassigned*))
-                        result))))
-      (iter reversed-vars '()))
-    (define (iter body reversed-vars reversed-new-body reversed-assignments)
+    (define (iter body
+                  reversed-new-body
+                  reversed-initializations
+                  reversed-assignments)
      (if (body-no-exps? body)
-         (if (null? reversed-vars)
+         (if (empty-sequence? reversed-initializations)
              body-original
-             (make-body
-              (make-let (make-unassigned-bindings
-                         reversed-vars)
-                        (append-sequences reversed-assignments ; reverse is not necessary here
-                                          (reverse-sequence reversed-new-body)))))
+             (append-sequences
+              reversed-initializations
+              (append-sequences reversed-assignments
+                                (reverse-sequence reversed-new-body))))
          (let ((first-exp
                 (body-first-exp body)))
            (if (tagged-list? first-exp 'define)
                (iter (body-rest-exps body)
-                     (cons (definition-variable first-exp)
-                           reversed-vars)
                      reversed-new-body
+                     (add-to-sequence-first
+                      (make-initialization
+                        (definition-variable first-exp))
+                      reversed-initializations)
                      (add-to-sequence-first
                       (definition->assignment first-exp)
                       reversed-assignments))
                (iter (body-rest-exps body)
-                     reversed-vars
                      (add-to-sequence-first
                       first-exp
                       reversed-new-body)
+                     reversed-initializations
                      reversed-assignments)))))
     (iter body-original
-          '()
+          (the-empty-sequence)
           (the-empty-sequence)
           (the-empty-sequence)))
 
-  (define (body-first-exp body)
-    (car body))
-  (define (body-rest-exps body)
-    (cdr body))
-  (define (body-no-exps? body)
-    (null? body))
-  (define (definition->assignment definition)
-    (make-assignment (definition-variable definition)
-                     (definition-value definition)))
+    (define (body-first-exp body)
+      (car body))
+    (define (body-rest-exps body)
+      (cdr body))
+    (define (body-no-exps? body)
+      (null? body))
+    (define (definition->assignment definition)
+      (make-assignment (definition-variable definition)
+                       (definition-value definition)))
+    (define (make-initialization var)
+      (make-definition var ''*unassigned*))
 
 
   (define (definition-value exp)

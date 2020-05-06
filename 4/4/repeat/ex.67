@@ -31,3 +31,89 @@
 ; Instead of storing pattern + frame, it is much more efficient to store an instantiation of pattern with the relevant values
 ; this way no confusion on the storing multiple combinations is aroused, because only unique instantiations are stored
 ; First the history check, then matching, unification
+
+; The imperative way makes it hard to parallize
+; It also requires more timely modifications (set! is extremely hard to use if one wants LAZY per-frame check
+; esp. the removal of old values)
+
+(define (apply-rules pattern frame)
+  (stream-flatmap
+   (lambda (rule)
+     (apply-a-rule
+      rule
+      pattern
+      (check-and-update-hist frame pattern)))
+   (fetch-rules pattern)))
+
+(define (check-and-update-hist frame pattern)
+  (define (repeated? inst)
+   (memq inst (frame-history frame)))
+  (define (update-history inst)
+   (make-frame (frame-bindings frame)
+               (cons inst (frame-history))))
+  (let ((new-inst (instantiate
+                   query
+                   frame
+                   (lambda (v f) 'unbound))))
+   (if (repeated? new-inst)
+       (error "A loop is detected" pattern frame)
+       (update-history new-inst))))
+
+; May look confusing
+; (define (check-and-update-hist frame pattern)
+;   (let ((new-inst (instantiate
+;                   query
+;                   frame
+;                   (lambda (v f) 'unbound))))
+;    (define (repeated?)
+;     (memq new-inst (frame-history frame)))
+;    (define (update-history)
+;     (make-frame (frame-bindings frame)
+;                 (cons new-inst (frame-history))))
+;    (if (repeated?)
+;        (error "A loop is detected" pattern frame)
+;        (update-history))))
+
+(define (make-frame bindings history)
+ (cons bindings history))
+
+(define (frame-bindings frame)
+ (car frame))
+
+(define (frame-history frame)
+ (cdr frame))
+
+(define (binding-in-frame variable frame)
+  (assoc variable (frame-bindings frame)))
+
+(define (extend variable value frame)
+ (make-frame (cons
+              (make-binding variable value)
+              (frame-bindings frame))
+             (frame-history frame)))
+
+(define (query-driver-loop)
+  (prompt-for-input input-prompt)
+  (let ((q (query-syntax-process (read))))
+    (cond ((assertion-to-be-added? q)
+           (add-rule-or-assertion!
+            (add-assertion-body q))
+           (newline)
+           (display
+            "Assertion added to data base.")
+           (query-driver-loop))
+          (else
+           (newline)
+           (display output-prompt)
+           (display-stream
+            (stream-map
+             (lambda (frame)
+               (instantiate
+                q
+                frame
+                (lambda (v f)
+                  (contract-question-mark v))))
+             (qeval q (singleton-stream the-empty-frame)))
+           (query-driver-loop)))))
+
+(define the-empty-frame '(() . ())) ; (cons '() '()) or '(())

@@ -1,0 +1,114 @@
+; If the syntax allows for some inst to have coinciding cars then predicates have to modified in the assemble procedure
+(define (make-execution-procedure
+         inst labels machine pc flag stack ops)
+  (let ((inst-type (car inst)))
+    (cond ((eq? inst-type 'Now)
+           (make-assign
+            inst machine labels ops pc))
+          ((eq? inst-type 'Anything)
+           (make-test
+            inst machine labels ops flag pc))
+          ((eq? inst-type 'Then)
+           (make-branch
+            inst machine labels flag pc))
+          ((eq? inst-type 'We)
+           (make-goto inst machine labels pc))
+          ((eq? inst-type 'Cannot)
+           (make-save inst machine stack pc))
+          ((eq? inst-type 'I)
+           (make-restore inst machine stack pc))
+          ((eq? inst-type 'Tell)
+           (make-perform
+            inst machine labels ops pc))
+          (else (error "Unknown instruction
+                        type: ASSEMBLE"
+                       inst)))))
+; (Now name is val .)
+(define (assign-reg-name assign-instruction)
+  (cadr assign-instruction))
+(define (assign-value-exp assign-instruction)
+  (all-except-n-last
+   (cdddr assign-instruction)
+   1))
+
+(define (make-assign
+         inst machine labels operations pc)
+  (let ((target
+         (get-register
+          machine
+          (assign-reg-name inst)))
+        (value-exp (assign-value-exp inst)))
+    (let ((value-proc
+           (if (operation-exp? value-exp)
+               (make-operation-exp
+                value-exp
+                machine
+                labels
+                operations)
+               (make-primitive-exp
+                value-exp          ; implicit selector changed
+                machine
+                labels))))
+      (lambda ()   ; execution procedure
+                   ; for assign
+        (set-contents! target (value-proc))
+        (advance-pc pc)))))
+
+; (Anything came of name1 and name2 ... action ?)
+(define (test-condition test-instruction)
+  (all-except-n-last
+   test-instruction
+   1))
+
+; (Then we go meet label)
+(define (branch-dest branch-instruction)
+  (all-except-n-last
+   (cddddr branch-instruction)
+   1))
+
+; (We go meet reg/label)
+(define (goto-dest goto-in struction)
+  (all-except-n-last
+   (cdddr goto-instruction)
+   1))
+
+; (Cannot remember who reg is .)
+; (I remembered who reg is !)
+(define (stack-inst-reg-name
+         stack-instruction)
+  (all-except-n-last
+   (cdddr
+    stack-instruction)
+   2))
+
+; (Tell what came of name1 and name2 ... action .)
+(define (perform-action inst)
+ (all-except-n-last
+  (cdr inst)
+  1))
+
+; (my friend name)
+(define (register-exp? exp)
+  (starts-with? '(my friend) exp))
+(define (register-exp-reg exp)
+  (caddr exp))
+
+; (the name)
+(define (constant-exp? exp)
+  (start-with? '(the) exp))
+(define (constant-exp-value exp)
+  (cadr exp))
+
+; (in name)
+(define (label-exp? exp)
+ (starts-with? '(in) exp))
+(define (label-exp-label exp)
+ (cadr exp))
+
+
+(define (starts-with sl l)
+ ())
+
+; cdr and all-except-n-last combinations are commutative in terms of procedures
+(define (all-except-n-last l n)
+ )
