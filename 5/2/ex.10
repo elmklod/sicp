@@ -60,13 +60,13 @@
    test-instruction
    1))
 
-; (Then we go meet label)
+; (Then we go meet label .)
 (define (branch-dest branch-instruction)
   (all-except-n-last
    (cddddr branch-instruction)
    1))
 
-; (We go meet reg/label)
+; (We go meet reg/label .)
 (define (goto-dest goto-in struction)
   (all-except-n-last
    (cdddr goto-instruction)
@@ -105,10 +105,122 @@
 (define (label-exp-label exp)
  (cadr exp))
 
+; (what came of prim1 and prim2 and ... op)
+; (Anything came of prim1 and prim2 and ... op)
 
-(define (starts-with sl l)
- ())
+(define (operation-exp? exp)
+  (or (starts-with? '(Anything came of) exp)
+      (starts-with? '(what came of) exp))
+(define (operation-exp-op operation-exp)
+  (last operation-exp)
+
+; Ex.9 prevents operating on labels with this syntax as well, but
+; the check can be inserted into this procedure
+; to facilitate the error propagation
+; this can be done by removing the cond clause for labels.
+(define (operation-exp-operands operation-exp)
+  (define (list-operands unprocessed-list)
+   (if (null? unprocessed-list)
+       '()
+       (let ((operand-elements-amount
+              (cond ((starts-with? '(the) unprocessed-list)
+                     2)
+                    ((starts-with? '(my friend) unprocessed-list)
+                     3)
+                    ((starts-with? '(in) unprocessed-list)
+                     2)
+                    (else (error "Cannot classify the operand:"
+                                 unprocessed-list)))))
+         (cons (first-n-list
+                unprocessed-list
+                operand-elements-amount)
+               (list-operands
+                (cut-first-n
+                 unprocessed-list
+                 operand-elements-amount))))))
+  (list-operands
+   (all-except-n-last
+    (cdddr operation-exp)
+    1)))
+
+(define (operation-exp-operands operation-exp)
+  (define (list-operands unprocessed-list result)
+   (if (null? unprocessed-list)
+       (reverse result)
+       (let ((operand-elements-amount
+              (cond ((starts-with? '(the) unprocessed-list)
+                     2)
+                    ((starts-with? '(my friend) unprocessed-list)
+                     3)
+                    ((starts-with? '(in) unprocessed-list)
+                     2)
+                    (else (error "Cannot classify the operand:"
+                                 unprocessed-list)))))
+         (list-operands
+          (cut-first-n
+           unprocessed-list
+           operand-elements-amount)
+          (cons (first-n-list
+                 unprocessed-list
+                 operand-elements-amount)
+                result)))))
+  (list-operands
+   (all-except-n-last
+    (cdddr operation-exp)
+    1)
+   '()))
+
+
+; If there exists Lx such that (equal? (append sl Lx) l), then true
+(define (starts-with? sl l)
+ (if (pair? l)
+     (or (null? sl)
+         (and (not (null? l))
+              (equal? (car sl)
+                      (car l))
+              (starts-with? (cdr sl)
+                            (cdr l))))
+     (error "Invalid expression" l)))
+
+(define (starts-with? sl l)
+ (if (pair? l)
+     (if (null? sl)
+         true
+         (if (null? l)
+             false
+             (and (equal? (car sl)
+                          (car l))
+                  (starts-with? (cdr sl)
+                                (cdr l)))))
+     (error "Invalid expression" l)))
 
 ; cdr and all-except-n-last combinations are commutative in terms of procedures
+
+; A proto.
+;(define (all-except-n-last l n)
+; (define (apply-n proc n x)
+;  (if (= 0 n)
+;      x
+;      (apply-n proc (- n 1) (proc x))))
+; (reverse (apply-n cdr n (reverse l))))
+
 (define (all-except-n-last l n)
- )
+ (let ((len-l (length l)))
+  (if (<= l n)
+      (error "Exression is shorter than it should be." l)
+      (let ((short-l
+             (cons (car l)
+                   '())))
+       (define (crop rem-l rem-len prev-pair)
+        (if (= rem-len n)
+            (set-cdr! prev-pair '())
+            (let ((new-pair
+                   (cons (car rem-l)
+                         '())))
+             (set-cdr! prev-pair new-pair)
+             (crop
+              (cdr rem-l)
+              (- rem-len 1)
+              new-pair))))
+       (crop (cdr l) (- len-l 1) short-l)
+       short-l))))

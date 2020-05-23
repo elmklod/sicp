@@ -33,11 +33,17 @@ The second is more "left"
        (iter (op result (car rest)) (cdr rest))))
  (iter init seqs))
 
+(define (fold-left op init seqs)
+  (if (null? seqs)
+      init
+      (fold-left op
+                 (op result (car seqs))
+                 (cdr seqs)))))
+
 The first is more "right"
 
-
 For the same direction procedure applications to be equal, the op must be commutative,
-For the oposite directions procedure applications to be equal, the op must be at least associative
+For the opposite directions procedure applications to be equal, the op must be at least associative
 (and usually commutative, as they may apply op in different orders)
 
 0 right != 1 right:
