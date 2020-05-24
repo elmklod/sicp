@@ -37,8 +37,12 @@ The second is more "left"
   (if (null? seqs)
       init
       (fold-left op
-                 (op result (car seqs))
+                 (op init (car seqs))
                  (cdr seqs)))))
+
+; Internal definitions are more safe when global environment has its bindings changed.
+; They can be altered, but only by another internal(same frame) definition or the environment inspecting facilities.
+; or specific binding access.
 
 The first is more "right"
 

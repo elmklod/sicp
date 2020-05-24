@@ -94,8 +94,34 @@
 (define (frame-bindings frame) frame) ; A frame is a list
 
 (define (fold-left op init seqs)
- (define (iter result rest)
-   (if (null? rest)
-       result
-       (iter (op result (car rest)) (cdr rest))))
- (iter init seqs))
+  (if (null? seqs)
+      init
+      (fold-left op
+                 (op init (car seqs))
+                 (cdr seqs)))))
+
+(define (fold-left-optim op init seqs stop-pred stop-proc)
+  (cond
+   ((null? seqs) init)
+   ((stop-pred init seqs) (stop-proc init seqs))
+   (else
+    (fold-left-optim
+     op
+     (op init (car seqs))
+     (cdr seqs)
+     stop-pred
+     stop-proc))))
+
+(define (unify-frames F1 F2) ; Faster
+   (fold-left-optim
+    (lambda (result-frame binding)
+      (simple-unify-match
+       (binding-variable binding)
+       (binding-value binding)
+       result-frame))
+    F1
+    (frame-bindings F2)
+    (lambda (init seqs)
+      (eq? init 'failed))
+    (lambda (init seqs) ; Or return init - it is semantically equivalent.
+      'failed)))
