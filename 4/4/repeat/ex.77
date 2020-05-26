@@ -1,0 +1,43 @@
+; Preserving loop detector from ex.67 - constructor make-frame has to be modified
+; Decide how delayed filters interleave and get executed : LiFo
+; When they are evaluated again
+; What to do with a frame when the filtering marks it failed.
+
+; Frames in this implementation share a lot of structures
+; It preserves a lot of memory which would be wasted on
+; redundant copies of them.
+; Mutating these structures will result in an erroneous behavior.
+; Avoid.
+
+; LiFo lists dictate that the simplest solution will employ LiFo data structures
+; It may not be the most optimal choice, (naturally older filters tend to be resolved earlier in the computation)
+; but any choice of data structures has different performance on different sets of queries.
+; It is not clear which one is generally the best
+
+; There are 2 convenient places in the program:
+;
+
+(define (negate operands frame-stream)
+  (stream-flatmap ; used to allow for the arbitrary size of the resulting stream with no additional procedures defined; flatmap works and a good way to show another use for this kind of higher-order procedures(abstractions)
+   (lambda (frame)
+     (if (stream-null?
+          (qeval (negated-query operands)
+                 (singleton-stream frame))) ; they use stream and not bare frames to be able to unite them in 1 stream without being forced to create extra procedure to plug-out empty frames
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))
+
+(define (lisp-value call frame-stream)
+  (stream-flatmap
+   (lambda (frame)
+     (if (execute
+          (instantiate
+           call
+           frame
+           (lambda (v f)
+             (error
+              "Unknown pat var: LISP-VALUE"
+              v))))
+         (singleton-stream frame)
+         the-empty-stream))
+   frame-stream))

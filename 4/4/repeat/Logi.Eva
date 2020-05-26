@@ -456,7 +456,7 @@
 (define (flatten-stream stream)
   (if (stream-null? stream)
       the-empty-stream
-      (interleave-delayed ; The non-delayed version will not work, but there must be examples where it fails
+      (interleave-delayed
        (stream-car stream)
        (delay (flatten-stream
                (stream-cdr stream))))))
@@ -505,7 +505,7 @@
 (define (query-syntax-process exp)
   (map-over-symbols expand-question-mark exp))
 
-(define (map-over-symbols proc exp) ; It is not a familiar map per se. It is more thorough, It is a thoroughmap.
+(define (map-over-symbols proc exp) ; It is not a familiar map per se. It is more thorough, It is a thoroughmap. It works on list structures including lists. Original map only works on lists
   (cond ((pair? exp)
          (cons (map-over-symbols ; the concept of a map discussed before has nothing analogous
                 proc (car exp))
@@ -570,3 +570,10 @@
 
 (define (extend variable value frame)
   (cons (make-binding variable value) frame))
+
+(define (display-stream s)
+  (stream-for-each display-line s))
+
+(define (display-line x)
+  (newline)
+  (display x))

@@ -32,25 +32,78 @@
 ; this way no confusion on the storing multiple combinations is aroused, because only unique instantiations are stored
 ; First the history check, then matching, unification
 
-; The imperative way makes it hard to parallize
+; The imperative way makes it hard to parallelize
 ; It also requires more timely modifications (set! is extremely hard to use if one wants LAZY per-frame check
 ; esp. the removal of old values)
 
 (define (apply-rules pattern frame)
-  (stream-flatmap
-   (lambda (rule)
-     (apply-a-rule
-      rule
-      pattern
-      (check-and-update-hist frame pattern)))
-   (fetch-rules pattern)))
+  (let ((parent-history (frame-history frame)))
+   (restore-history-frames
+    parent-history
+    (stream-flatmap
+     (lambda (rule)
+       (apply-a-rule
+        rule
+        pattern
+        (check-and-update-hist frame pattern)))
+     (fetch-rules pattern)))))
+
+; Removes redundant computations
+(define (apply-rules pattern frame)
+  (let ((checked-updated-frame
+         (check-and-update-hist frame pattern))
+        (parent-history (frame-history frame)))
+   (restore-history-frames
+    parent-history
+    (stream-flatmap
+     (lambda (rule)
+       (apply-a-rule
+        rule
+        pattern
+        checked-updated-frame))
+     (fetch-rules pattern)))))
+
+(define (restore-history-frames parent-history frames)
+ (stream-map
+  (lambda (frame)
+   (make-frame
+    (frame-bindings frame)
+    parent-history))
+  frames))
+
+; The parent history is always the cdr of the current history(This implementation) --- CHECK THIS
+; Less efficient
+; Parent and child histories differ only in the recentmost term
+; When child history has it removed, it becomes the parent history
+; 
+; (define (apply-rules pattern frame)
+;   (let ((checked-updated-frame
+;          (check-and-update-hist frame pattern)))
+;    (restore-history-frames
+;     (stream-flatmap
+;      (lambda (rule)
+;        (apply-a-rule
+;         rule
+;         pattern
+;         checked-updated-frame))
+;      (fetch-rules pattern)))))
+;
+; (define (restore-history-frames frames)
+;  (stream-map
+;   (lambda (frame)
+;    (make-frame
+;     (frame-bindings frame)
+;     (cdr (frame-history frame))))
+;   frames))
+
+
 
 (define (check-and-update-hist frame pattern)
   (define (repeated? inst)
    (memq inst (frame-history frame)))
   (define (update-history inst)
    (make-frame (frame-bindings frame)
-               (cons inst (frame-history))))
+               (cons inst (frame-history frame))))
   (let ((new-inst (instantiate
                    query
                    frame
@@ -69,7 +122,7 @@
 ;     (memq new-inst (frame-history frame)))
 ;    (define (update-history)
 ;     (make-frame (frame-bindings frame)
-;                 (cons new-inst (frame-history))))
+;                 (cons new-inst (frame-history frame))))
 ;    (if (repeated?)
 ;        (error "A loop is detected" pattern frame)
 ;        (update-history))))

@@ -112,10 +112,11 @@
      stop-pred
      stop-proc))))
 
+; There is no need to propagate failure as in the original
 (define (unify-frames F1 F2) ; Faster
    (fold-left-optim
     (lambda (result-frame binding)
-      (simple-unify-match
+      (extend-if-possible ;*
        (binding-variable binding)
        (binding-value binding)
        result-frame))
