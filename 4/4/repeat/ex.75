@@ -46,8 +46,8 @@
  (stream-map stream-car
              (stream-filter (lambda (frame-extensions-stream)
                              (= (stream-length
-                                     frame-extensions-stream)
-                                    1))
+                                 frame-extensions-stream)
+                                1))
                          (stream-map (lambda (frame)
                                       (qeval
                                        query
@@ -58,8 +58,8 @@
  (simple-flatten ; Abstraction captured. ex.74. Does unneeded checks with stream-null? predicate
    (stream-filter (lambda (frame-extensions-stream)
                    (= (stream-length
-                           frame-extensions-stream)
-                          1))
+                       frame-extensions-stream)
+                      1))
                (stream-map (lambda (frame)
                             (qeval
                              query
@@ -75,7 +75,7 @@
          1))
      (stream-map
        (lambda (frame)
-        (qeval query (singleton-frame frame)))
+        (qeval query (singleton-stream frame)))
        frame-stream))))
 
 ; Optimal procedures 2 and 4 are both more optimal than any other
@@ -87,5 +87,9 @@
 
 ; another way:
 
-(and (supervisor ?x ?s) ; ?x and ?s must be different patterns, otherwise the query is always true if the db does not have redundant assertion in which case the semantically valid assignments may be discarded as well as invalid but returned(without redundacy)
+(and (supervisor ?x ?s) ; ?x and ?s must be different patterns, otherwise the query is always true(Oliver) if the db does not have redundant assertion in which case the semantically valid assignments may be discarded as well as invalid but returned(without redundacy)
      (unique (supervisor ?employee ?s)))
+
+; The form above extends to support compound queries and rules, which may not be what authors asked.
+; In this case substitute (qeval query (singleton-stream frame)) with (find-assertions query frame) in every context
+; to only support assertions.

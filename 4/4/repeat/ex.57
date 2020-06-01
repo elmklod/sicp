@@ -25,8 +25,8 @@
 
 (rule (can-drop-in ?t1 ?t2)
       (or (same ?t1 ?t2)
-          (and (can-do-job ?t1 ?someone)
-               (can-drop-in ?someone ?t2))))
+          (and (can-do-job ?t1 ?somejob)
+               (can-drop-in ?somejob ?t2))))
 ; this implementation nicely encompasses every possibility
 ; by which title1 can drop in for a title2
 

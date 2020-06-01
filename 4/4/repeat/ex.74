@@ -1,5 +1,5 @@
 (define (negate operands frame-stream)
-  (stream-flatmap ; used to allow for the arbitrary size of the resulting stream with no additional procedures defined; flatmap works and a good way to show another use for this kind of higher-order procedures(abstractions)
+  (simple-stream-flatmap ; used to allow for the arbitrary size of the resulting stream with no additional procedures defined; flatmap works and a good way to show another use for this kind of higher-order procedures(abstractions)
    (lambda (frame)
      (if (stream-null?
           (qeval (negated-query operands)
@@ -9,7 +9,7 @@
    frame-stream))
 
 (define (lisp-value call frame-stream)
-  (stream-flatmap
+  (simple-stream-flatmap
    (lambda (frame)
      (if (execute
           (instantiate
@@ -24,7 +24,7 @@
    frame-stream))
 
 (define (find-assertions pattern frame)
-  (stream-flatmap
+  (simple-stream-flatmap
     (lambda (datum)
       (check-an-assertion datum pattern frame))
     (fetch-assertions pattern frame)))

@@ -1,7 +1,10 @@
 ; Preserving loop detector from ex.67 - constructor make-frame has to be modified
+; Unique special form is also a filter but does not need to be delayed
 ; Decide how delayed filters interleave and get executed : LiFo
 ; When they are evaluated again
-; What to do with a frame when the filtering marks it failed.
+; What to do with a frame when the filtering marks it failed and how to filter it out
+; What to do with frames that reach the driver-loop printer with delayed filters unresolved
+; Decide how delayed filters are implemented
 
 ; Frames in this implementation share a lot of structures
 ; It preserves a lot of memory which would be wasted on
@@ -15,29 +18,267 @@
 ; It is not clear which one is generally the best
 
 ; There are 2 convenient places in the program:
-;
+; Each one renders the other redundant
+
+; Driver-loop printing at the end of evaluation
+;  If used exclusively, it allows for all invalid(for not and lisp-value) frames to be propagated to the
+;  driver-loop. The checking is performed once for each possible frame
+
+; Frame extension procedure extend
+;  If used exclusively, it performs checks each time the frame is extended.
+;  Some invalid frames are removed earlier, decreasing the amount of frames to be
+;  processed
+
+; The second approach is chosen. It is what authors ask.
+
+; When the delayed filtering fails, the frame returned is 'failed
+; No additional filtering to remove failed frames is needed
+; They are all substituted with the-empty-stream in check-an-assertion/apply-a-rule
+; Later they are removed during flattening in find-assertions/apply-rules
+
+; Every frame is checked by the printer. If there are any delayed filters left, an error is signaled.
+
 
 (define (negate operands frame-stream)
-  (stream-flatmap ; used to allow for the arbitrary size of the resulting stream with no additional procedures defined; flatmap works and a good way to show another use for this kind of higher-order procedures(abstractions)
-   (lambda (frame)
-     (if (stream-null?
-          (qeval (negated-query operands)
-                 (singleton-stream frame))) ; they use stream and not bare frames to be able to unite them in 1 stream without being forced to create extra procedure to plug-out empty frames
-         (singleton-stream frame)
-         the-empty-stream))
-   frame-stream))
+  (let ((neg-q (negated-query operands)))
+   (simple-stream-flatmap
+    (lambda (frame)
+     (filter-or-delay
+      frame
+      neg-q
+      (lambda (q f)
+        (stream-null?
+         (qeval
+          q
+          (singleton-stream f))))))
+    frame-stream)))
 
 (define (lisp-value call frame-stream)
-  (stream-flatmap
+  (simple-stream-flatmap
    (lambda (frame)
-     (if (execute
-          (instantiate
-           call
-           frame
-           (lambda (v f)
-             (error
-              "Unknown pat var: LISP-VALUE"
-              v))))
-         (singleton-stream frame)
-         the-empty-stream))
-   frame-stream))
+    (filter-or-delay
+     frame
+     call
+     (lambda (q f)
+      (execute
+       (instantiate
+        q
+        f
+        (lambda (v f) ; Unnecessary
+         (error
+          "Unknown pat var: LISP-VALUE"
+          v))))))
+   frame-stream)))
+
+(define (filter-or-delay
+         frame
+         query
+         filter-check)
+ (let ((inst-query (update-query query frame)))
+  (if (has-unbound-vars? inst-query)
+      (add-filter frame inst-query filter-check)
+      (if (filter-check inst-query frame)
+          (singleton-stream frame)
+          the-empty-stream))))
+
+(define (update-query query frame)
+  (instantiate
+   query
+   frame
+   (lambda (v f) v)))
+
+(define (has-unbound-vars? query)
+  (define (tree-walk e)
+    (cond ((var? e)
+           true)
+          ((pair? e)
+           (or (tree-walk (car e))
+               (tree-walk (cdr e))))
+          (else false)))
+  (tree-walk query))
+
+(define (has-unbound-vars? e)
+  (cond ((var? e)
+         true)
+        ((pair? e)
+         (or (has-unbound-vars? (car e))
+             (has-unbound-vars? (cdr e))))
+        (else false))))
+
+(define (add-filter frame query filter-check)
+  (make-frame
+   (frame-bindings frame)
+   (frame-history frame)
+   (add-filter-to-filters
+    (make-filter query filter-check)
+    (frame-filters frame))))
+
+(define (add-filter-to-filters filter filters)
+  (cons filter
+        filters))
+
+(define (make-filter query filter-check)
+  (cons query filter-check))
+
+(define (filter-query filter)
+  (car filter))
+
+(define (filter-check filter)
+  (cdr filter))
+
+(define empty-filters '())
+
+(define (no-filters? filters) (null? filters))
+
+(define failed-filters (cons '() '()))
+
+(define (filters-failed? filters)
+  (eq? failed-filters filters))
+
+(define (make-frame bindings history filters)
+  (list bindings history filters))
+
+(define (frame-bindings frame)
+ (car frame))
+
+(define (frame-history frame)
+ (cadr frame))
+
+(define (frame-filters frame)
+ (caddr frame))
+
+(define the-empty-frame (list '() '() empty-filters))
+
+; Change
+(define (extend variable value frame)
+ (let* ((new-binding (make-binding variable value))
+        (old-filters (frame-filters frame))
+        (extend-with-new-binding-and-updated-filters
+         (lambda (filters)
+          (make-frame
+           (cons new-binding
+                 (frame-bindings frame))
+           (frame-history frame)
+           filters))))
+  (if (no-filters? old-filters)
+      (extend-with-new-binding-and-updated-filters
+       empty-filters)
+      (check-filters
+       old-filters
+       new-binding
+       extend-with-new-binding-and-updated-filters))))
+
+(define (check-filters
+         old-filters
+         new-binding
+         add-filters-to-frame)
+  (define update-query-and-check-filter
+    (let ((frame-with-binding
+           (frame-add-binding new-bindinig the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
+      (lambda (filters filter)
+        (let* ((check (filter-check filter))
+               (query (filter-query filter))
+               (updated-query (update-query
+                               query
+                               frame-with-binding)))
+         (if (has-unbound-vars? updated-query)
+             (add-filter-to-filters
+              (make-filter
+               updated-query
+               check)
+              filters)
+             (if (check updated-query)
+                 filters
+                 failed-filters))))))
+  (let ((new-filters
+         (fold-left-optim
+          update-query-and-check-filter
+          empty-filters
+          (reverse old-filters) ; Unnecessary. Used to keep some order of filters across same frame expansions(parallel and sequential)
+          (lambda (filters old-filters)
+            (filters-failed? filters))
+          (lambda (filters old-filters)
+            failed-filters))))
+    (if (filter-failed? new-filters)
+        'failed
+        (add-filters-to-frame
+         new-filters))))
+
+
+; Modularised
+(define (extend variable value frame)
+ (let* ((new-binding (make-binding variable value))
+        (old-filters (frame-filters frame))
+        (extend-with-new-binding-and-updated-filters
+         (lambda (filters)
+          (make-frame
+           (cons new-binding
+                 (frame-bindings frame))
+           (frame-history frame)
+           filters))))
+  (if (no-filters? old-filters)
+      (extend-with-new-binding-and-updated-filters
+       empty-filters)
+      (let ((new-filters
+            (check-filters old-filters new-binding)))
+        (if (filter-failed? new-filters)
+            'failed
+            (extend-with-new-binding-and-updated-filters
+             new-filters))))))
+
+(define (check-filters
+         old-filters
+         new-binding)
+  (define update-query-and-check-filter
+    (let ((frame-with-binding
+           (frame-add-binding new-bindinig the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
+      (lambda (filters filter)
+        (let* ((check (filter-check filter))
+               (query (filter-query filter))
+               (updated-query (update-query
+                               query
+                               frame-with-binding)))
+         (if (has-unbound-vars? updated-query)
+             (add-filter-to-filters
+              (make-filter
+               updated-query
+               check)
+              filters)
+             (if (check updated-query)
+                 filters
+                 failed-filters))))))
+  (fold-left-optim
+   update-query-and-check-filter
+   empty-filters
+   (reverse old-filters) ; Unnecessary. Used to keep some order of filters across same frame expansions(parallel and sequential)
+   (lambda (filters old-filters)
+     (filters-failed? filters))
+   (lambda (filters old-filters)
+     failed-filters)))
+
+
+
+(define (fold-left-optim op init seqs stop-pred stop-proc)
+  (cond
+   ((null? seqs) init)
+   ((stop-pred init seqs) (stop-proc init seqs))
+   (else
+    (fold-left-optim
+     op
+     (op init (car seqs))
+     (cdr seqs)
+     stop-pred
+     stop-proc))))
+
+; Preferred version
+(define (fold-left-optim op init seqs stop? stop-proc)
+  (if (stop? init seqs)
+      (stop-proc init seqs)
+      (if (null? seqs)
+          init
+          (fold-left-optim
+           op
+           (op init (car seqs))
+           (cdr seqs)
+           stop?
+           stop-proc))))

@@ -131,8 +131,24 @@
          the-empty-stream))
    frame-stream))
 
+; At least optimize sometimes
+(define (negate operands frame-stream)
+  (let ((neg-q (negated-query operands)))
+   (stream-flatmap
+    (lambda (frame)
+     (if (stream-null?
+          (qeval neg-q
+                 (singleton-stream frame)))
+         (singleton-stream frame)
+         the-empty-stream))
+    frame-stream)))
+
 (put-special-form 'not negate)
 
+; (and (same ?x null?)
+;       (same ?y '())
+;       (lisp-value ?x ?y))
+; is a valid query
 (define (lisp-value call frame-stream)
   (stream-flatmap
    (lambda (frame)
@@ -190,7 +206,7 @@
         (else 'failed)))
 
 
-(define (extend-if-consistent var dat frame) ;  fully functional
+(define (extend-if-consistent var dat frame)
   (let ((binding (binding-in-frame var frame)))
     (if binding
         (pattern-match
@@ -310,6 +326,49 @@
               (if record (cdr record) false))
             false)))
     (define (insert! key-1 key-2 value)
+      (let ((subtable
+             (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record
+                   (assoc key-2
+                          (cdr subtable))))
+              (if record
+                  (set-cdr! record value)
+                  (set-cdr!
+                   subtable
+                   (cons (cons key-2 value)
+                         (cdr subtable)))))
+            (set-cdr!
+             local-table
+             (cons (list key-1
+                         (cons key-2 value))
+                   (cdr local-table)))))
+      'ok)
+    (define (dispatch m)
+      (cond ((eq? m 'lookup-proc) lookup)
+            ((eq? m 'insert-proc!) insert!)
+            (else (error "Unknown operation:
+                          TABLE" m))))
+    dispatch))
+
+; This table will speed up the search by splitting the initial node into 2 parent nodes and decreasing the original leaf density
+(define (make-table-2D same-key-test)
+  (let ((local-table (list '*table*)))
+    (define (assoc key records)  ; the lookup of the binding is probably faster when it is more internal
+      (cond ((null? records) false)
+            ((same-key-test key (caar records))
+             (car records))
+            (else (assoc key (cdr records)))))
+    (define (lookup key-2 key-1)
+      (let ((subtable
+             (assoc key-1 (cdr local-table))))
+        (if subtable
+            (let ((record
+                   (assoc key-2
+                          (cdr subtable))))
+              (if record (cdr record) false))
+            false)))
+    (define (insert! key-2 key-1 value)
       (let ((subtable
              (assoc key-1 (cdr local-table))))
         (if subtable

@@ -63,6 +63,33 @@
         checked-updated-frame))
      (fetch-rules pattern)))))
 
+
+; To improve performance a rule conclusion instantiated with the frame after unification
+; is stored in the frame history as well.
+; Separation of the first check-update prevents wasting time on the useless unification which may be expensive
+; In this case no checking is needed
+; It was performed by the first check.
+; Updating history prevents the same rule conclusion to be evaluated again without searching through the db
+(define (apply-a-rule rule
+                      query-pattern
+                      query-frame)
+  (let ((clean-rule
+         (rename-variables-in rule)))
+    (let ((unify-result
+           (unify-match query-pattern
+                        (conclusion clean-rule)
+                        query-frame)))
+      (if (eq? unify-result 'failed)
+          the-empty-stream
+          (qeval (rule-body clean-rule)
+                 (singleton-stream
+                  (update-history-frame
+                   (make-history-pattern
+                    query-pattern        ; query-pattern can be substituted with the (conclusion clean-rule). Unclear which one takes less searches through bindings
+                    unify-result)
+                   unify-result)))))))
+
+
 (define (restore-history-frames parent-history frames)
  (stream-map
   (lambda (frame)
@@ -71,11 +98,11 @@
     parent-history))
   frames))
 
-; The parent history is always the cdr of the current history(This implementation) --- CHECK THIS
+; The parent history is always the cdr(cddr in case apply-a-rule is modified as above) of the current history(This implementation) --- CHECK THIS
 ; Less efficient
 ; Parent and child histories differ only in the recentmost term
 ; When child history has it removed, it becomes the parent history
-; 
+;
 ; (define (apply-rules pattern frame)
 ;   (let ((checked-updated-frame
 ;          (check-and-update-hist frame pattern)))
@@ -96,30 +123,33 @@
 ;     (cdr (frame-history frame))))
 ;   frames))
 
-
-
 (define (check-and-update-hist frame pattern)
   (define (repeated? inst)
-   (memq inst (frame-history frame)))
-  (define (update-history inst)
-   (make-frame (frame-bindings frame)
-               (cons inst (frame-history frame))))
-  (let ((new-inst (instantiate
-                   query
-                   frame
-                   (lambda (v f) 'unbound))))
+   (member inst (frame-history frame)))
+  (let ((new-inst
+         (make-history-pattern pattern frame)))
    (if (repeated? new-inst)
        (error "A loop is detected" pattern frame)
-       (update-history new-inst))))
+       (update-history-frame new-inst frame))))
+
+(define (update-history-frame inst frame)
+ (make-frame (frame-bindings frame)
+             (cons inst (frame-history frame))))
+
+(define (make-history-pattern pattern frame)
+  (instantiate
+   pattern
+   frame
+   (lambda (v f) 'unbound)))
 
 ; May look confusing
 ; (define (check-and-update-hist frame pattern)
 ;   (let ((new-inst (instantiate
-;                   query
+;                   pattern
 ;                   frame
 ;                   (lambda (v f) 'unbound))))
 ;    (define (repeated?)
-;     (memq new-inst (frame-history frame)))
+;     (member new-inst (frame-history frame)))
 ;    (define (update-history)
 ;     (make-frame (frame-bindings frame)
 ;                 (cons new-inst (frame-history frame))))
@@ -170,3 +200,9 @@
            (query-driver-loop)))))
 
 (define the-empty-frame '(() . ())) ; (cons '() '()) or '(())
+
+; The new and efficient way is to deduce whether a pattern is a general parent(incl. being equivalent) of the ones already in history
+; If it is not - the loops that authors want to detect are avoided.
+; If it is - the loop is found
+; Patterns should be added to history when the unification of pattern-rule is finished.(apply-a-rule)
+; They should be checked against a history during the apply-rules procedure
