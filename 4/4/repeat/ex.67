@@ -196,7 +196,7 @@
                 frame
                 (lambda (v f)
                   (contract-question-mark v))))
-             (qeval q (singleton-stream the-empty-frame)))
+             (qeval q (singleton-stream the-empty-frame))))
            (query-driver-loop)))))
 
 (define the-empty-frame '(() . ())) ; (cons '() '()) or '(())
@@ -206,3 +206,76 @@
 ; If it is - the loop is found
 ; Patterns should be added to history when the unification of pattern-rule is finished.(apply-a-rule)
 ; They should be checked against a history during the apply-rules procedure
+
+(define (apply-rules pattern frame)
+  (let ((checked-frame
+         (check-history frame pattern))
+        (parent-history (frame-history frame)))
+   (restore-history-frames
+    parent-history
+    (stream-flatmap
+     (lambda (rule)
+       (apply-a-rule
+        rule
+        pattern
+        checked-frame))
+     (fetch-rules pattern)))))
+
+(define (check-history frame pattern)
+ (define (generalizes? pat hist)
+  (define (includes? pat hist-pat) ; Striped down pattern-matcher
+    (cond ((equal? pat hist-pat) true)
+          ((eq? pat 'unbound)
+           true)
+          ((and (pair? pat) (pair? hist-pat))
+           (and (includes? (car pat) (car hist-pat))
+                (includes? (cdr pat) (cdr hist-pat))))
+          (else false)))
+  (fold-left
+   false
+   (lambda (init hist-pat)
+    (or init
+        (includes? pat hist-pat)))
+   hist))
+ (if (generalizes?
+      (make-history-pattern pattern frame)
+      (frame-history frame))
+     (error "A loop is detected" pattern frame)
+     frame))
+
+(define (apply-rules pattern frame)
+  (let ((parent-history (frame-history frame)))
+   (check-history frame pattern) ; Imperative
+   (restore-history-frames
+    parent-history
+    (stream-flatmap
+     (lambda (rule)
+       (apply-a-rule
+        rule
+        pattern
+        frame))
+     (fetch-rules pattern)))))
+
+(define (check-history frame pattern)
+ (define (generalizes? pat hist)
+  (define (includes? pat hist-pat)
+    (cond ((equal? pat hist-pat) true)
+          ((eq? pat 'unbound)
+           true)
+          ((and (pair? pat) (pair? hist-pat))
+           (and (includes? (car pat) (car hist-pat))
+                (includes? (cdr pat) (cdr hist-pat))))
+          (else false)))
+  (fold-left
+   false
+   (lambda (init hist-pat)
+    (or init
+        (includes? pat hist-pat)))
+   hist))
+ (if (generalizes?
+      (make-history-pattern pattern frame)
+      (frame-history frame))
+     (error "A loop is detected" pattern frame-history)
+     'ok))
+
+; apply-a-rule stays the same as above
