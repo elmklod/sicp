@@ -2,7 +2,7 @@
   (let ((qproc (get-special-form (type query))))
     (if qproc
         (qproc (contents query) frame-stream)
-        (simple-query query frame-stream)))
+        (simple-query query frame-stream))))
 
 (define (query-driver-loop)
  (prompt-for-input input-prompt)
@@ -51,4 +51,14 @@
                  (qeval q the-empty-stream)
                  (lambda (v f)
                   (contract-question-mark v))))))
-        (query-driver-loop)))))
+        (query-driver-loop)))))   ; ***
+
+
+(define (display-line x)
+  (newline)
+  (display x))
+
+; New primitives:
+; newline
+; display
+; read
