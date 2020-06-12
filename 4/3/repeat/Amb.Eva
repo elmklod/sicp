@@ -171,7 +171,7 @@
           ;; recursive call to get-args
           (lambda (args fail3)
             (succeed (cons arg args)
-                     fail3))
+                     fail3))         ; Can be substituted with fail2 and will have the same meaning
           fail2))
        fail)))
 

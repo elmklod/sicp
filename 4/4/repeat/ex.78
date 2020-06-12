@@ -1,0 +1,54 @@
+(define (qeval query frame)
+  (let ((qproc (get-special-form (type query))))
+    (if qproc
+        (qproc (contents query) frame-stream)
+        (simple-query query frame-stream)))
+
+(define (query-driver-loop)
+ (prompt-for-input input-prompt)
+ (let ((input (read))) ; It is not processed by query-syntax-process on purpose to avoid changing 'try-again if it can be changed by the proc
+  (if (eq? input 'try-again)  ; Or use (require (not (eq? 'try-again))) which is less intuitive
+      (amb)
+      (let ((q (query-syntax-process input)))
+        (cond ((assertion-to-be-added? q)
+               (add-rule-or-assertion!
+                (add-assertion-body q))
+               (newline)
+               (display
+                "Assertion added to data base.")
+               (query-driver-loop))
+              (else
+               (newline)
+               (display output-prompt)
+               (display-line
+                (instantiate
+                 q
+                 (qeval q the-empty-stream)
+                 (lambda (v f)
+                  (contract-question-mark v))))
+               (query-driver-loop)))))))
+
+
+; It is possible to centralize query-driver-loop recursive application because everything else is used only for its side-effect, not value
+(define (query-driver-loop)
+ (prompt-for-input input-prompt)
+ (let ((input (read)))
+  (if (eq? input 'try-again)
+      (amb)
+      (let ((q (query-syntax-process input)))
+        (cond ((assertion-to-be-added? q)
+               (add-rule-or-assertion!
+                (add-assertion-body q))
+               (newline)
+               (display
+                "Assertion added to data base."))
+              (else
+               (newline)
+               (display output-prompt)
+               (display-line
+                (instantiate
+                 q
+                 (qeval q the-empty-stream)
+                 (lambda (v f)
+                  (contract-question-mark v))))))
+        (query-driver-loop)))))

@@ -65,6 +65,31 @@
              (qeval q (singleton-stream '()))))
            (query-driver-loop)))))
 
+; It is possible to centralize query-driver-loop recursive application because everything else is used only for its side-effect, not value
+(define (query-driver-loop)
+  (prompt-for-input input-prompt)
+  (let ((q (query-syntax-process (read))))
+    (cond ((assertion-to-be-added? q)
+           (add-rule-or-assertion!
+            (add-assertion-body q))
+           (newline)
+           (display
+            "Assertion added to data base."))
+          (else
+           (newline)
+           (display output-prompt)
+           (display-stream
+            (stream-map
+             (lambda (frame)
+               (instantiate
+                q
+                frame
+                (lambda (v f)
+                  (contract-question-mark v))))
+             (qeval q (singleton-stream '()))))))
+    (query-driver-loop))) ; ***
+
+
 (define (instantiate
          exp frame unbound-var-handler)
   (define (copy exp)
@@ -83,6 +108,12 @@
           (else exp)))
   (copy exp))
 
+; What if the compound query is added as an assertion?
+; With this implementation it may not be found in the database.
+; The solution is to get qproc and if it is not false then
+; (interleave-delayed (qproc (contents query) frame-stream)
+;              (delay (simple-query query frame-stream)))
+; Everything else is unchanged
 (define (qeval query frame-stream)
   (let ((qproc (get-special-form (type query))))
     (if qproc
