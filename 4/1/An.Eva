@@ -4,6 +4,8 @@
 ; of all procedures where that _word_ was used without shadowing
 ; In the purely functional program there is no need for it
 ; as there is no way to redefine _anything_
+; In the normal evaluator there is also no need for it
+; because there is no history of processed procedures
 
 (define (eval exp env) ((analyze exp) env))
 

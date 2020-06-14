@@ -1,32 +1,142 @@
+; First evaluate this modified amb-evaluator
+
+; New primitives for the amb evaluators:
+; newline
+; display
+; read
+; Modified amb-evaluator:
+(define (analyze exp)
+  (cond ((self-evaluating? exp)
+         (analyze-self-evaluating exp))
+        ((quoted? exp)
+         (analyze-quoted exp))
+        ((variable? exp)
+         (analyze-variable exp))
+        ((assignment? exp)
+         (analyze-assignment exp))
+        ((permanent-assignment? exp)
+         (analyze-permanent-assignment exp))
+        ((definition? exp)
+         (analyze-definition exp))
+        ((if? exp)
+         (analyze-if exp))
+        ((if-fail? exp)
+         (analyze-if-fail exp))
+        ((lambda? exp)
+         (analyze-lambda exp))
+        ((begin? exp)
+         (analyze-sequence
+          (begin-actions exp)))
+        ((cond? exp)
+         (analyze (cond->if exp)))
+        ((let? exp)
+         (analyze (let->combination exp)))
+        ((let*? exp)
+         (analyze (let*->nested-lets exp)))
+        ((amb? exp)
+         (analyze-amb exp))
+        ((ramb? exp)
+         (analyze-ramb exp))
+        ((and? exp)
+         (analyze (and->if exp)))
+        ((or? exp)
+         (analyze (or->if exp)))
+        ((alteration? exp)
+         (analyze-alteration exp))
+        ((application? exp)
+         (analyze-application exp))
+        (else
+         (error "Unknown expression
+                 type: ANALYZE"
+                exp))))
+
+(define (driver-loop)
+  (internal-loop
+   (lambda ()
+     (newline)
+     (display
+      ";;; There is no current problem")
+     (driver-loop))))
+
+(define (internal-loop try-again)
+  (prompt-for-input input-prompt)
+  (let ((input (read)))
+    (if (eq? input 'try-again)
+        (try-again)
+        (begin
+          (newline)
+          (display
+           ";;; Starting a new problem ")
+          (ambeval
+           input
+           the-global-environment
+           print-success-continuation
+           resetting-failure-continuation)))))
+
+(define (print-success-continuation
+         val next-alternative)
+  (announce-output
+   output-prompt)
+  (user-print val)
+  (internal-loop
+   next-alternative))
+
+(define (resetting-failure-continuation)
+ (announce-output
+  ";;; There are no
+   more values of")
+ (user-print input)
+ (driver-loop))
+
+(define (alteration? exp) (tagged-list? exp 'alter))
+
+; This case specifically can do without resetting the success continuation
+; Since in query-driver-loop it has no additional success continuations appended to it
+; And this success continuation is not used during the logical evaluator program processing
+; To prevent future bugs, this special form resets success continuation.
+(define (analyze-alteration exp)
+  (let ((seqs-proc (analyze-sequence (alternative-sequence exp))))
+    (lambda (env succeed fail)
+      (seqs-proc
+       env
+       print-success-continuation
+       resetting-failure-continuation))))
+
+
+; When amb-evaluator is running first evaluate Logi.Eva
+; then this
+
+
 (define (qeval query frame)
   (let ((qproc (get-special-form (type query))))
     (if qproc
-        (qproc (contents query) frame-stream)
-        (simple-query query frame-stream))))
+        (qproc (contents query) frame)
+        (simple-query query frame))))
 
 (define (query-driver-loop)
  (prompt-for-input input-prompt)
  (let ((input (read))) ; It is not processed by query-syntax-process on purpose to avoid changing 'try-again if it can be changed by the proc
   (if (eq? input 'try-again)  ; Or use (require (not (eq? 'try-again))) which is less intuitive
       (amb)
-      (let ((q (query-syntax-process input)))
-        (cond ((assertion-to-be-added? q)
-               (add-rule-or-assertion!
-                (add-assertion-body q))
-               (newline)
-               (display
-                "Assertion added to data base.")
-               (query-driver-loop))
-              (else
-               (newline)
-               (display output-prompt)
-               (display-line
-                (instantiate
-                 q
-                 (qeval q the-empty-stream)
-                 (lambda (v f)
-                  (contract-question-mark v))))
-               (query-driver-loop)))))))
+      (alternate
+       (let ((q (query-syntax-process input)))
+         (cond ((assertion-to-be-added? q)
+                (add-rule-or-assertion!
+                 (add-assertion-body q))
+                (newline)
+                (display
+                 "Assertion added to data base.")
+                (query-driver-loop))
+               (else
+                (newline)
+                (display output-prompt)
+                (display-line
+                 (instantiate
+                  q
+                  (qeval q the-empty-frame)
+                  (lambda (v f)
+                   (contract-question-mark v))))
+                (query-driver-loop))))))))
 
 
 ; It is possible to centralize query-driver-loop recursive application because everything else is used only for its side-effect, not value
@@ -35,30 +145,44 @@
  (let ((input (read)))
   (if (eq? input 'try-again)
       (amb)
-      (let ((q (query-syntax-process input)))
-        (cond ((assertion-to-be-added? q)
-               (add-rule-or-assertion!
-                (add-assertion-body q))
-               (newline)
-               (display
-                "Assertion added to data base."))
-              (else
-               (newline)
-               (display output-prompt)
-               (display-line
-                (instantiate
-                 q
-                 (qeval q the-empty-stream)
-                 (lambda (v f)
-                  (contract-question-mark v))))))
-        (query-driver-loop)))))   ; ***
+      (alternate
+       (let ((q (query-syntax-process input)))
+         (cond ((assertion-to-be-added? q)
+                (add-rule-or-assertion!
+                 (add-assertion-body q))
+                (newline)
+                (display
+                 "Assertion added to data base."))
+               (else
+                (newline)
+                (display output-prompt)
+                (display-line
+                 (instantiate
+                  q
+                  (qeval q the-empty-frame)
+                  (lambda (v f)
+                   (contract-question-mark v))))))
+         (query-driver-loop))))))   ; ***
 
+; It is from ex.77
+(define the-empty-frame (list '() '() empty-filters))
 
-(define (display-line x)
-  (newline)
-  (display x))
+(define (simple-query query-pattern
+                      frame)
+   (amb (find-assertions query-pattern frame)
+        (apply-rules query-pattern frame)))
 
-; New primitives:
-; newline
-; display
-; read
+(define (find-assertions pattern frame)
+  (stream-flatmap
+    (lambda (datum)
+      (check-an-assertion datum pattern frame))
+    (fetch-assertions pattern)))
+
+(define (check-an-assertion
+         assertion query-pat query-frame)
+  (let ((match-result
+         (pattern-match
+          query-pat assertion query-frame)))
+    (if (eq? match-result 'failed)
+        the-empty-stream
+        (singleton-stream match-result))))

@@ -41,6 +41,10 @@
 (define input-prompt  ";;; Query input:")
 (define output-prompt ";;; Query results:")
 
+(define (prompt-for-input string)
+  (newline) (newline)
+  (display string) (newline))
+
 (define (query-driver-loop)
   (prompt-for-input input-prompt)
   (let ((q (query-syntax-process (read))))
@@ -589,7 +593,7 @@
 
 (define (rule-body rule)
   (if (null? (cddr rule))
-      '(always-true) ; the caddr is a list to be evaluated, (always-true) should also be a list to be evaluated
+      '(always-true)
       (caddr rule)))
 
 (define (query-syntax-process exp)
