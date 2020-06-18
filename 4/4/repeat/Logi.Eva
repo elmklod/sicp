@@ -433,10 +433,10 @@
 (define assertions-and-rules-streams
   (make-table-2D equal?))
 
-(define put-assertion-or-rule-stream
+(define put-to-assertion-or-rule-stream
   (assertions-and-rules-streams 'insert!))
 
-(define get-assertion-or-rule-stream
+(define get-from-assertion-or-rule-stream
   (assertions-and-rules-streams 'lookup))
 
 (define THE-ASSERTIONS the-empty-stream)
@@ -446,14 +446,14 @@
       (get-indexed-assertions pattern)
       (get-all-assertions)))
 
-(define (get-all-assertions) THE-ASSERTIONS) ; why is it needed? just for abstraction?
+(define (get-all-assertions) THE-ASSERTIONS) ; why is it needed? just for an abstraction?
 
 (define (get-indexed-assertions pattern)
   (get-stream (index-key-of pattern)
               'assertion-stream))
 
-(define (get-stream key1 key2)
-  (let ((s (get-assertion-or-rule-stream key1 key2)))
+(define (get-stream key2 key1)
+  (let ((s (get-from-assertion-or-rule-stream key2 key1)))
     (if s s the-empty-stream)))
 
 (define THE-RULES the-empty-stream)
@@ -497,11 +497,12 @@
         (let ((current-assertion-stream
                (get-stream
                 key 'assertion-stream)))
-          (put key
-               'assertion-stream
-               (cons-stream
-                assertion
-                current-assertion-stream))))))
+          (put-to-assertion-or-rule-stream
+           key
+           'assertion-stream
+           (cons-stream
+            assertion
+            current-assertion-stream))))))
 
 (define (store-rule-in-index rule)
   (let ((pattern (conclusion rule)))
@@ -510,11 +511,12 @@
           (let ((current-rule-stream
                  (get-stream
                   key 'rule-stream)))
-            (put key
-                 'rule-stream
-                 (cons-stream
-                  rule
-                  current-rule-stream)))))))
+            (put-to-assertion-or-rule-stream
+             key
+             'rule-stream
+             (cons-stream
+              rule
+              current-rule-stream)))))))
 
 (define (indexable? pat)
   (or (constant-symbol? (car pat))

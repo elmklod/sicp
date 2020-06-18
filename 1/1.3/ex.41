@@ -168,7 +168,7 @@ Therefore, inc procedure will be applied 16 times to 5, the whole expression eva
 
  21
 
-Indee, it is so
+Indeed, it is so
 
 1 ]=> (((double (lambda (x) (double (double x)))) inc)
  5)

@@ -4,6 +4,7 @@
 ; newline
 ; display
 ; read
+; error
 ; Modified amb-evaluator:
 (define (analyze exp)
   (cond ((self-evaluating? exp)
@@ -103,7 +104,7 @@
        resetting-failure-continuation))))
 
 
-; Within amb-evaluator first evaluate Logi.Eva
+; Within amb-evaluator first evaluate Logi.Eva(its relevant parts)
 ; then this
 
 
@@ -351,7 +352,7 @@
            'failed)
           (else (extend var val frame)))))
 
-; Can fail (amb) instead of true, removing the need to have a clause consequent
+; Can fail as (amb) instead of true, removing the need to have a clause consequent
 ; or use (require (not (equal? var e)))
 (define (depends-on? exp var frame)
   (define (tree-walk e)
@@ -427,3 +428,99 @@
 ; Rules and assertions are better suited for storage in lists, not streams
 ; they are already evaluated before consing
 ; This implementation requires storing them in lists(amb-loop)
+
+(define assertions-and-rules-lists
+  (make-table-2D equal?))
+
+(define put-to-assertion-or-rule-list
+  (assertions-and-rules-lists 'insert!))
+
+(define get-from-assertion-or-rule-list
+  (assertions-and-rules-lists 'lookup))
+
+(define THE-ASSERTIONS '())
+
+(define (fetch-assertions pattern)
+  (if (use-index? pattern)
+      (get-indexed-assertions pattern)
+      (get-all-assertions)))
+
+(define (get-all-assertions) THE-ASSERTIONS) ; why is it needed? just for an abstraction?
+
+(define (get-indexed-assertions pattern)
+  (get-list (index-key-of pattern)
+            'assertion-list))
+
+(define (get-list key2 key1)
+  (let ((s (get-from-assertion-or-rule-list key2 key1)))
+    (if s s '())))
+
+(define THE-RULES '())
+
+(define (fetch-rules pattern)
+  (if (use-index? pattern)
+      (get-indexed-rules pattern)
+      (get-all-rules)))
+
+(define (get-all-rules) THE-RULES)
+
+; Lists can be appended but it is time(and depending on the implementation, memory) consuming.
+; Far more interesting and effective is to use amb to choose between them.
+(define (get-indexed-rules pattern)
+  (amb
+   (get-list (index-key-of pattern)
+               'rule-list)
+   (get-list '? 'rule-list)))
+
+(define (add-rule-or-assertion! assertion)
+  (if (rule? assertion)
+      (add-rule! assertion)
+      (add-assertion! assertion)))
+
+(define (add-assertion! assertion)
+  (store-assertion-in-index assertion)
+  (let ((old-assertions THE-ASSERTIONS))
+    (set! THE-ASSERTIONS
+          (cons assertion
+                old-assertions))
+    'ok))
+
+(define (add-rule! rule)
+  (store-rule-in-index rule)
+  (let ((old-rules THE-RULES))
+    (set! THE-RULES
+          (cons rule old-rules))
+    'ok))
+
+(define (store-assertion-in-index assertion)
+  (if (indexable? assertion)
+      (let ((key (index-key-of assertion)))
+        (let ((current-assertion-list
+               (get-list
+                key 'assertion-list)))
+          (put-to-assertion-or-rule-list
+           key
+           'assertion-list
+           (cons
+            assertion
+            current-assertion-list))))))
+
+(define (store-rule-in-index rule)
+  (let ((pattern (conclusion rule)))
+    (if (indexable? pattern)
+        (let ((key (index-key-of pattern)))
+          (let ((current-rule-list
+                 (get-list
+                  key 'rule-list)))
+            (put-to-assertion-or-rule-list
+             key
+             'rule-list
+             (cons
+              rule
+              current-rule-list)))))))
+
+
+
+; Renaming of parameters
+(define (always-true ignore frame)
+  frame)
