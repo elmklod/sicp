@@ -524,3 +524,58 @@
 ; Renaming of parameters
 (define (always-true ignore frame)
   frame)
+
+; disjuncts/conjuncts is a list
+(define (disjoin disjuncts frame)
+ (amb-loop
+  (lambda (disjunct)
+   (qeval disjunct frame))
+  disjuncts))
+
+(define (conjoin conjuncts frame)
+ (fold-left
+  (lambda (fr conjunct)
+   (qeval conjunct fr))
+  frame
+  conjuncts))
+
+; ex.76 - the only requirement is unify-frames and its dependencies
+(define (conjoin conjuncts frame)
+ (fold-left
+  (lambda (fr conjunct)
+   (unify-frames
+    fr
+    (qeval conjunct frame)))
+  the-empty-frame
+  conjuncts))
+
+(put-special-form 'and conjoin)
+
+(define (unify-frames F1 F2)
+   (fold-left
+    (lambda (result-frame binding)
+      (simple-unify-match
+       (binding-variable binding)
+       (binding-value binding)
+       result-frame))
+    F1
+    (frame-bindings F2)))
+
+(define (simple-unify-match var val frame)
+  (cond ((eq? frame 'failed) 'failed)
+        (else
+         (extend-if-possible var val frame))
+
+; ((eq? frame 'failed) 'failed) clause is not needed if there is no intermediate value 'failed and
+; failure is directly achieved either via require statement or (amb)
+(define (simple-unify-match var val frame)
+ (extend-if-possible var val frame))
+
+(define (fold-left op init seqs)
+  (if (null? seqs)
+      init
+      (fold-left op
+                 (op init (car seqs))
+                 (cdr seqs)))))
+
+(put-special-form 'or disjoin)

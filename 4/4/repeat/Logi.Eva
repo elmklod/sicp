@@ -134,6 +134,7 @@
         (apply-rules query-pattern frame))))
    frame-stream))
 
+; A case for fold-left
 (define (conjoin conjuncts frame-stream)
   (if (empty-conjunction? conjuncts)
       frame-stream
