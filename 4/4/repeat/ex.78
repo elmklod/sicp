@@ -283,6 +283,51 @@
      (apply-a-rule rule pattern frame))
    (fetch-rules pattern)))
 
+; ex.67
+(define (apply-rules pattern frame)
+  (let ((parent-history (frame-history frame)))
+   (check-history frame pattern) ; Imperative
+   (restore-history-frame
+    parent-history
+    (amb-loop
+     (lambda (rule)
+       (apply-a-rule
+        rule
+        pattern
+        frame))
+     (fetch-rules pattern)))))
+
+; Using amb here removes the idea of signaling about loops, although it now skips loop-entering computations
+(define (check-history frame pattern)
+ (define (generalizes? pat hist)
+  (define (includes? pat hist-pat)
+    (cond ((equal? pat hist-pat) true)
+          ((eq? pat 'unbound)
+           true)
+          ((and (pair? pat) (pair? hist-pat))
+           (and (includes? (car pat) (car hist-pat))
+                (includes? (cdr pat) (cdr hist-pat))))
+          (else false)))
+  (fold-left
+   false
+   (lambda (init hist-pat)
+    (or init
+        (includes? pat hist-pat)))
+   hist))
+ (if (generalizes?
+      (make-history-pattern pattern frame)
+      (frame-history frame))
+     (error "A loop is detected" pattern frame-history)
+     'ok))
+
+
+; Add filters from ex.77 if needed
+(define (restore-history-frame parent-history frame)
+ (make-frame
+  (frame-bindings frame)
+  parent-history
+  (frame-filters frame)))
+
 (define (apply-a-rule rule
                       query-pattern
                       query-frame)
@@ -385,6 +430,28 @@
                         query-frame)))
       (qeval (rule-body clean-rule)
              unify-result))))
+
+(define (update-history-frame inst frame)
+ (make-frame (frame-bindings frame)
+             (cons inst (frame-history frame))
+             (frame-filters frame)))
+
+; ex.67
+(define (apply-a-rule rule
+                      query-pattern
+                      query-frame)
+  (let ((clean-rule
+         (rename-variables-in rule)))
+    (let ((unify-result
+           (unify-match query-pattern
+                        (conclusion clean-rule)
+                        query-frame)))
+      (qeval (rule-body clean-rule)
+              (update-history-frame
+               (make-history-pattern
+                query-pattern
+                unify-result)
+               unify-result)))))
 
 (define (unify-match p1 p2 frame)
   (cond ((equal? p1 p2) frame)
@@ -579,3 +646,13 @@
                  (cdr seqs)))))
 
 (put-special-form 'or disjoin)
+
+(define (negate operands frame)
+ (require                       ; This combination of require and if-fail with the specific return values lets the computation fail on success of some computation and succeed on its failure. A special form is warranted for convenience 
+  (if-fail
+   (begin
+    (qeval (negated-query operands)
+           frame)
+    false)
+   true))
+ frame)
