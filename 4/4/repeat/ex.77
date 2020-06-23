@@ -174,7 +174,7 @@
          add-filters-to-frame)
   (define update-query-and-check-filter
     (let ((frame-with-binding
-           (frame-add-binding new-bindinig the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
+           (frame-add-binding new-binding the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
       (lambda (filters filter)
         (let* ((check (filter-check filter))
                (query (filter-query filter))
@@ -231,7 +231,7 @@
          new-binding)
   (define update-query-and-check-filter
     (let ((frame-with-binding
-           (frame-add-binding new-bindinig the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
+           (frame-add-binding new-binding the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
       (lambda (filters filter)
         (let* ((check (filter-check filter))
                (query (filter-query filter))

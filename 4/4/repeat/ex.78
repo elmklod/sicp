@@ -631,7 +631,7 @@
 (define (simple-unify-match var val frame)
   (cond ((eq? frame 'failed) 'failed)
         (else
-         (extend-if-possible var val frame))
+         (extend-if-possible var val frame))))
 
 ; ((eq? frame 'failed) 'failed) clause is not needed if there is no intermediate value 'failed and
 ; failure is directly achieved either via require statement or (amb)
@@ -643,12 +643,12 @@
       init
       (fold-left op
                  (op init (car seqs))
-                 (cdr seqs)))))
+                 (cdr seqs))))
 
 (put-special-form 'or disjoin)
 
 (define (negate operands frame)
- (require                       ; This combination of require and if-fail with the specific return values lets the computation fail on success of some computation and succeed on its failure. A special form is warranted for convenience 
+ (require                       ; This combination of require and if-fail with the specific return values lets the computation fail on success of some computation and succeed on its failure. A special form is warranted for convenience
   (if-fail
    (begin
     (qeval (negated-query operands)
@@ -656,3 +656,110 @@
     false)
    true))
  frame)
+
+(put-special-form 'not negate)
+
+(define (lisp-value call frame)
+ (require
+  (execute
+   (instantiate
+    call
+    frame
+    (lambda (v f)
+     (error
+      "Unknown pat var: LISP-VALUE"
+      v)))))
+ frame)
+
+; Provide all variables here except for exp
+; to the amb evaluator
+(define (execute exp)
+ (apply (eval (predicate exp)
+              user-initial-environment)
+        (args exp)))
+
+(put-special-form 'lisp-value lisp-value)
+
+; Filters from ex.77 can be easily added
+
+(define (negate operands frame)
+ (filter-or-delay
+  frame
+  (negated-query operands)
+  (lambda (q f)
+    (if-fail
+     (begin
+      (qeval q f)
+      false)
+     true))))
+
+(define (lisp-value call frame-stream)
+ (filter-or-delay
+  frame
+  call
+  (lambda (q f)
+   (execute
+    (instantiate
+     q
+     f
+     (lambda (v f) ; Unnecessary
+      (error
+       "Unknown pat var: LISP-VALUE"
+       v)))))))
+
+(define (filter-or-delay
+         frame
+         query
+         filter-check)
+ (let ((inst-query (update-query query frame)))
+  (if (has-unbound-vars? inst-query)           ; part of update-query-and-check-filter/fold-left-optim with init set to the original filters and the list having the filter as its only element(check-filters)
+      (add-filter frame inst-query filter-check)
+      (begin (require (filter-check inst-query frame))
+             frame))))
+
+(define (extend variable value frame)
+ (let* ((new-binding (make-binding variable value))
+        (old-filters (frame-filters frame))
+        (extend-with-new-binding-and-updated-filters
+         (lambda (filters)
+          (make-frame
+           (cons new-binding
+                 (frame-bindings frame))
+           (frame-history frame)
+           filters))))
+  (if (no-filters? old-filters)
+      (extend-with-new-binding-and-updated-filters
+       empty-filters)
+      (check-filters
+       old-filters
+       new-binding
+       extend-with-new-binding-and-updated-filters))))
+
+(define (check-filters
+         old-filters
+         new-binding
+         add-filters-to-frame)
+  (define update-query-and-check-filter
+    (let ((frame-with-binding
+           (frame-add-binding new-binding the-empty-frame))) ; Can be recursively computed with extend. Introduces additional binding creation and requires changing the proc header of the check-filters procedure: Substitute new-binding par with 2: var and val that take original var and val values from extend
+      (lambda (filters filter)
+        (let* ((check (filter-check filter))
+               (query (filter-query filter))
+               (updated-query (update-query
+                               query
+                               frame-with-binding)))
+         (if (has-unbound-vars? updated-query)
+             (add-filter-to-filters
+              (make-filter
+               updated-query
+               check)
+              filters)
+             (begin (require (check updated-query)) ; amb is here
+                    filters))))))
+  (let ((new-filters
+         (fold-left
+          update-query-and-check-filter
+          empty-filters
+          (reverse old-filters)))) ; Unnecessary. Used to keep some order of filters across same frame expansions(parallel and sequential)
+   (add-filters-to-frame
+    new-filters)))
