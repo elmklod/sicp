@@ -180,6 +180,18 @@
         ((last-exp? seq) (first-exp seq))
         (else (make-begin seq))))
 
+; From RE:EVA
+(define (add-to-sequence-first elem seq)
+  (cons elem seq))
+(define (append-sequences seq1 seq2)
+    (append seq1 seq2))
+(define (reverse-sequence seq)
+  (reverse seq))
+(define (the-empty-sequence)
+  '())
+(define (empty-sequence? seq)
+  (null? seq))
+
 (define (make-begin seq) (cons 'begin seq))
 
 (define (application? exp) (pair? exp))
@@ -226,6 +238,64 @@
 
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
+
+; From RE:EVA
+
+(define (make-procedure parameters body env)
+  (list 'procedure parameters (scan-out-defines body) env))
+
+(define (body-first-exp body)
+  (car body))
+(define (body-rest-exps body)
+  (cdr body))
+(define (body-no-exps? body)
+  (null? body))
+(define (definition->assignment definition)
+  (make-assignment (definition-variable definition)
+                   (definition-value definition)))
+(define (make-initialization var)
+  (make-definition var ''*unassigned*))
+(define (make-definition name body)
+  (list 'define name body))
+(define (make-assignment var val)
+    (list 'set! var val))
+
+(define (scan-out-defines body-original)
+    (define (iter body
+                  reversed-new-body
+                  reversed-initializations
+                  reversed-assignments)
+     (if (body-no-exps? body)
+         (if (empty-sequence? reversed-initializations)
+             body-original
+             (append-sequences
+              reversed-initializations
+              (append-sequences reversed-assignments
+                                (reverse-sequence reversed-new-body))))
+         (let ((first-exp
+                (body-first-exp body)))
+           (if (tagged-list? first-exp 'define)
+               (iter (body-rest-exps body)
+                     reversed-new-body
+                     (add-to-sequence-first
+                      (make-initialization
+                        (definition-variable first-exp))
+                      reversed-initializations)
+                     (add-to-sequence-first
+                      (definition->assignment first-exp)
+                      reversed-assignments))
+               (iter (body-rest-exps body)
+                     (add-to-sequence-first
+                      first-exp
+                      reversed-new-body)
+                     reversed-initializations
+                     reversed-assignments)))))
+    (iter body-original
+          (the-empty-sequence)
+          (the-empty-sequence)
+          (the-empty-sequence)))
+
+
 (define (compound-procedure? p)
   (tagged-list? p 'procedure))
 (define (procedure-parameters p) (cadr p))

@@ -1,0 +1,100 @@
+(define (require-failure proc)
+  (require
+   (if-fail
+    (begin (proc) false)
+    true)))
+
+; Example
+; (require-failure
+;  (lambda ()         necessary part
+;   (let ((n (amb 1 8)))
+;    (require (= n 0)))))
+;
+;
+
+; special forms
+
+(define (analyze exp)
+  (cond ((self-evaluating? exp)
+         (analyze-self-evaluating exp))
+        ((quoted? exp)
+         (analyze-quoted exp))
+        ((variable? exp)
+         (analyze-variable exp))
+        ((assignment? exp)
+         (analyze-assignment exp))
+        ((permanent-assignment? exp)
+         (analyze-permanent-assignment exp))
+        ((definition? exp)
+         (analyze-definition exp))
+        ((if? exp)
+         (analyze-if exp))
+        ((if-fail? exp)
+         (analyze-if-fail exp))
+        ((lambda? exp)
+         (analyze-lambda exp))
+        ((begin? exp)
+         (analyze-sequence
+          (begin-actions exp)))
+        ((cond? exp)
+         (analyze (cond->if exp)))
+        ((let? exp)
+         (analyze (let->combination exp)))
+        ((let*? exp)
+         (analyze (let*->nested-lets exp)))
+        ((amb? exp)
+         (analyze-amb exp))
+        ((ramb? exp)
+         (analyze-ramb exp))
+        ((require-failure? exp)
+         (analyze (transform-require-failure exp)))
+        ((and? exp)
+         (analyze (and->if exp)))
+        ((or? exp)
+         (analyze (or->if exp)))
+        ((application? exp)
+         (analyze-application exp))
+        (else
+         (error "Unknown expression
+                 type: ANALYZE"
+                exp))))
+
+(define (require-failure? exp)
+ (tagged-list? exp 'require-failure))
+
+; One-way, packing exp-to-fail in lambda and evaluating first this lambda then the expression is possible, but is useless
+(define (transform-require-failure exp)
+ (let ((exp-to-fail (require-failure-expression exp)))
+   (make-require
+    (make-if-fail
+     (sequence->exp
+      (make-sequence
+       exp-to-fail
+       'false))
+     'true))))
+
+(define (require-failure-expression exp)
+  (cadr exp))
+
+(define (make-if-fail succ fail)
+ (list 'if-fail
+        succ
+        fail))
+
+(define (make-require pred-exp)
+  (list 'require pred-exp))
+
+(define (make-sequence . w)
+ (if (null? w)
+     (the-empty-sequence)
+     (add-to-sequence-first
+      (car w)
+      (apply make-sequence (cdr w)))))
+
+; Ex.
+(require
+ (if-fail
+  (begin
+   (> 1 a)
+   false)
+  true))
